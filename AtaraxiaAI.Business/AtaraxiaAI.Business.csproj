@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Emgu.CV" Version="4.6.0.5131" />
+    <PackageReference Include="Emgu.CV.runtime.windows" Version="4.6.0.5131" />
+    <PackageReference Include="Serilog" Version="2.12.0" />
+    <PackageReference Include="System.Speech" Version="7.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\AtaraxiaAI.Data\AtaraxiaAI.Data.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Base\" />
+    <Folder Include="Services\IPAddress\" />
+    <Folder Include="Services\Location\" />
+    <Folder Include="Services\VisionEngine\" />
+    <Folder Include="Services\SpeechEngine\" />
+    <Folder Include="Skills\Jokes\Domains\" />
+  </ItemGroup>
+
+</Project>

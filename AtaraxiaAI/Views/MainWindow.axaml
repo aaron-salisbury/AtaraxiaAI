@@ -1,0 +1,46 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:AtaraxiaAI.ViewModels"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="960" d:DesignHeight="540"
+        x:Class="AtaraxiaAI.Views.MainWindow"
+        Icon="/Base/Assets/logo.ico"
+        Title="AtaraxiaAI">
+
+	<Border>
+		<Grid>
+			<Grid.RowDefinitions>
+				<RowDefinition Height=".25*" />
+				<RowDefinition Height="*" />
+			</Grid.RowDefinitions>
+
+			<Image ZIndex="-2"
+				   Grid.RowSpan="2"
+				   Source="{Binding VisionFrame}"
+				   Stretch="Fill"/>
+
+			<Border ZIndex="-1"
+					Grid.RowSpan="2"
+					Background="#990000"
+					Opacity=".5" />
+
+			<ScrollViewer Grid.Row="0" Name="LogsScrollViewer">
+				<TextBlock Margin="5"
+						   Name="LogsTextBlock"
+						   Background="Transparent"
+						   FontFamily="/Base/Assets/Fonts/ProFontWindows.ttf#ProFontWindows"
+						   Text="{Binding LogMessages}" />
+			</ScrollViewer>
+
+
+			<TextBlock
+				Grid.Row="1"
+				FontFamily="/Base/Assets/Fonts/heavy_data.ttf#Heavy Data"
+				FontSize="24"
+				Text="{Binding Greeting}"
+				HorizontalAlignment="Center"
+				VerticalAlignment="Center"/>
+		</Grid>
+	</Border>
+</Window>
