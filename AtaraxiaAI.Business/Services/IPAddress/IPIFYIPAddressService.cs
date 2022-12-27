@@ -21,10 +21,11 @@ namespace AtaraxiaAI.Business.Services
                 if (!string.IsNullOrEmpty(response))
                 {
                     ip = response;
+                    AI.Log.Logger.Information($"IP Address: {ip}");
                 }
                 else
                 {
-                    AI.Log.Logger.Information("Failed to determine IP Address.");
+                    AI.Log.Logger.Error("Failed to determine IP Address.");
                 }
             }
 

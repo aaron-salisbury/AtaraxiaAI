@@ -39,10 +39,8 @@ namespace AtaraxiaAI.ViewModels
 
         public void SetVisionFrame(byte[] jpeg)
         {
-            using (MemoryStream ms = new MemoryStream(jpeg))
-            {
-                VisionFrame = new Avalonia.Media.Imaging.Bitmap(ms);
-            }
+            using MemoryStream ms = new MemoryStream(jpeg);
+            VisionFrame = new Avalonia.Media.Imaging.Bitmap(ms);
         }
     }
 }

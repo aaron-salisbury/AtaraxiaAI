@@ -18,7 +18,17 @@ namespace AtaraxiaAI.Business.Services
 
                 if (!string.IsNullOrEmpty(json))
                 {
-                    return await Json.ToObjectAsync<Location>(json);
+                    Location location = await Json.ToObjectAsync<Location>(json);
+
+                    if (location != null)
+                    {
+                        AI.Log.Logger.Information($"Approximate Location: {location.City}, {location.Region} {location.Zip}");
+                        return location;
+                    }
+                    else
+                    {
+                        AI.Log.Logger.Error("Failed to determine location.");
+                    }
                 }
             }
 

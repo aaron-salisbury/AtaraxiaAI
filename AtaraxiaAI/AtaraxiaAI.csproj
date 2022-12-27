@@ -18,7 +18,7 @@
     <AvaloniaResource Include="Base\Assets\Fonts\heavy_data.ttf" />
     <AvaloniaResource Include="Base\Assets\Fonts\ProFontWindows.ttf" />
     <AvaloniaResource Include="Base\Assets\logo.ico" />
-    <AvaloniaResource Include="Base\Assets\sample-background.jpg" />
+    <EmbeddedResource Include="Base\Assets\sample-background.jpg" />
   </ItemGroup>
   <ItemGroup>
     <!--This helps with theme dll-s trimming.

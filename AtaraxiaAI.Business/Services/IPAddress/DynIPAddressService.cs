@@ -23,10 +23,12 @@ namespace AtaraxiaAI.Business.Services
                     int first = response.IndexOf("Address: ") + 9;
                     int last = response.LastIndexOf("</body>");
                     ip = response.Substring(first, last - first);
+
+                    AI.Log.Logger.Information($"IP Address: {ip}");
                 }
                 else
                 {
-                    AI.Log.Logger.Information("Failed to determine IP Address.");
+                    AI.Log.Logger.Error("Failed to determine IP Address.");
                 }
             }
 
