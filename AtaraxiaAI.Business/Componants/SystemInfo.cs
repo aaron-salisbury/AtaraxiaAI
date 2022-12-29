@@ -6,7 +6,7 @@ using System.Management;
 using System.Runtime.InteropServices;
 using System.Text;
 
-namespace AtaraxiaAI.Business
+namespace AtaraxiaAI.Business.Componants
 {
     public class SystemInfo
     {
@@ -72,7 +72,7 @@ namespace AtaraxiaAI.Business
                 dblSByte = bytes / 1024.0;
             }
 
-            return String.Format("{0:0.##} {1}", dblSByte, suffix[i]);
+            return string.Format("{0:0.##} {1}", dblSByte, suffix[i]);
         }
 
         public override string ToString()

@@ -1,4 +1,5 @@
 ﻿using AtaraxiaAI.Business.Base;
+using AtaraxiaAI.Business.Componants;
 using AtaraxiaAI.Business.Services;
 using AtaraxiaAI.Data.Domains;
 using System;

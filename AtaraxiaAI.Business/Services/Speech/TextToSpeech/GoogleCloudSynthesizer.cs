@@ -1,11 +1,9 @@
-﻿using AtaraxiaAI.Data.Domains;
+﻿using AtaraxiaAI.Business.Componants;
+using AtaraxiaAI.Data.Domains;
 using Google.Cloud.TextToSpeech.V1;
 using Google.Protobuf;
-using NAudio.Wave;
 using System;
 using System.Globalization;
-using System.IO;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace AtaraxiaAI.Business.Services
@@ -32,7 +30,7 @@ namespace AtaraxiaAI.Business.Services
             if (IsAvailable())
             {
                 culture = culture ?? new CultureInfo("en-US");
-                _audioConfig = new AudioConfig { AudioEncoding = AudioEncoding.Mp3 };
+                _audioConfig = new AudioConfig { AudioEncoding = AudioEncoding.Linear16 };
 
                 _voice = new VoiceSelectionParams
                 {
@@ -59,21 +57,8 @@ namespace AtaraxiaAI.Business.Services
 
                 try
                 {
-                    using (var ms = new MemoryStream(response.AudioContent.ToByteArray()))
-                    using (var rdr = new Mp3FileReader(ms))
-                    using (var wavStream = WaveFormatConversionStream.CreatePcmStream(rdr))
-                    using (var baStream = new BlockAlignReductionStream(wavStream))
-                    using (var waveOut = new WaveOutEvent())
-                    {
-                        waveOut.Init(baStream);
-                        waveOut.Play();
-                        while (waveOut.PlaybackState == PlaybackState.Playing)
-                        {
-                            Thread.Sleep(100);
-                        }
-
-                        isSuccessful = true;
-                    }
+                    SpeechEngine.StreamSpeechToSpeaker(response.AudioContent.ToByteArray());
+                    isSuccessful = true;
                 }
                 catch (Exception e)
                 {

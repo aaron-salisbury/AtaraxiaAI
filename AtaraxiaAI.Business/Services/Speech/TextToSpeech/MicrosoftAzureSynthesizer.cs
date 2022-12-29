@@ -1,4 +1,5 @@
 ﻿using AtaraxiaAI.Business.Base;
+using AtaraxiaAI.Business.Componants;
 using AtaraxiaAI.Data.Domains;
 using Microsoft.CognitiveServices.Speech;
 using System;
@@ -58,7 +59,7 @@ namespace AtaraxiaAI.Business.Services
             {
                 try
                 {
-                    using (var synthesizer = new SpeechSynthesizer(_speechConfig))
+                    using (var synthesizer = new SpeechSynthesizer(_speechConfig, null))
                     using (var result = await synthesizer.SpeakTextAsync(message))
                     {
                         if (result.Reason == ResultReason.Canceled)
@@ -73,6 +74,7 @@ namespace AtaraxiaAI.Business.Services
                         }
                         else
                         {
+                            SpeechEngine.StreamSpeechToSpeaker(result.AudioData);
                             isSuccessful = true;
                         }
                     }

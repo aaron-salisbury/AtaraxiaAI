@@ -1,6 +1,10 @@
-﻿using System.Globalization;
+﻿using AtaraxiaAI.Business.Services;
+using NAudio.Wave;
+using System.Globalization;
+using System.IO;
+using System.Threading;
 
-namespace AtaraxiaAI.Business.Services
+namespace AtaraxiaAI.Business.Componants
 {
     public class SpeechEngine
     {
@@ -34,17 +38,17 @@ namespace AtaraxiaAI.Business.Services
 
         private void SetSynthesizer()
         {
-            ISynthesizer microsoftSynthesizer = new MicrosoftAzureSynthesizer(_culture);
-            if (microsoftSynthesizer.IsAvailable())
-            {
-                Synthesizer = microsoftSynthesizer;
-                return;
-            }
-
             ISynthesizer googleSynthesizer = new GoogleCloudSynthesizer(_culture);
             if (googleSynthesizer.IsAvailable())
             {
                 Synthesizer = googleSynthesizer;
+                return;
+            }
+
+            ISynthesizer microsoftSynthesizer = new MicrosoftAzureSynthesizer(_culture);
+            if (microsoftSynthesizer.IsAvailable())
+            {
+                Synthesizer = microsoftSynthesizer;
                 return;
             }
 
@@ -57,6 +61,23 @@ namespace AtaraxiaAI.Business.Services
 
             Synthesizer = null;
             AI.Log.Logger.Warning("No speech synthesizer is currently available.");
+        }
+
+        public static void StreamSpeechToSpeaker(byte[] speechWavBuffer)
+        {
+            using (var ms = new MemoryStream(speechWavBuffer))
+            using (var rdr = new WaveFileReader(ms))
+            using (var wavStream = WaveFormatConversionStream.CreatePcmStream(rdr))
+            using (var provider = new BlockAlignReductionStream(wavStream))
+            using (var waveOut = new WaveOutEvent())
+            {
+                waveOut.Init(provider);
+                waveOut.Play();
+                while (waveOut.PlaybackState == PlaybackState.Playing)
+                {
+                    Thread.Sleep(100);
+                }
+            }
         }
     }
 }

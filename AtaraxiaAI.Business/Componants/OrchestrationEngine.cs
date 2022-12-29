@@ -1,7 +1,6 @@
-﻿using AtaraxiaAI.Business.Services;
-using AtaraxiaAI.Business.Skills;
+﻿using AtaraxiaAI.Business.Skills;
 
-namespace AtaraxiaAI.Business
+namespace AtaraxiaAI.Business.Componants
 {
     public class OrchestrationEngine
     {

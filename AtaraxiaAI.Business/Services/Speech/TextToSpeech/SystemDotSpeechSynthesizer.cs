@@ -1,4 +1,6 @@
-﻿using System.Globalization;
+﻿using AtaraxiaAI.Business.Componants;
+using System.Globalization;
+using System.IO;
 using System.Runtime.InteropServices;
 using System.Speech.Synthesis;
 using System.Threading.Tasks;
@@ -7,37 +9,38 @@ namespace AtaraxiaAI.Business.Services
 {
     public class SystemDotSpeechSynthesizer : ISynthesizer
     {
-        private SpeechSynthesizer _synthesizer;
         private CultureInfo _culture;
 
         public SystemDotSpeechSynthesizer(CultureInfo culture = null)
         {
-            if (IsAvailable())
-            {
-                _culture = culture ?? new CultureInfo("en-US");
-                _synthesizer = new SpeechSynthesizer();
-                _synthesizer.SetOutputToDefaultAudioDevice();
-            }
+            _culture = culture ?? new CultureInfo("en-US");
         }
 
         public bool IsAvailable() => RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
 
-        public async Task<bool> SpeakAsync(string message)
+        public Task<bool> SpeakAsync(string message)
         {
             bool isSuccessful = false;
 
             if (IsAvailable())
             {
-                PromptBuilder promptBuilder = new PromptBuilder();
-                promptBuilder.StartVoice(_culture);
-                promptBuilder.AppendText(message);
-                promptBuilder.EndVoice();
+                using (var synthesizer = new SpeechSynthesizer())
+                using (var audioStream = new MemoryStream())
+                {
+                    synthesizer.SetOutputToWaveStream(audioStream);
 
-                await Task.Run(() => _synthesizer.SpeakAsync(promptBuilder));
-                isSuccessful = true;
+                    PromptBuilder promptBuilder = new PromptBuilder();
+                    promptBuilder.StartVoice(_culture);
+                    promptBuilder.AppendText(message);
+                    promptBuilder.EndVoice();
+
+                    synthesizer.Speak(promptBuilder);
+                    SpeechEngine.StreamSpeechToSpeaker(audioStream.GetBuffer());
+                    isSuccessful = true;
+                }
             }
 
-            return isSuccessful;
+            return Task.FromResult(isSuccessful);
         }
     }
 }
