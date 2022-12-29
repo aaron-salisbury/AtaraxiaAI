@@ -24,9 +24,9 @@ namespace AtaraxiaAI.Business.Services
 
             _culture = culture ?? new CultureInfo("en-US");
 
-            Recognizer = new SpeechRecognitionEngine(_culture);
-            Recognizer.SetInputToDefaultAudioDevice();
-            Recognizer.LoadGrammarAsync(recognitionGrammar ?? GetDefaultGrammar());
+            //Recognizer = new SpeechRecognitionEngine(_culture);
+            //Recognizer.SetInputToDefaultAudioDevice();
+            //Recognizer.LoadGrammarAsync(recognitionGrammar ?? GetDefaultGrammar());
 
             SetSynthesizer();
         }
@@ -57,6 +57,13 @@ namespace AtaraxiaAI.Business.Services
 
         private void SetSynthesizer()
         {
+            ISynthesizer microsoftSynthesizer = new MicrosoftAzureSynthesizer(_culture);
+            if (microsoftSynthesizer.IsAvailable())
+            {
+                Synthesizer = microsoftSynthesizer;
+                return;
+            }
+
             ISynthesizer googleSynthesizer = new GoogleCloudSynthesizer(_culture);
             if (googleSynthesizer.IsAvailable())
             {

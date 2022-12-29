@@ -20,32 +20,37 @@ namespace AtaraxiaAI.Business.Services
     /// </summary>
     public class GoogleCloudSynthesizer : ISynthesizer
     {
+        private const int FREE_LIMIT = 1000000;
+        private const bool CREDENTIALS_SET = false; //TODO: Flip when using real credentials.
+
         private TextToSpeechClient _synthesizer;
         private AudioConfig _audioConfig;
         private VoiceSelectionParams _voice;
 
         public GoogleCloudSynthesizer(CultureInfo culture = null)
         {
-            culture = culture ?? new CultureInfo("en-US");
-            _audioConfig = new AudioConfig { AudioEncoding = AudioEncoding.Mp3 };
-
-            _voice = new VoiceSelectionParams
+            if (IsAvailable())
             {
-                LanguageCode = culture.Name,
-                SsmlGender = SsmlVoiceGender.Male,
-                Name = string.Equals(culture.Name, "en-US") ? "en-US-Neural2-J" : null
-            };
+                culture = culture ?? new CultureInfo("en-US");
+                _audioConfig = new AudioConfig { AudioEncoding = AudioEncoding.Mp3 };
 
-            // TODO: Credentials have to be set one way or another.
-            // https://cloud.google.com/docs/authentication/provide-credentials-adc#local-dev
-            _synthesizer = new TextToSpeechClientBuilder().Build();
+                _voice = new VoiceSelectionParams
+                {
+                    LanguageCode = culture.Name,
+                    SsmlGender = SsmlVoiceGender.Male,
+                    Name = string.Equals(culture.Name, "en-US", StringComparison.OrdinalIgnoreCase) ? "en-US-Neural2-J" : null
+                };
+
+                // Credentials: https://cloud.google.com/docs/authentication/provide-credentials-adc#local-dev
+                _synthesizer = new TextToSpeechClientBuilder().Build(); //TODO: Set your credentials.
+            }
         }
 
-        public bool IsAvailable() => AI.AppData.GoogleCloudSpeechToTextByteCount < 1000000;
+        public bool IsAvailable() => AI.AppData.GoogleCloudSpeechToTextByteCount < FREE_LIMIT && CREDENTIALS_SET;
 
         public async Task SpeakAsync(string message)
         {
-            if (IsAvailable())
+            if (AI.AppData.GoogleCloudSpeechToTextByteCount + message.Length <= FREE_LIMIT)
             {
                 SynthesisInput input = new SynthesisInput { Text = message };
                 SynthesizeSpeechResponse response = await _synthesizer.SynthesizeSpeechAsync(input, _voice, _audioConfig);

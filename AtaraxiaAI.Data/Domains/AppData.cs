@@ -6,6 +6,7 @@ namespace AtaraxiaAI.Data.Domains
     public class AppData
     {
         public int MonthOfLastCloudServicesRoll { get; set; }
+        public int MicrosoftAzureSpeechToTextCharCount { get; set; }
         public int GoogleCloudSpeechToTextByteCount { get; set; }
     }
 }

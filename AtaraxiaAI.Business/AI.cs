@@ -33,6 +33,8 @@ namespace AtaraxiaAI.Business
             }
             else if (AppData.MonthOfLastCloudServicesRoll != currentMonth)
             {
+                AppData.MonthOfLastCloudServicesRoll = currentMonth;
+                AppData.MicrosoftAzureSpeechToTextCharCount = 0;
                 AppData.GoogleCloudSpeechToTextByteCount = 0;
                 Task.Run(async () => await Data.CRUD.UpdateDataAsync<AppData>(AppData, Log.Logger));
             }
