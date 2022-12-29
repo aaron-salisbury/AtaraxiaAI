@@ -6,7 +6,7 @@ using Emgu.CV.Util;
 using System;
 using System.Linq;
 
-namespace AtaraxiaAI.Business.Services.VisionEngine
+namespace AtaraxiaAI.Business.Services
 {
     // https://youtu.be/v7_g1Zoapkg
     internal class PWCYoloVisionEngine : IVisionEngine

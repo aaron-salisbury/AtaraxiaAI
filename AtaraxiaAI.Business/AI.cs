@@ -1,6 +1,5 @@
 ﻿using AtaraxiaAI.Business.Base;
 using AtaraxiaAI.Business.Services;
-using AtaraxiaAI.Business.Services.VisionEngine;
 using AtaraxiaAI.Data.Domains;
 using System;
 using System.Runtime.InteropServices;
@@ -16,7 +15,7 @@ namespace AtaraxiaAI.Business
 
         public IVisionEngine VisionEngine { get; set; }
 
-        public ISpeechEngine SpeechEngine { get; set; }
+        public SpeechEngine SpeechEngine { get; set; }
 
         public OrchestrationEngine CommandLoop { get; set; }
 
@@ -53,9 +52,9 @@ namespace AtaraxiaAI.Business
             IIPLocationService locationService = new IPAPIIPLocationService();
             Data.Domains.Location location = await locationService.GetLocationByIPAsync(iP);
 
-            SpeechEngine = new DotNetSpeechEngine();
+            SpeechEngine = new SpeechEngine();
             CommandLoop = new OrchestrationEngine(SpeechEngine);
-            SpeechEngine.Listen(CommandLoop.Heard);
+            SpeechEngine.Recognizer.Listen(CommandLoop.Heard);
 
             VisionEngine = new PWCYoloVisionEngine();
             VisionEngine.Initiate(updateFrameAction);

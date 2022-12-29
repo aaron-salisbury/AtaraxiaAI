@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace AtaraxiaAI.Business.Services.VisionEngine
+namespace AtaraxiaAI.Business.Services
 {
     public interface IVisionEngine
     {

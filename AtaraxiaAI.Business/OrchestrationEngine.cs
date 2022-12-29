@@ -5,9 +5,9 @@ namespace AtaraxiaAI.Business
 {
     public class OrchestrationEngine
     {
-        private ISpeechEngine _speechEngine;
+        private SpeechEngine _speechEngine;
 
-        public OrchestrationEngine(ISpeechEngine speechEngine)
+        public OrchestrationEngine(SpeechEngine speechEngine)
         {
             _speechEngine = speechEngine;
         }

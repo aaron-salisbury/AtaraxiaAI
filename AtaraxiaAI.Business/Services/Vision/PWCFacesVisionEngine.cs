@@ -3,7 +3,7 @@ using Emgu.CV.Structure;
 using System;
 using System.Drawing;
 
-namespace AtaraxiaAI.Business.Services.VisionEngine
+namespace AtaraxiaAI.Business.Services
 {
     // https://youtu.be/YTBAjP-0Fto
     internal class PWCFacesVisionEngine : IVisionEngine

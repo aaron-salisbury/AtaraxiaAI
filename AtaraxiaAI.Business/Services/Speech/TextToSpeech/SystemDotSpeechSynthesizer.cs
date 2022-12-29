@@ -12,9 +12,12 @@ namespace AtaraxiaAI.Business.Services
 
         public SystemDotSpeechSynthesizer(CultureInfo culture = null)
         {
-            _culture = culture ?? new CultureInfo("en-US");
-            _synthesizer = new SpeechSynthesizer();
-            _synthesizer.SetOutputToDefaultAudioDevice();
+            if (IsAvailable())
+            {
+                _culture = culture ?? new CultureInfo("en-US");
+                _synthesizer = new SpeechSynthesizer();
+                _synthesizer.SetOutputToDefaultAudioDevice();
+            }
         }
 
         public bool IsAvailable() => RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
