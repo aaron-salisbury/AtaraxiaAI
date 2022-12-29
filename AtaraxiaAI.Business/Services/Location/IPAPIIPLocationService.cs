@@ -22,7 +22,6 @@ namespace AtaraxiaAI.Business.Services
 
                     if (location != null)
                     {
-                        AI.Log.Logger.Information($"Approximate Location: {location.City}, {location.Region} {location.Zip}");
                         return location;
                     }
                     else

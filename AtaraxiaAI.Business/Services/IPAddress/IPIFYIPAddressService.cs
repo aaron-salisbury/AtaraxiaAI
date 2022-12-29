@@ -9,8 +9,6 @@ namespace AtaraxiaAI.Business.Services
 
         public async Task<string> GetPublicIPAddressAsync()
         {
-            AI.Log.Logger.Information("Determining IP Address.");
-
             string ip = null;
 
             using (StreamReader stream = new StreamReader(
@@ -21,7 +19,6 @@ namespace AtaraxiaAI.Business.Services
                 if (!string.IsNullOrEmpty(response))
                 {
                     ip = response;
-                    AI.Log.Logger.Information($"IP Address: {ip}");
                 }
                 else
                 {

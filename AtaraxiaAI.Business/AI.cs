@@ -2,7 +2,6 @@
 using AtaraxiaAI.Business.Services;
 using AtaraxiaAI.Data.Domains;
 using System;
-using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 
 namespace AtaraxiaAI.Business
@@ -12,6 +11,8 @@ namespace AtaraxiaAI.Business
         public static InMemoryLogger Log { get; set; }
 
         public static AppData AppData { get; set; }
+
+        public SystemInfo SystemInfo { get; set; }
 
         public IVisionEngine VisionEngine { get; set; }
 
@@ -43,14 +44,12 @@ namespace AtaraxiaAI.Business
         {
             Log.Logger.Information("Initializing ...");
 
-            Log.Logger.Information($"System: {RuntimeInformation.OSDescription} ({RuntimeInformation.OSArchitecture})");
-            //TODO: More system data. Possibly using the following: https://www.nuget.org/packages/System.Management/7.0.0
-
-            IIPAddressService iPService = new IPIFYIPAddressService();
-            string iP = await iPService.GetPublicIPAddressAsync();
+            SystemInfo = new SystemInfo();
+            Log.Logger.Information(SystemInfo.ToString());
 
             IIPLocationService locationService = new IPAPIIPLocationService();
-            Data.Domains.Location location = await locationService.GetLocationByIPAsync(iP);
+            Data.Domains.Location location = await locationService.GetLocationByIPAsync(SystemInfo.IPAddress);
+            Log.Logger.Information($"Location: {location.City}, {location.Region} {location.Zip}");
 
             SpeechEngine = new SpeechEngine();
             CommandLoop = new OrchestrationEngine(SpeechEngine);
