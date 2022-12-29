@@ -9,15 +9,11 @@ namespace AtaraxiaAI.Business
     public class AI
     {
         public static InMemoryLogger Log { get; set; }
-
         public static AppData AppData { get; set; }
 
         public SystemInfo SystemInfo { get; set; }
-
         public IVisionEngine VisionEngine { get; set; }
-
         public SpeechEngine SpeechEngine { get; set; }
-
         public OrchestrationEngine CommandLoop { get; set; }
 
         public AI()
