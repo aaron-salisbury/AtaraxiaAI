@@ -30,7 +30,6 @@
 
   <ItemGroup>
     <Folder Include="Base\" />
-    <Folder Include="Domains\" />
   </ItemGroup>
 
 </Project>

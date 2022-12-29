@@ -7,6 +7,8 @@
   <ItemGroup>
     <PackageReference Include="Emgu.CV" Version="4.6.0.5131" />
     <PackageReference Include="Emgu.CV.runtime.windows" Version="4.6.0.5131" />
+    <PackageReference Include="Google.Cloud.TextToSpeech.V1" Version="2.5.0" />
+    <PackageReference Include="NAudio" Version="1.10.0" />
     <PackageReference Include="Serilog" Version="2.12.0" />
     <PackageReference Include="System.Speech" Version="7.0.0" />
   </ItemGroup>
@@ -20,7 +22,6 @@
     <Folder Include="Services\IPAddress\" />
     <Folder Include="Services\Location\" />
     <Folder Include="Services\VisionEngine\" />
-    <Folder Include="Services\SpeechEngine\" />
     <Folder Include="Skills\Jokes\Domains\" />
   </ItemGroup>
 

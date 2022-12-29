@@ -1,6 +1,7 @@
 ﻿using AtaraxiaAI.Business.Base;
 using AtaraxiaAI.Business.Services;
 using AtaraxiaAI.Business.Services.VisionEngine;
+using AtaraxiaAI.Data.Domains;
 using System;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
@@ -11,6 +12,8 @@ namespace AtaraxiaAI.Business
     {
         public static InMemoryLogger Log { get; set; }
 
+        public static AppData AppData { get; set; }
+
         public IVisionEngine VisionEngine { get; set; }
 
         public ISpeechEngine SpeechEngine { get; set; }
@@ -20,6 +23,13 @@ namespace AtaraxiaAI.Business
         public AI()
         {
             Log = new InMemoryLogger();
+            AppData = Task.Run(async () => await Data.CRUD.ReadDataAsync<AppData>(Log.Logger)).Result;
+
+            if (AppData == null)
+            {
+                AppData = new AppData();
+                Task.Run(async () => await Data.CRUD.UpdateDataAsync<AppData>(AppData, Log.Logger));
+            }
         }
 
         public async Task Initiate(Action<byte[]> updateFrameAction)

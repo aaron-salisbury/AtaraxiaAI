@@ -6,7 +6,6 @@ using System.Globalization;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Speech.Recognition;
-using System.Speech.Synthesis;
 
 namespace AtaraxiaAI.Business.Services
 {
@@ -15,7 +14,7 @@ namespace AtaraxiaAI.Business.Services
         const string OS_NOT_IMPLEMENTED_MESSAGE = "This speech engine has only been implemented for the Windows operating system.";
 
         public SpeechRecognitionEngine Recognizer { get; set; }
-        public SpeechSynthesizer Synthesizer { get; set; }
+        public ISynthesizer Synthesizer { get; set; }
 
         private CultureInfo _culture;
 
@@ -29,8 +28,7 @@ namespace AtaraxiaAI.Business.Services
             Recognizer.SetInputToDefaultAudioDevice();
             Recognizer.LoadGrammarAsync(recognitionGrammar ?? GetDefaultGrammar());
 
-            Synthesizer = new SpeechSynthesizer();
-            Synthesizer.SetOutputToDefaultAudioDevice();
+            SetSynthesizer();
         }
 
         public void Listen(Action<string> speechRecognizedAction)
@@ -49,21 +47,29 @@ namespace AtaraxiaAI.Business.Services
 
         public void Speek(string message)
         {
-            
-            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            Synthesizer.SpeakAsync(message);
+
+            if (!Synthesizer.IsAvailable())
             {
-                AI.Log.Logger.Error(new NotImplementedException(OS_NOT_IMPLEMENTED_MESSAGE), "Failure to speek.");
+                SetSynthesizer();
+            }
+        }
+
+        private void SetSynthesizer()
+        {
+            ISynthesizer googleSynthesizer = new GoogleCloudSynthesizer(_culture);
+            if (googleSynthesizer.IsAvailable())
+            {
+                Synthesizer = googleSynthesizer;
+                return;
             }
 
-            Recognizer.RecognizeAsyncStop();
-
-            PromptBuilder promptBuilder = new PromptBuilder();
-            promptBuilder.StartVoice(_culture);
-            promptBuilder.AppendText(message);
-            promptBuilder.EndVoice();
-
-            Synthesizer.Speak(promptBuilder);
-            Recognizer.RecognizeAsync(RecognizeMode.Multiple);
+            ISynthesizer systemDotSpeechSynthesizer = new SystemDotSpeechSynthesizer(_culture);
+            if (systemDotSpeechSynthesizer.IsAvailable())
+            {
+                Synthesizer = systemDotSpeechSynthesizer;
+                return;
+            }
         }
 
         public static Grammar GetDefaultGrammar()

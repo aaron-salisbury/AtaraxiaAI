@@ -15,51 +15,6 @@ namespace AtaraxiaAI.Data
         private const string YOLO_WEIGHTS_PATH = "AtaraxiaAI.Data.Detection.PWCVision.yolov3-tiny.weights";
         private const string COCO_NAMES_PATH = "AtaraxiaAI.Data.Detection.PWCVision.coco.names";
 
-        public static async Task<IEnumerable<T>> ReadDomainsAsync<T>(ILogger logger)
-        {
-            logger.Information("Reading from file system.");
-
-            try
-            {
-                string filePath = Path.Combine(GetAppDirectoryPath(), GetJsonFileNameForType<T>());
-
-                string json = File.ReadAllText(filePath);
-
-                if (!string.IsNullOrEmpty(json))
-                {
-                    return await Json.ToObjectAsync<IEnumerable<T>>(json);
-                }
-            }
-            catch (Exception e)
-            {
-                logger.Error($"Failed to read from file system: {e.Message}");
-            }
-
-            return null;
-        }
-
-        public static async Task UpdateDomainsAsync<T>(IEnumerable<object> domains, ILogger logger)
-        {
-            logger.Information("Writing to file system.");
-
-            try
-            {
-                FileInfo file = new FileInfo(Path.Combine(GetAppDirectoryPath(), GetJsonFileNameForType<T>()));
-
-                if (file != null && file.Directory != null)
-                {
-                    file.Directory.Create();
-                    string json = await Json.StringifyAsync(domains);
-
-                    File.WriteAllText(file.FullName, json);
-                }
-            }
-            catch (Exception e)
-            {
-                logger.Error($"Failed to write to file system: {e.Message}");
-            }
-        }
-
         public static List<GrammarChoice> CreateDefaultGrammarChoices(ILogger logger)
         {
             List<GrammarChoice> grammarChoices = new List<GrammarChoice>
@@ -85,6 +40,52 @@ namespace AtaraxiaAI.Data
             Task.Run(() => { UpdateDomainsAsync<GrammarChoice>(grammarChoices, logger).Wait(); });
 
             return grammarChoices;
+        }
+
+        public static async Task<T> ReadDataAsync<T>(ILogger logger)
+        {
+            logger.Information("Reading from file system.");
+
+            try
+            {
+                string filePath = Path.Combine(GetAppDirectoryPath(), GetJsonFileNameForType<T>());
+
+                string json = File.ReadAllText(filePath);
+
+                if (!string.IsNullOrEmpty(json))
+                {
+                    return await Json.ToObjectAsync<T>(json);
+                }
+            }
+            catch (Exception e)
+            {
+                logger.Error($"Failed to read from file system: {e.Message}");
+            }
+
+            return default(T);
+        }
+
+        public static async Task<IEnumerable<T>> ReadDomainsAsync<T>(ILogger logger)
+        {
+            logger.Information("Reading from file system.");
+
+            try
+            {
+                string filePath = Path.Combine(GetAppDirectoryPath(), GetJsonFileNameForType<T>());
+
+                string json = File.ReadAllText(filePath);
+
+                if (!string.IsNullOrEmpty(json))
+                {
+                    return await Json.ToObjectAsync<IEnumerable<T>>(json);
+                }
+            }
+            catch (Exception e)
+            {
+                logger.Error($"Failed to read from file system: {e.Message}");
+            }
+
+            return null;
         }
 
         public static byte[] ReadYoloCFGBuffer()
@@ -124,6 +125,50 @@ namespace AtaraxiaAI.Data
             }
 
             return labels.ToArray();
+        }
+
+        public static async Task UpdateDataAsync<T>(object data, ILogger logger)
+        {
+            logger.Information("Writing to file system.");
+
+            try
+            {
+                FileInfo file = new FileInfo(Path.Combine(GetAppDirectoryPath(), GetJsonFileNameForType<T>()));
+
+                if (file != null && file.Directory != null)
+                {
+                    file.Directory.Create();
+                    string json = await Json.StringifyAsync(data);
+
+                    File.WriteAllText(file.FullName, json);
+                }
+            }
+            catch (Exception e)
+            {
+                logger.Error($"Failed to write to file system: {e.Message}");
+            }
+        }
+
+        public static async Task UpdateDomainsAsync<T>(IEnumerable<object> domains, ILogger logger)
+        {
+            logger.Information("Writing to file system.");
+
+            try
+            {
+                FileInfo file = new FileInfo(Path.Combine(GetAppDirectoryPath(), GetJsonFileNameForType<T>()));
+
+                if (file != null && file.Directory != null)
+                {
+                    file.Directory.Create();
+                    string json = await Json.StringifyAsync(domains);
+
+                    File.WriteAllText(file.FullName, json);
+                }
+            }
+            catch (Exception e)
+            {
+                logger.Error($"Failed to write to file system: {e.Message}");
+            }
         }
 
         private static Stream GetEmbeddedResourceStream(string filename)
