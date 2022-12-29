@@ -25,9 +25,15 @@ namespace AtaraxiaAI.Business
             Log = new InMemoryLogger();
             AppData = Task.Run(async () => await Data.CRUD.ReadDataAsync<AppData>(Log.Logger)).Result;
 
+            int currentMonth = DateTime.Now.Month;
             if (AppData == null)
             {
-                AppData = new AppData();
+                AppData = new AppData { MonthOfLastCloudServicesRoll = currentMonth };
+                Task.Run(async () => await Data.CRUD.UpdateDataAsync<AppData>(AppData, Log.Logger));
+            }
+            else if (AppData.MonthOfLastCloudServicesRoll != currentMonth)
+            {
+                AppData.GoogleCloudSpeechToTextByteCount = 0;
                 Task.Run(async () => await Data.CRUD.UpdateDataAsync<AppData>(AppData, Log.Logger));
             }
         }
