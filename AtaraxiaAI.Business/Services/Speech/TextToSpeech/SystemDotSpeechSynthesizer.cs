@@ -22,8 +22,10 @@ namespace AtaraxiaAI.Business.Services
 
         public bool IsAvailable() => RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
 
-        public async Task SpeakAsync(string message)
+        public async Task<bool> SpeakAsync(string message)
         {
+            bool isSuccessful = false;
+
             if (IsAvailable())
             {
                 PromptBuilder promptBuilder = new PromptBuilder();
@@ -32,7 +34,10 @@ namespace AtaraxiaAI.Business.Services
                 promptBuilder.EndVoice();
 
                 await Task.Run(() => _synthesizer.SpeakAsync(promptBuilder));
+                isSuccessful = true;
             }
+
+            return isSuccessful;
         }
     }
 }

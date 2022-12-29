@@ -20,13 +20,15 @@ namespace AtaraxiaAI.Business.Services
             SetSynthesizer();
         }
 
-        public void Speek(string message)
+        public void Speak(string message)
         {
-            Synthesizer.SpeakAsync(message);
-
-            if (!Synthesizer.IsAvailable())
+            if (Synthesizer != null) // Could be null if cloud services are maxed and not running on Windows.
             {
-                SetSynthesizer();
+                if (!Synthesizer.SpeakAsync(message).Result)
+                {
+                    SetSynthesizer();
+                    Speak(message);
+                }
             }
         }
 
@@ -52,6 +54,9 @@ namespace AtaraxiaAI.Business.Services
                 Synthesizer = systemDotSpeechSynthesizer;
                 return;
             }
+
+            Synthesizer = null;
+            AI.Log.Logger.Warning("No speech synthesizer is currently available.");
         }
     }
 }

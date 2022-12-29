@@ -48,8 +48,10 @@ namespace AtaraxiaAI.Business.Services
 
         public bool IsAvailable() => AI.AppData.GoogleCloudSpeechToTextByteCount < FREE_LIMIT && CREDENTIALS_SET;
 
-        public async Task SpeakAsync(string message)
+        public async Task<bool> SpeakAsync(string message)
         {
+            bool isSuccessful = false;
+
             if (AI.AppData.GoogleCloudSpeechToTextByteCount + message.Length <= FREE_LIMIT)
             {
                 SynthesisInput input = new SynthesisInput { Text = message };
@@ -69,6 +71,8 @@ namespace AtaraxiaAI.Business.Services
                         {
                             Thread.Sleep(100);
                         }
+
+                        isSuccessful = true;
                     }
                 }
                 catch (Exception e)
@@ -79,6 +83,14 @@ namespace AtaraxiaAI.Business.Services
                 AI.AppData.GoogleCloudSpeechToTextByteCount += input.ToByteArray().Length;
                 await Data.CRUD.UpdateDataAsync<AppData>(AI.AppData, AI.Log.Logger);
             }
+            else
+            {
+                // If we're this close to the limit, just max it out and don't bother to try again until next month.
+                AI.AppData.GoogleCloudSpeechToTextByteCount = FREE_LIMIT;
+                await Data.CRUD.UpdateDataAsync<AppData>(AI.AppData, AI.Log.Logger);
+            }
+
+            return isSuccessful;
         }
     }
 }

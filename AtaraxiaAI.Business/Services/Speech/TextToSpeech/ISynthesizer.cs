@@ -6,6 +6,6 @@ namespace AtaraxiaAI.Business.Services
     {
         bool IsAvailable();
 
-        Task SpeakAsync(string message);
+        Task<bool> SpeakAsync(string message);
     }
 }

@@ -1,4 +1,5 @@
-﻿using AtaraxiaAI.Business.Services;
+﻿using AtaraxiaAI.Business.Base;
+using AtaraxiaAI.Business.Services;
 using System;
 using System.Linq;
 using System.Management;
@@ -78,10 +79,10 @@ namespace AtaraxiaAI.Business
         {
             StringBuilder builder = new StringBuilder();
             builder.AppendLine($"System: {OSDescription} ({OSArchitecture})");
-            builder.AppendLine($"               Memory: {Memory}");
-            builder.AppendLine($"               Logical Processors: {LogicalProcessors}");
-            builder.AppendLine($"               Video Processor: {VideoProcessor}");
-            builder.Append($"               IP Address: {IPAddress}");
+            builder.AppendLine($"{InMemoryLogger.NEW_LINE_PREFIX}Memory: {Memory}");
+            builder.AppendLine($"{InMemoryLogger.NEW_LINE_PREFIX}Logical Processors: {LogicalProcessors}");
+            builder.AppendLine($"{InMemoryLogger.NEW_LINE_PREFIX}Video Processor: {VideoProcessor}");
+            builder.Append($"{InMemoryLogger.NEW_LINE_PREFIX}IP Address: {IPAddress}");
 
             return builder.ToString();
         }

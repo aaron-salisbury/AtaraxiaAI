@@ -1,7 +1,8 @@
-﻿Continue working throgh this series: https://www.youtube.com/watch?v=Y5atyJbVsAU&t=2108s
+﻿Fix memory leak or whatever prevents the app from totally closing.
+Continue working throgh this series: https://www.youtube.com/watch?v=Y5atyJbVsAU&t=2108s
 Look into https://wit.ai/
 Cross-platform speech engine.
-Logs write to the UI like they're being typed, scroll up automatically, and clear on their own.
+Logs should write to the UI like they're being typed, scroll up automatically, and clear on their own.
 
 New Skills:
   https://api.adviceslip.com/?ref=apilist.fun

@@ -1,4 +1,5 @@
-﻿using AtaraxiaAI.Data.Domains;
+﻿using AtaraxiaAI.Business.Base;
+using AtaraxiaAI.Data.Domains;
 using Microsoft.CognitiveServices.Speech;
 using System;
 using System.Globalization;
@@ -49,8 +50,10 @@ namespace AtaraxiaAI.Business.Services
 
         public bool IsAvailable() => AI.AppData.MicrosoftAzureSpeechToTextCharCount < FREE_LIMIT && CREDENTIALS_SET;
 
-        public async Task SpeakAsync(string message)
+        public async Task<bool> SpeakAsync(string message)
         {
+            bool isSuccessful = false;
+
             if (AI.AppData.MicrosoftAzureSpeechToTextCharCount + message.Length <= FREE_LIMIT)
             {
                 try
@@ -63,10 +66,14 @@ namespace AtaraxiaAI.Business.Services
                             SpeechSynthesisCancellationDetails cancellation = SpeechSynthesisCancellationDetails.FromResult(result);
 
                             StringBuilder builder = new StringBuilder($"Failed to synthesize speech: {cancellation.Reason}");
-                            builder.AppendLine($"ErrorCode={cancellation.ErrorCode}");
-                            builder.Append($"ErrorDetails=[{cancellation.ErrorDetails}]");
+                            builder.AppendLine($"{InMemoryLogger.NEW_LINE_PREFIX}ErrorCode={cancellation.ErrorCode}");
+                            builder.Append($"{InMemoryLogger.NEW_LINE_PREFIX}ErrorDetails=[{cancellation.ErrorDetails}]");
 
                             AI.Log.Logger.Error(builder.ToString());
+                        }
+                        else
+                        {
+                            isSuccessful = true;
                         }
                     }
                 }
@@ -78,6 +85,14 @@ namespace AtaraxiaAI.Business.Services
                 AI.AppData.MicrosoftAzureSpeechToTextCharCount += message.Length;
                 await Data.CRUD.UpdateDataAsync<AppData>(AI.AppData, AI.Log.Logger);
             }
+            else
+            {
+                // If we're this close to the limit, just max it out and don't bother to try again until next month.
+                AI.AppData.MicrosoftAzureSpeechToTextCharCount = FREE_LIMIT;
+                await Data.CRUD.UpdateDataAsync<AppData>(AI.AppData, AI.Log.Logger);
+            }
+
+            return isSuccessful;
         }
     }
 }
