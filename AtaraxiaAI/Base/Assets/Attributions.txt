@@ -1,8 +1,8 @@
 ﻿Application icon "AI" by photo3idea_studio: 
 https://www.flaticon.com/free-icon/ai_1693857
 
-Sample background "Parked Motorcycles Along an Alley" by Jimmy Liao:
-https://www.pexels.com/photo/parked-motorcycles-along-an-alley-14197903/
+Default gif background "Generic Network Connectivity Array | DARK BLUE" by Xponentialdesign:
+https://giphy.com/gifs/network-technologies-connectivity-ITRemFlr5tS39AzQUL
 
 System log font "ProFont" by SQ Software:
 https://www.fontsquirrel.com/fonts/ProFontWindows

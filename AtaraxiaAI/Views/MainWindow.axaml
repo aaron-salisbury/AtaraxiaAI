@@ -6,7 +6,9 @@
         mc:Ignorable="d" d:DesignWidth="960" d:DesignHeight="540"
         x:Class="AtaraxiaAI.Views.MainWindow"
         Icon="/Base/Assets/logo.ico"
-        Title="AtaraxiaAI">
+        Title="AtaraxiaAI"
+		
+		xmlns:gif="using:AvaloniaGif">
 
 	<Border>
 		<Grid>
@@ -15,15 +17,16 @@
 				<RowDefinition Height="*" />
 			</Grid.RowDefinitions>
 
-			<Image ZIndex="-2"
+			<gif:GifImage ZIndex="-2" 
+						  Grid.RowSpan="2" 
+						  Stretch="Fill" 
+						  StretchDirection="Both" 
+						  SourceUriRaw="{Binding Path=BackgroundGifPath}" />
+			
+			<Image ZIndex="-1"
 				   Grid.RowSpan="2"
 				   Source="{Binding VisionFrame}"
-				   Stretch="Fill"/>
-
-			<Border ZIndex="-1"
-					Grid.RowSpan="2"
-					Background="#990000"
-					Opacity=".5" />
+				   Stretch="Fill" />
 
 			<ScrollViewer Grid.Row="0" Name="LogsScrollViewer">
 				<TextBlock Margin="5"

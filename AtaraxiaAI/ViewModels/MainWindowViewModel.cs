@@ -10,22 +10,26 @@ namespace AtaraxiaAI.ViewModels
     public partial class MainWindowViewModel : ObservableObject
     {
         [ObservableProperty]
-        private object? _greeting;
+        private object _greeting;
 
         [ObservableProperty]
-        private AI? _aI;
+        private AI _aI;
 
         [ObservableProperty]
-        private string? _logMessages;
+        private string _logMessages;
+
+        [ObservableProperty]
+        private string? _backgroundGifPath;
 
         [ObservableProperty]
         private IBitmap? _visionFrame;
 
         public MainWindowViewModel()
         {
-            LogMessages = string.Empty;
-            Greeting = "Welcome to Avalonia!";
-            AI = new AI();
+            _greeting = "Welcome to Avalonia!";
+            _backgroundGifPath = "avares://AtaraxiaAI/Base/Assets/278284.gif";
+            _logMessages = string.Empty;
+            _aI = new AI();
 
             AI.Log.InMemorySink.Messages.CollectionChanged += new NotifyCollectionChangedEventHandler(OnLogsPropertyChanged);
 
@@ -41,6 +45,8 @@ namespace AtaraxiaAI.ViewModels
         {
             using MemoryStream ms = new MemoryStream(jpeg);
             VisionFrame = new Avalonia.Media.Imaging.Bitmap(ms);
+
+            BackgroundGifPath = null;
         }
     }
 }

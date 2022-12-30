@@ -6,19 +6,19 @@
     <!--Avalonia doesen't support TrimMode=link currently,but we are working on that https://github.com/AvaloniaUI/Avalonia/issues/6892 -->
     <TrimMode>copyused</TrimMode>
     <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
     <None Remove=".gitignore" />
     <None Remove="Base\Assets\Fonts\heavy_data.ttf" />
     <None Remove="Base\Assets\Fonts\ProFontWindows.ttf" />
     <None Remove="Base\Assets\logo.ico" />
-    <None Remove="Base\Assets\sample-background.jpg" />
   </ItemGroup>
   <ItemGroup>
     <AvaloniaResource Include="Base\Assets\Fonts\heavy_data.ttf" />
     <AvaloniaResource Include="Base\Assets\Fonts\ProFontWindows.ttf" />
     <AvaloniaResource Include="Base\Assets\logo.ico" />
-    <EmbeddedResource Include="Base\Assets\sample-background.jpg" />
+    <AvaloniaResource Include="Base\Assets\278284.gif" />
   </ItemGroup>
   <ItemGroup>
     <!--This helps with theme dll-s trimming.
@@ -38,5 +38,9 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\AtaraxiaAI.Business\AtaraxiaAI.Business.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Base\Controls\AvaloniaGif\Decoding\" />
+    <Folder Include="Base\Controls\AvaloniaGif\Extensions\" />
   </ItemGroup>
 </Project>
