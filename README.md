@@ -3,7 +3,7 @@ Ataraxia AI
 
 Building out a virtual assistant and familiarizing myself with Machine Learning along the way.
 
-Three-tier C# application that uses the Avalonia framework, following the MVVM design pattern, for the presentation layer and .NET Standard 2.0 libraries for the business & data layers.
+Three-tier C# application that uses the Avalonia framework, following the MVVM design pattern, for the presentation layer and .NET libraries for the business & data layers.
 
 Attributions
 ------------
