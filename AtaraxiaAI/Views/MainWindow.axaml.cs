@@ -1,8 +1,6 @@
 using AtaraxiaAI.ViewModels;
 using Avalonia.Controls;
 using Microsoft.Extensions.DependencyInjection;
-using System.IO;
-using System.Reflection;
 
 namespace AtaraxiaAI.Views
 {
