@@ -39,7 +39,7 @@ namespace AtaraxiaAI.Business
             }
         }
 
-        public async Task Initiate(Action<byte[]> updateFrameAction)
+        public async Task Initiate()
         {
             Log.Logger.Information("Initializing ...");
 
@@ -57,7 +57,16 @@ namespace AtaraxiaAI.Business
             SpeechEngine.Recognizer.Listen(CommandLoop.Heard);
 
             VisionEngine = new PWCYoloVisionEngine();
-            VisionEngine.Initiate(updateFrameAction);
+        }
+
+        public void ActivateVision(Action<byte[]> updateFrameAction)
+        {
+            Task.Run(() => VisionEngine.Initiate(updateFrameAction));
+        }
+
+        public void DeactivateVision()
+        {
+            VisionEngine.Deactivate();
         }
     }
 }

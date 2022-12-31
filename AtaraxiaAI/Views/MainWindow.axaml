@@ -1,32 +1,47 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:vm="using:AtaraxiaAI.ViewModels"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+		xmlns:vm="using:AtaraxiaAI.ViewModels"
+		xmlns:gif="using:AvaloniaGif"
         mc:Ignorable="d" d:DesignWidth="960" d:DesignHeight="540"
         x:Class="AtaraxiaAI.Views.MainWindow"
         Icon="/Base/Assets/logo.ico"
         Title="AtaraxiaAI"
-		
-		xmlns:gif="using:AvaloniaGif">
+		ExtendClientAreaToDecorationsHint="True">
 
-	<Border>
-		<Grid>
+	<Grid>
+		<Grid.RowDefinitions>
+			<RowDefinition Height="30" />
+			<RowDefinition Height="*" />
+		</Grid.RowDefinitions>
+
+		<gif:GifImage ZIndex="-2"
+					  Grid.RowSpan="2"
+					  Stretch="Fill"
+					  StretchDirection="Both"
+					  SourceUriRaw="{Binding Path=BackgroundGifPath}"
+					  IsVisible="{Binding IsBackgroundGifVisible}"
+					  IsHitTestVisible="False" />
+
+		<Image ZIndex="-1"
+			   Grid.RowSpan="2"
+			   Stretch="Fill"
+			   Source="{Binding VisionFrame}" 
+			   IsVisible="{Binding IsVisionFrameVisible}"
+			   IsHitTestVisible="False" />
+		
+		<Border Grid.Row="0" IsHitTestVisible="False" />
+
+		<Grid Grid.Row="1" IsHitTestVisible="True">
 			<Grid.RowDefinitions>
 				<RowDefinition Height=".25*" />
 				<RowDefinition Height="*" />
 			</Grid.RowDefinitions>
 
-			<gif:GifImage ZIndex="-2" 
-						  Grid.RowSpan="2" 
-						  Stretch="Fill" 
-						  StretchDirection="Both" 
-						  SourceUriRaw="{Binding Path=BackgroundGifPath}" />
-			
-			<Image ZIndex="-1"
-				   Grid.RowSpan="2"
-				   Source="{Binding VisionFrame}"
-				   Stretch="Fill" />
+
+
+
 
 			<ScrollViewer Grid.Row="0" Name="LogsScrollViewer">
 				<TextBlock Margin="5"
@@ -36,14 +51,16 @@
 						   Text="{Binding LogMessages}" />
 			</ScrollViewer>
 
+			<StackPanel Grid.Row="1" VerticalAlignment="Center" IsHitTestVisible="True">
+				<Button Content="Vision"
+						Command="{Binding OnVisionClickCommand}"
+						HorizontalAlignment="Center" />
 
-			<TextBlock
-				Grid.Row="1"
-				FontFamily="/Base/Assets/Fonts/heavy_data.ttf#Heavy Data"
-				FontSize="24"
-				Text="{Binding Greeting}"
-				HorizontalAlignment="Center"
-				VerticalAlignment="Center"/>
+				<TextBlock FontFamily="/Base/Assets/Fonts/heavy_data.ttf#Heavy Data"
+					FontSize="24"
+					Text="{Binding Greeting}"
+					HorizontalAlignment="Center" />
+			</StackPanel>
 		</Grid>
-	</Border>
+	</Grid>
 </Window>

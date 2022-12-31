@@ -11,16 +11,15 @@ namespace AtaraxiaAI.Business.Services
     // https://youtu.be/v7_g1Zoapkg
     internal class PWCYoloVisionEngine : IVisionEngine
     {
+        public bool IsRunning { get; set; }
+
         private Net _net;
         private string[] _classLabels;
         private VideoCapture _vc;
 
         public PWCYoloVisionEngine()
         {
-            AI.Log.Logger.Information("Initializing vision engine.");
-
             _classLabels = CRUD.ReadCOCOClassLabels();
-            _vc = new VideoCapture(0, VideoCapture.API.DShow);
 
             try
             {
@@ -37,15 +36,22 @@ namespace AtaraxiaAI.Business.Services
             }
         }
 
+        public bool IsActive() => IsRunning;
+
         public void Initiate(Action<byte[]> updateFrameAction)
         {
+            AI.Log.Logger.Information("Initializing vision engine.");
+
+            _vc = new VideoCapture(0, VideoCapture.API.DShow);
+
             Mat frame = new Mat();
             VectorOfMat output = new VectorOfMat();
             VectorOfRect boxes = new VectorOfRect();
             VectorOfFloat scores = new VectorOfFloat();
             VectorOfInt indices = new VectorOfInt();
 
-            while (true)
+            IsRunning = true;
+            while (IsRunning)
             {
                 _vc.Read(frame);
 
@@ -122,6 +128,12 @@ namespace AtaraxiaAI.Business.Services
                     break;
                 }
             }
+        }
+
+        public void Deactivate()
+        {
+            IsRunning = false;
+            _vc = null;
         }
     }
 }

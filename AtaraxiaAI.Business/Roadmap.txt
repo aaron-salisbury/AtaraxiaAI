@@ -1,4 +1,6 @@
-﻿Fix memory leak or whatever prevents the app from totally closing.
+﻿Fix memory leak or whatever prevents the app from totally closing. 
+    On close of app, clear VideoCapture property of vision engine by calling Deactivate().
+VisionFrame isnt working anymore.
 Continue working throgh this series: https://www.youtube.com/watch?v=Y5atyJbVsAU&t=2108s
 Look into https://wit.ai/
 Cross-platform speech engine.
