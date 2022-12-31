@@ -6,6 +6,7 @@ Look into https://wit.ai/
 Cross-platform speech engine.
 Logs should write to the UI like they're being typed, scroll up automatically, and clear on their own.
 Maybe use something like this to talk through the microphone: https://vb-audio.com/Cable/index.htm
+Virtual UI keyboard, maybe like https://github.com/AvaloniaUI/Avalonia/issues/6775
 
 New Skills:
   https://api.adviceslip.com/?ref=apilist.fun
