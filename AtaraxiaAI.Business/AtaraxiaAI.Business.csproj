@@ -16,7 +16,7 @@
     <Folder Include="Services\Speech\TextToSpeech\" />
     <Folder Include="Services\Speech\SpeechToText\" />
     <Folder Include="Services\Vision\" />
-    <Folder Include="Skills\Jokes\Domains\" />
+    <Folder Include="Skills\Domains\" />
   </ItemGroup>
 
   <ItemGroup>

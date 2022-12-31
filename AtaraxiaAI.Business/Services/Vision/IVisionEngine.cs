@@ -1,13 +1,10 @@
 ﻿using System;
+using System.Threading;
 
 namespace AtaraxiaAI.Business.Services
 {
     public interface IVisionEngine
     {
-        bool IsActive();
-
-        void Initiate(Action<byte[]> updateFrameAction);
-
-        void Deactivate();
+        void Initiate(Action<byte[]> updateFrameAction, CancellationToken cancelToken);
     }
 }

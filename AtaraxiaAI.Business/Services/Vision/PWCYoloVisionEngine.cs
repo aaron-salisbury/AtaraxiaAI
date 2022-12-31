@@ -5,14 +5,13 @@ using Emgu.CV.Structure;
 using Emgu.CV.Util;
 using System;
 using System.Linq;
+using System.Threading;
 
 namespace AtaraxiaAI.Business.Services
 {
     // https://youtu.be/v7_g1Zoapkg
     internal class PWCYoloVisionEngine : IVisionEngine
     {
-        public bool IsRunning { get; set; }
-
         private Net _net;
         private string[] _classLabels;
 
@@ -35,9 +34,7 @@ namespace AtaraxiaAI.Business.Services
             }
         }
 
-        public bool IsActive() => IsRunning;
-
-        public void Initiate(Action<byte[]> updateFrameAction)
+        public void Initiate(Action<byte[]> updateFrameAction, CancellationToken cancelToken)
         {
             AI.Log.Logger.Information("Initializing vision engine.");
 
@@ -47,10 +44,9 @@ namespace AtaraxiaAI.Business.Services
             VectorOfFloat scores = new VectorOfFloat();
             VectorOfInt indices = new VectorOfInt();
 
-            IsRunning = true;
             using (VideoCapture vc = new VideoCapture(0, VideoCapture.API.DShow))
             {
-                while (IsRunning)
+                while (!cancelToken.IsCancellationRequested)
                 {
                     vc.Read(frame);
 
@@ -121,18 +117,8 @@ namespace AtaraxiaAI.Business.Services
                     CvInvoke.Resize(frameOut, frameOut, new System.Drawing.Size(0, 0), 4, 4);
 
                     updateFrameAction(frameOut.ToJpegData());
-
-                    if (CvInvoke.WaitKey(1) == 27)
-                    {
-                        break;
-                    }
                 }
             }
-        }
-
-        public void Deactivate()
-        {
-            IsRunning = false;
         }
     }
 }

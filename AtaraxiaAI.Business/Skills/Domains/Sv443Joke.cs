@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace AtaraxiaAI.Business.Skills
+namespace AtaraxiaAI.Business.Skills.Domains
 {
     [Serializable]
     public class Sv443Joke
@@ -9,6 +9,8 @@ namespace AtaraxiaAI.Business.Skills
         public string Category { get; set; }
         public string Type { get; set; }
         public string Joke { get; set; }
+        public string Setup { get; set; }
+        public string Delivery { get; set; }
         public Sv443JokeFlags Flags { get; set; }
         public int ID { get; set; }
         public bool Safe { get; set; }

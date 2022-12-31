@@ -56,20 +56,16 @@ namespace AtaraxiaAI.ViewModels
             LogMessages = string.Concat(AI.Log.InMemorySink.Messages);
         }
 
-        /// <summary>
-        /// Release resources.
-        /// </summary>
         public void Shutdown()
         {
-            AI.DeactivateVision();
+            AI.Shutdown();
         }
 
         private void OnVisionClick()
         {
-            if (AI.VisionEngine.IsActive())
+            if (AI.IsVisionEngineRunning)
             {
                 AI.DeactivateVision();
-                BackgroundGifPath = BKGRND_GIF_PATH;
                 _isBackgroundGifVisible = true;
                 _isVisionFrameVisible = false;
             }

@@ -4,6 +4,7 @@ using AtaraxiaAI.Business.Services;
 using AtaraxiaAI.Data.Domains;
 using Desktop.Robot;
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace AtaraxiaAI.Business
@@ -15,9 +16,17 @@ namespace AtaraxiaAI.Business
 
         public SystemInfo SystemInfo { get; set; }
         public Robot Peripherals { get; set; }
-        public IVisionEngine VisionEngine { get; set; }
-        public SpeechEngine SpeechEngine { get; set; }
         public OrchestrationEngine CommandLoop { get; set; }
+        public SpeechEngine SpeechEngine { get; set; }
+        public IVisionEngine VisionEngine { get; set; }
+
+        public bool IsVisionEngineRunning
+        {
+            get { return _visionTask != null && _visionTask.Status == TaskStatus.Running; }
+        }
+
+        private CancellationTokenSource _visionTokenSource;
+        private Task _visionTask;
 
         public AI()
         {
@@ -43,6 +52,8 @@ namespace AtaraxiaAI.Business
         {
             Log.Logger.Information("Initializing ...");
 
+            VisionEngine = new PWCYoloVisionEngine();
+
             SystemInfo = new SystemInfo();
             Log.Logger.Information(SystemInfo.ToString());
 
@@ -55,18 +66,31 @@ namespace AtaraxiaAI.Business
             SpeechEngine = new SpeechEngine();
             CommandLoop = new OrchestrationEngine(SpeechEngine);
             SpeechEngine.Recognizer.Listen(CommandLoop.Heard);
-
-            VisionEngine = new PWCYoloVisionEngine();
         }
 
         public void ActivateVision(Action<byte[]> updateFrameAction)
         {
-            Task.Run(() => VisionEngine.Initiate(updateFrameAction));
+            _visionTokenSource = new CancellationTokenSource();
+            _visionTask = Task.Run(() => VisionEngine.Initiate(updateFrameAction, _visionTokenSource.Token));
         }
 
         public void DeactivateVision()
         {
-            VisionEngine.Deactivate();
+            if (IsVisionEngineRunning)
+            {
+                _visionTokenSource.Cancel();
+                _visionTokenSource.Dispose();
+                _visionTask.Wait();
+                _visionTask.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// Release resources.
+        /// </summary>
+        public void Shutdown()
+        {
+            DeactivateVision();
         }
     }
 }

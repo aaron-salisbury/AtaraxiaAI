@@ -2,14 +2,13 @@
 using Emgu.CV.Structure;
 using System;
 using System.Drawing;
+using System.Threading;
 
 namespace AtaraxiaAI.Business.Services
 {
     // https://youtu.be/YTBAjP-0Fto
     internal class PWCFacesVisionEngine : IVisionEngine
     {
-        public bool IsRunning { get; set; }
-
         private CascadeClassifier _faceCascade;
 
         public PWCFacesVisionEngine()
@@ -17,19 +16,16 @@ namespace AtaraxiaAI.Business.Services
             _faceCascade = new CascadeClassifier("./Detection/PWCVision/haarcascade_frontalface_default.xml");
         }
 
-        public bool IsActive() => IsRunning;
-
-        public void Initiate(Action<byte[]> updateFrameAction)
+        public void Initiate(Action<byte[]> updateFrameAction, CancellationToken cancelToken)
         {
             AI.Log.Logger.Information("Initializing vision engine.");
 
             Mat frame = new Mat();
             Mat frameGray = new Mat();
 
-            IsRunning = true;
             using (VideoCapture vc = new VideoCapture(0, VideoCapture.API.DShow))
             {
-                while (IsRunning)
+                while (!cancelToken.IsCancellationRequested)
                 {
                     vc.Read(frame);
 
@@ -47,11 +43,6 @@ namespace AtaraxiaAI.Business.Services
                 }
             }
             
-        }
-
-        public void Deactivate()
-        {
-            IsRunning = false;
         }
     }
 }

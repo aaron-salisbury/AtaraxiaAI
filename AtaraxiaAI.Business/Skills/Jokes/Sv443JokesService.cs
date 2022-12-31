@@ -1,4 +1,5 @@
-﻿using AtaraxiaAI.Data;
+﻿using AtaraxiaAI.Business.Skills.Domains;
+using AtaraxiaAI.Data;
 using AtaraxiaAI.Data.Base;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -6,7 +7,7 @@ using System.Threading.Tasks;
 namespace AtaraxiaAI.Business.Skills
 {
     // https://sv443.net/jokeapi/v2/
-    public static class Sv443Jokes
+    public static class Sv443JokesService
     {
         private const string URL_FORMAT = "https://v2.jokeapi.dev/joke/{0}"; // {0}Categories
 
@@ -59,21 +60,12 @@ namespace AtaraxiaAI.Business.Skills
                 joke = await Json.ToObjectAsync<Sv443Joke>(json);
             }
 
-            if (joke != null && !string.IsNullOrEmpty(joke.Joke))
-            {
-                AI.Log.Logger.Information($"Acquired joke: {joke.Joke}");
-            }
-            else
+            if (joke == null)
             {
                 AI.Log.Logger.Error("Failed to aquire joke.");
             }
 
             return joke;
-        }
-
-        public static async Task<Sv443Joke> GetDarkJokeAsync()
-        {
-            return await GetJokeAsync(new List<Categories> { Categories.Dark });
         }
     }
 }

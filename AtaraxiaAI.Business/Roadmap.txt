@@ -1,9 +1,6 @@
-﻿Fix memory leak or whatever prevents the app from totally closing. 
-    On close of app, clear VideoCapture property of vision engine by calling Deactivate().
-VisionFrame isnt working anymore.
+﻿VisionFrame isnt working anymore.
 Continue working throgh this series: https://www.youtube.com/watch?v=Y5atyJbVsAU&t=2108s
 Look into https://wit.ai/
-Cross-platform speech engine.
 Logs should write to the UI like they're being typed, scroll up automatically, and clear on their own.
 Maybe use something like this to talk through the microphone: https://vb-audio.com/Cable/index.htm
 Virtual UI keyboard, maybe like https://github.com/AvaloniaUI/Avalonia/issues/6775

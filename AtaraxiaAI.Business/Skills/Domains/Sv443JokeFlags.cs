@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace AtaraxiaAI.Business.Skills
+namespace AtaraxiaAI.Business.Skills.Domains
 {
     [Serializable]
     public class Sv443JokeFlags
