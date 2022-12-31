@@ -15,7 +15,6 @@ namespace AtaraxiaAI.Business.Services
 
         private Net _net;
         private string[] _classLabels;
-        private VideoCapture _vc;
 
         public PWCYoloVisionEngine()
         {
@@ -42,8 +41,6 @@ namespace AtaraxiaAI.Business.Services
         {
             AI.Log.Logger.Information("Initializing vision engine.");
 
-            _vc = new VideoCapture(0, VideoCapture.API.DShow);
-
             Mat frame = new Mat();
             VectorOfMat output = new VectorOfMat();
             VectorOfRect boxes = new VectorOfRect();
@@ -51,81 +48,84 @@ namespace AtaraxiaAI.Business.Services
             VectorOfInt indices = new VectorOfInt();
 
             IsRunning = true;
-            while (IsRunning)
+            using (VideoCapture vc = new VideoCapture(0, VideoCapture.API.DShow))
             {
-                _vc.Read(frame);
-
-                CvInvoke.Resize(frame, frame, new System.Drawing.Size(0, 0), .4, .4);
-
-                boxes = new VectorOfRect();
-                indices = new VectorOfInt();
-                scores = new VectorOfFloat();
-
-                Image<Bgr, byte> image = frame.ToImage<Bgr, byte>();
-
-                Mat input = DnnInvoke.BlobFromImage(image, 1 / 255.0, swapRB: true);
-
-                _net.SetInput(input);
-
-                _net.Forward(output, _net.UnconnectedOutLayersNames);
-
-                for (int i = 0; i < output.Size; i++)
+                while (IsRunning)
                 {
-                    var mat = output[i];
-                    float[,] data = (float[,])mat.GetData();
+                    vc.Read(frame);
 
-                    for (int j = 0; j < data.GetLength(0); j++)
+                    CvInvoke.Resize(frame, frame, new System.Drawing.Size(0, 0), .4, .4);
+
+                    boxes = new VectorOfRect();
+                    indices = new VectorOfInt();
+                    scores = new VectorOfFloat();
+
+                    Image<Bgr, byte> image = frame.ToImage<Bgr, byte>();
+
+                    Mat input = DnnInvoke.BlobFromImage(image, 1 / 255.0, swapRB: true);
+
+                    _net.SetInput(input);
+
+                    _net.Forward(output, _net.UnconnectedOutLayersNames);
+
+                    for (int i = 0; i < output.Size; i++)
                     {
-                        float[] row = Enumerable.Range(0, data.GetLength(1))
-                                      .Select(x => data[j, x])
-                                      .ToArray();
+                        var mat = output[i];
+                        float[,] data = (float[,])mat.GetData();
 
-                        float[] rowScore = row.Skip(5).ToArray();
-                        int classId = rowScore.ToList().IndexOf(rowScore.Max());
-                        float confidence = rowScore[classId];
-
-                        if (confidence > 0.8f)
+                        for (int j = 0; j < data.GetLength(0); j++)
                         {
-                            int centerX = (int)(row[0] * frame.Width);
-                            int centerY = (int)(row[1] * frame.Height);
-                            int boxWidth = (int)(row[2] * frame.Width);
-                            int boxHeight = (int)(row[3] * frame.Height);
+                            float[] row = Enumerable.Range(0, data.GetLength(1))
+                                          .Select(x => data[j, x])
+                                          .ToArray();
 
-                            int x = (int)(centerX - (boxWidth / 2));
-                            int y = (int)(centerY - (boxHeight / 2));
+                            float[] rowScore = row.Skip(5).ToArray();
+                            int classId = rowScore.ToList().IndexOf(rowScore.Max());
+                            float confidence = rowScore[classId];
 
-                            boxes.Push(new System.Drawing.Rectangle[] { new System.Drawing.Rectangle(x, y, boxWidth, boxHeight) });
-                            indices.Push(new int[] { classId });
-                            scores.Push(new float[] { confidence });
+                            if (confidence > 0.8f)
+                            {
+                                int centerX = (int)(row[0] * frame.Width);
+                                int centerY = (int)(row[1] * frame.Height);
+                                int boxWidth = (int)(row[2] * frame.Width);
+                                int boxHeight = (int)(row[3] * frame.Height);
+
+                                int x = (int)(centerX - (boxWidth / 2));
+                                int y = (int)(centerY - (boxHeight / 2));
+
+                                boxes.Push(new System.Drawing.Rectangle[] { new System.Drawing.Rectangle(x, y, boxWidth, boxHeight) });
+                                indices.Push(new int[] { classId });
+                                scores.Push(new float[] { confidence });
+                            }
                         }
                     }
-                }
 
-                int[] bestIndex = DnnInvoke.NMSBoxes(boxes.ToArray(), scores.ToArray(), .8f, .8f);
+                    int[] bestIndex = DnnInvoke.NMSBoxes(boxes.ToArray(), scores.ToArray(), .8f, .8f);
 
-                Image<Bgr, byte> frameOut = frame.ToImage<Bgr, byte>();
+                    Image<Bgr, byte> frameOut = frame.ToImage<Bgr, byte>();
 
-                for (int i = 0; i < bestIndex.Length; i++)
-                {
-                    int index = bestIndex[i];
-                    var box = boxes[index];
-                    CvInvoke.Rectangle(frameOut, box, new MCvScalar(255, 255, 255), 1);
-                    CvInvoke.PutText(
-                        frameOut, 
-                        _classLabels[indices[index]], 
-                        new System.Drawing.Point(box.X, box.Y - 20),
-                        Emgu.CV.CvEnum.FontFace.HersheyPlain, 
-                        1.0, 
-                        new MCvScalar(255, 255, 255), 2);
-                }
+                    for (int i = 0; i < bestIndex.Length; i++)
+                    {
+                        int index = bestIndex[i];
+                        var box = boxes[index];
+                        CvInvoke.Rectangle(frameOut, box, new MCvScalar(255, 255, 255), 1);
+                        CvInvoke.PutText(
+                            frameOut,
+                            _classLabels[indices[index]],
+                            new System.Drawing.Point(box.X, box.Y - 20),
+                            Emgu.CV.CvEnum.FontFace.HersheyPlain,
+                            1.0,
+                            new MCvScalar(255, 255, 255), 2);
+                    }
 
-                CvInvoke.Resize(frameOut, frameOut, new System.Drawing.Size(0, 0), 4, 4);
+                    CvInvoke.Resize(frameOut, frameOut, new System.Drawing.Size(0, 0), 4, 4);
 
-                updateFrameAction(frameOut.ToJpegData());
+                    updateFrameAction(frameOut.ToJpegData());
 
-                if (CvInvoke.WaitKey(1) == 27)
-                {
-                    break;
+                    if (CvInvoke.WaitKey(1) == 27)
+                    {
+                        break;
+                    }
                 }
             }
         }
@@ -133,7 +133,6 @@ namespace AtaraxiaAI.Business.Services
         public void Deactivate()
         {
             IsRunning = false;
-            _vc = null;
         }
     }
 }

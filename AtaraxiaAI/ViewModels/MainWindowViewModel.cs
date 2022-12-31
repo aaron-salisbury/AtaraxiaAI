@@ -56,6 +56,14 @@ namespace AtaraxiaAI.ViewModels
             LogMessages = string.Concat(AI.Log.InMemorySink.Messages);
         }
 
+        /// <summary>
+        /// Release resources.
+        /// </summary>
+        public void Shutdown()
+        {
+            AI.DeactivateVision();
+        }
+
         private void OnVisionClick()
         {
             if (AI.VisionEngine.IsActive())

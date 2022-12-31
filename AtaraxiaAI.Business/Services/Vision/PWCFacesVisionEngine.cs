@@ -11,7 +11,6 @@ namespace AtaraxiaAI.Business.Services
         public bool IsRunning { get; set; }
 
         private CascadeClassifier _faceCascade;
-        private VideoCapture _vc;
 
         public PWCFacesVisionEngine()
         {
@@ -24,34 +23,35 @@ namespace AtaraxiaAI.Business.Services
         {
             AI.Log.Logger.Information("Initializing vision engine.");
 
-            _vc = new VideoCapture(0, VideoCapture.API.DShow);
-
             Mat frame = new Mat();
             Mat frameGray = new Mat();
 
             IsRunning = true;
-            while (IsRunning)
+            using (VideoCapture vc = new VideoCapture(0, VideoCapture.API.DShow))
             {
-                _vc.Read(frame);
-
-                CvInvoke.CvtColor(frame, frameGray, Emgu.CV.CvEnum.ColorConversion.Bgr2Gray);
-
-                Rectangle[] faces = _faceCascade.DetectMultiScale(frameGray, 1.3, 5);
-
-                if (faces != null && faces.Length> 0)
+                while (IsRunning)
                 {
-                    CvInvoke.Rectangle(frame, faces[0], new MCvScalar(0, 255, 0), 2);
-                }
+                    vc.Read(frame);
 
-                Image<Bgr, byte> frameImage = frame.ToImage<Bgr, byte>();
-                updateFrameAction(frameImage.ToJpegData());
+                    CvInvoke.CvtColor(frame, frameGray, Emgu.CV.CvEnum.ColorConversion.Bgr2Gray);
+
+                    Rectangle[] faces = _faceCascade.DetectMultiScale(frameGray, 1.3, 5);
+
+                    if (faces != null && faces.Length > 0)
+                    {
+                        CvInvoke.Rectangle(frame, faces[0], new MCvScalar(0, 255, 0), 2);
+                    }
+
+                    Image<Bgr, byte> frameImage = frame.ToImage<Bgr, byte>();
+                    updateFrameAction(frameImage.ToJpegData());
+                }
             }
+            
         }
 
         public void Deactivate()
         {
             IsRunning = false;
-            _vc = null;
         }
     }
 }
