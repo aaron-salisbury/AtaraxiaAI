@@ -14,13 +14,13 @@
 		<!-- Regular styles. -->
 		<Style Selector="#MainMenu Button">
 			<Setter Property="Background" Value="Transparent"/>
-			<Setter Property="Height" Value="38"/>
-			<Setter Property="CornerRadius" Value="0"/>
+			<Setter Property="Height" Value="30"/>
+			<Setter Property="CornerRadius" Value="5"/>
 			<Setter Property="VerticalContentAlignment" Value="Center"/>
 		</Style>
 		<Style Selector="#MainMenu material|MaterialIcon">
-			<Setter Property="Height" Value="17"/>
-			<Setter Property="Width" Value="17"/>
+			<Setter Property="Height" Value="18"/>
+			<Setter Property="Width" Value="18"/>
 			<Setter Property="Foreground">
 				<Setter.Value>
 					<SolidColorBrush Opacity="0.7" Color="White" />
@@ -44,10 +44,9 @@
 		<Border Grid.Row="0" IsHitTestVisible="False" />
 		
 		<Grid Grid.Row="1" IsHitTestVisible="True" ColumnDefinitions="Auto, *">
-
 			<!-- Main Menu -->
 			<Grid  Grid.Column="0" RowDefinitions="Auto, *">
-				<Border Name="MainMenu" Margin="5,0,0,0" CornerRadius="7" Background="Red">
+				<Border Name="MainMenu" Margin="7,0,0,0" CornerRadius="7">
 					<Border.Background>
 						<SolidColorBrush Opacity="0.4" Color="Black" />
 					</Border.Background>
