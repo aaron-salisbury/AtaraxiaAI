@@ -2,6 +2,7 @@ using AtaraxiaAI.Business;
 using Avalonia.Media.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Material.Icons;
 using System.Collections.Specialized;
 using System.IO;
 using System.Threading.Tasks;
@@ -13,12 +14,10 @@ namespace AtaraxiaAI.ViewModels
         private const string BKGRND_GIF_PATH = "avares://AtaraxiaAI/Base/Assets/278284.gif";
 
         public RelayCommand OnVisionClickCommand { get; }
+        public RelayCommand OnLogsClickCommand { get; }
+        public RelayCommand OnSettingsClickCommand { get; }
 
-        [ObservableProperty]
-        private object _greeting;
-
-        [ObservableProperty]
-        private AI _aI;
+        public AI AI { get; set; }
 
         [ObservableProperty]
         private string _logMessages;
@@ -27,28 +26,44 @@ namespace AtaraxiaAI.ViewModels
         private string? _backgroundGifPath;
 
         [ObservableProperty]
-        private bool _isBackgroundGifVisible;
-
-        [ObservableProperty]
         private IBitmap? _visionFrame;
 
         [ObservableProperty]
-        private bool _isVisionFrameVisible;
+        private bool _showVisionFeed;
+
+        [ObservableProperty]
+        private MaterialIconKind _visionIcon;
+
+        [ObservableProperty]
+        private bool _showLogs;
+
+        [ObservableProperty]
+        private MaterialIconKind _logsIcon;
+
+        [ObservableProperty]
+        private bool _showSettings;
+
+        [ObservableProperty]
+        private MaterialIconKind _settingsIcon;
 
         public MainWindowViewModel()
         {
-            _isBackgroundGifVisible = true;
-            _isVisionFrameVisible = false;
-            _greeting = "Welcome to Avalonia!";
+            _showVisionFeed = false;
+            _visionIcon = MaterialIconKind.EyeOff;
+            _showLogs = false;
+            _logsIcon = MaterialIconKind.ClipboardTextOff;
+            _showSettings = false;
+            _settingsIcon = MaterialIconKind.CogOff;
             _backgroundGifPath = BKGRND_GIF_PATH;
             _logMessages = string.Empty;
-            _aI = new AI();
-
-            AI.Log.InMemorySink.Messages.CollectionChanged += new NotifyCollectionChangedEventHandler(OnLogsPropertyChanged);
-
-            Task.Run(() => { AI.Initiate().Wait(); });
 
             OnVisionClickCommand = new RelayCommand(() => OnVisionClick());
+            OnLogsClickCommand = new RelayCommand(() => OnLogsClick());
+            OnSettingsClickCommand = new RelayCommand(() => OnSettingsClick());
+
+            AI = new AI();
+            AI.Log.InMemorySink.Messages.CollectionChanged += new NotifyCollectionChangedEventHandler(OnLogsPropertyChanged);
+            Task.Run(() => { AI.Initiate().Wait(); });
         }
 
         private void OnLogsPropertyChanged(object? sender, NotifyCollectionChangedEventArgs e)
@@ -65,15 +80,43 @@ namespace AtaraxiaAI.ViewModels
         {
             if (AI.IsVisionEngineRunning)
             {
+                VisionIcon = MaterialIconKind.EyeOff;
                 AI.DeactivateVision();
-                _isBackgroundGifVisible = true;
-                _isVisionFrameVisible = false;
+                ShowVisionFeed = false;
             }
             else
             {
+                VisionIcon = MaterialIconKind.Eye;
                 AI.ActivateVision(SetVisionFrame);
-                _isBackgroundGifVisible = false;
-                _isVisionFrameVisible = true; //TODO: This isnt working for some reason.
+                ShowVisionFeed = true;
+            }
+        }
+
+        private void OnLogsClick()
+        {
+            if (ShowLogs)
+            {
+                LogsIcon = MaterialIconKind.ClipboardTextOff;
+                ShowLogs = false;
+            }
+            else
+            {
+                LogsIcon = MaterialIconKind.ClipboardText;
+                ShowLogs = true;
+            }
+        }
+
+        private void OnSettingsClick()
+        {
+            if (ShowSettings)
+            {
+                SettingsIcon = MaterialIconKind.CogOff;
+                ShowSettings = false;
+            }
+            else
+            {
+                SettingsIcon = MaterialIconKind.Cog;
+                ShowSettings = true;
             }
         }
 

@@ -2,7 +2,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-		xmlns:vm="using:AtaraxiaAI.ViewModels"
+		xmlns:material="using:Material.Icons.Avalonia"
 		xmlns:gif="using:AvaloniaGif"
         mc:Ignorable="d" d:DesignWidth="960" d:DesignHeight="540"
         x:Class="AtaraxiaAI.Views.MainWindow"
@@ -10,12 +10,28 @@
         Title="AtaraxiaAI"
 		ExtendClientAreaToDecorationsHint="True">
 
-	<Grid>
-		<Grid.RowDefinitions>
-			<RowDefinition Height="30" />
-			<RowDefinition Height="*" />
-		</Grid.RowDefinitions>
+	<Window.Styles>
+		<!-- Regular styles. -->
+		<Style Selector="#MainMenu Button">
+			<Setter Property="Background" Value="Transparent"/>
+			<Setter Property="Height" Value="38"/>
+			<Setter Property="CornerRadius" Value="0"/>
+			<Setter Property="VerticalContentAlignment" Value="Center"/>
+		</Style>
+		<Style Selector="#MainMenu material|MaterialIcon">
+			<Setter Property="Height" Value="17"/>
+			<Setter Property="Width" Value="17"/>
+			<Setter Property="Foreground">
+				<Setter.Value>
+					<SolidColorBrush Opacity="0.7" Color="White" />
+				</Setter.Value>
+			</Setter>
+		</Style>
+	</Window.Styles>
 
+	<Grid RowDefinitions="30, *">
+
+		<!-- GIF Background -->
 		<gif:GifImage ZIndex="-2"
 					  Grid.RowSpan="2"
 					  Stretch="Fill"
@@ -23,44 +39,61 @@
 					  SourceUriRaw="{Binding Path=BackgroundGifPath}"
 					  IsVisible="{Binding IsBackgroundGifVisible}"
 					  IsHitTestVisible="False" />
-
-		<Image ZIndex="-1"
-			   Grid.RowSpan="2"
-			   Stretch="Fill"
-			   Source="{Binding VisionFrame}" 
-			   IsVisible="{Binding IsVisionFrameVisible}"
-			   IsHitTestVisible="False" />
 		
+		<!-- Window Drag Area -->
 		<Border Grid.Row="0" IsHitTestVisible="False" />
+		
+		<Grid Grid.Row="1" IsHitTestVisible="True" ColumnDefinitions="Auto, *">
 
-		<Grid Grid.Row="1" IsHitTestVisible="True">
-			<Grid.RowDefinitions>
-				<RowDefinition Height=".25*" />
-				<RowDefinition Height="*" />
-			</Grid.RowDefinitions>
+			<!-- Main Menu -->
+			<Grid  Grid.Column="0" RowDefinitions="Auto, *">
+				<Border Name="MainMenu" Margin="5,0,0,0" CornerRadius="7" Background="Red">
+					<Border.Background>
+						<SolidColorBrush Opacity="0.4" Color="Black" />
+					</Border.Background>
+					
+					<!-- Icons: https://materialdesignicons.com/ -->
+					<StackPanel Margin="5">
+						<Button Command="{Binding OnVisionClickCommand}">
+							<material:MaterialIcon Kind="{Binding VisionIcon}" />
+						</Button>
 
+						<Button Command="{Binding OnLogsClickCommand}">
+							<material:MaterialIcon Kind="{Binding LogsIcon}" />
+						</Button>
 
+						<Button Command="{Binding OnSettingsClickCommand}">
+							<material:MaterialIcon Kind="{Binding SettingsIcon}" />
+						</Button>
+					</StackPanel>
+				</Border>
+			</Grid>
 
+			<!-- Content Area -->
+			<Border Grid.Column="1" Padding="15">
+				<Grid ColumnDefinitions="2*, 1*">
 
+					<!-- Logs -->
+					<ScrollViewer Grid.Column="0" Name="LogsScrollViewer" IsVisible="{Binding ShowLogs}">
+						<TextBlock Margin="5"
+								   Name="LogsTextBlock"
+								   Background="Transparent"
+								   FontFamily="/Base/Assets/Fonts/ProFontWindows.ttf#ProFontWindows"
+								   Text="{Binding LogMessages}" />
+					</ScrollViewer>
 
-			<ScrollViewer Grid.Row="0" Name="LogsScrollViewer">
-				<TextBlock Margin="5"
-						   Name="LogsTextBlock"
-						   Background="Transparent"
-						   FontFamily="/Base/Assets/Fonts/ProFontWindows.ttf#ProFontWindows"
-						   Text="{Binding LogMessages}" />
-			</ScrollViewer>
+					<Grid Grid.Column="1" RowDefinitions="1*, 3*">
 
-			<StackPanel Grid.Row="1" VerticalAlignment="Center" IsHitTestVisible="True">
-				<Button Content="Vision"
-						Command="{Binding OnVisionClickCommand}"
-						HorizontalAlignment="Center" />
+						<!-- Vision Feed -->
+						<Image Grid.Row="0"
+							   Stretch="Fill"
+							   Source="{Binding VisionFrame}"
+							   IsVisible="{Binding ShowVisionFeed}" />
 
-				<TextBlock FontFamily="/Base/Assets/Fonts/heavy_data.ttf#Heavy Data"
-					FontSize="24"
-					Text="{Binding Greeting}"
-					HorizontalAlignment="Center" />
-			</StackPanel>
+						<!-- TODO: Settings-->
+					</Grid>
+				</Grid>
+			</Border>
 		</Grid>
 	</Grid>
 </Window>

@@ -22,7 +22,7 @@ namespace AtaraxiaAI.Business.Skills
                     !string.IsNullOrEmpty(joke.Delivery))
                 {
                     speechEngine.Speak(joke.Setup);
-                    Thread.Sleep(2000);
+                    Thread.Sleep(1000);
                     speechEngine.Speak(joke.Delivery);
                 }
             }

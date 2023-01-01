@@ -4,6 +4,7 @@ Look into https://wit.ai/
 Logs should write to the UI like they're being typed, scroll up automatically, and clear on their own.
 Maybe use something like this to talk through the microphone: https://vb-audio.com/Cable/index.htm
 Virtual UI keyboard, maybe like https://github.com/AvaloniaUI/Avalonia/issues/6775
+Do something real with SystemDotSpeechRecognizer, instead of loading fake Grammar and saving it every time.
 
 New Skills:
   https://api.adviceslip.com/?ref=apilist.fun

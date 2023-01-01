@@ -4,6 +4,7 @@ using Serilog.Formatting;
 using Serilog.Formatting.Display;
 using System;
 using System.Collections.Concurrent;
+using System.Collections.ObjectModel;
 using System.Globalization;
 using System.IO;
 
@@ -19,7 +20,7 @@ namespace AtaraxiaAI.Business.Base
             get { return _events; }
         }
 
-        public TimeOutObservableCollection<string> Messages { get; set; }
+        public ObservableCollection<string> Messages { get; set; }
 
         //private string _messages;
         //public string Messages
@@ -64,7 +65,7 @@ namespace AtaraxiaAI.Business.Base
             string formattedLogEvent = renderSpace.ToString();
             Events.Enqueue(formattedLogEvent);
 
-            Messages.AddTimeOut(formattedLogEvent);
+            Messages.Add(formattedLogEvent);
         }
     }
 }
