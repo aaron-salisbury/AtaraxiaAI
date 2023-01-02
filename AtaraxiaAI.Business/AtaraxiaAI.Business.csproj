@@ -9,7 +9,6 @@
   </ItemGroup>
 	
   <ItemGroup>
-    <Folder Include="Base\" />
     <Folder Include="Services\IPAddress\" />
     <Folder Include="Services\Location\" />
     <Folder Include="Services\Speech\TextToSpeech\" />

@@ -6,6 +6,7 @@ using Desktop.Robot;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using static AtaraxiaAI.Business.Base.Enums;
 
 namespace AtaraxiaAI.Business
 {
@@ -19,6 +20,8 @@ namespace AtaraxiaAI.Business
         public OrchestrationEngine CommandLoop { get; set; }
         public SpeechEngine SpeechEngine { get; set; }
         public IVisionEngine VisionEngine { get; set; }
+
+        private Action<byte[]> _updateFrameAction;
 
         public bool IsVisionEngineRunning
         {
@@ -70,6 +73,7 @@ namespace AtaraxiaAI.Business
 
         public void ActivateVision(Action<byte[]> updateFrameAction)
         {
+            _updateFrameAction = updateFrameAction;
             _visionTokenSource = new CancellationTokenSource();
             _visionTask = Task.Run(() => VisionEngine.Initiate(updateFrameAction, _visionTokenSource.Token));
         }
@@ -82,6 +86,20 @@ namespace AtaraxiaAI.Business
                 _visionTokenSource.Dispose();
                 _visionTask.Wait();
                 _visionTask.Dispose();
+            }
+        }
+
+        public void UpdateCaptureSource(CaptureSources captureSource)
+        {
+            if (VisionEngine is PWCYoloVisionEngine yoloEngine)
+            {
+                yoloEngine.CaptureSource = captureSource;
+            }
+
+            if (IsVisionEngineRunning)
+            {
+                DeactivateVision();
+                ActivateVision(_updateFrameAction);
             }
         }
 

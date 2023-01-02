@@ -3,6 +3,7 @@ using Avalonia.Media.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Material.Icons;
+using Microsoft.Extensions.DependencyInjection;
 using System.Collections.Specialized;
 using System.IO;
 using System.Threading.Tasks;
@@ -46,6 +47,9 @@ namespace AtaraxiaAI.ViewModels
         [ObservableProperty]
         private MaterialIconKind _settingsIcon;
 
+        [ObservableProperty]
+        private object? _settingsView;
+
         public MainWindowViewModel()
         {
             _showVisionFeed = false;
@@ -56,6 +60,7 @@ namespace AtaraxiaAI.ViewModels
             _settingsIcon = MaterialIconKind.CogOff;
             _backgroundGifPath = BKGRND_GIF_PATH;
             _logMessages = string.Empty;
+            _settingsView = App.Current?.Services?.GetService<SettingsViewModel>();
 
             OnVisionClickCommand = new RelayCommand(() => OnVisionClick());
             OnLogsClickCommand = new RelayCommand(() => OnLogsClick());

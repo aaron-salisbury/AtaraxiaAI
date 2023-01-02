@@ -10,33 +10,22 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
+using static AtaraxiaAI.Business.Base.Enums;
 
 namespace AtaraxiaAI.Business.Services
 {
     // https://youtu.be/v7_g1Zoapkg
     internal class PWCYoloVisionEngine : IVisionEngine
     {
-        public enum CaptureSources
-        {
-            Webcam,
-            Screen
-        }
+        public CaptureSources CaptureSource { get; set; }
 
-        private CaptureSources _captureSource;
         private Net _net;
         private string[] _classLabels;
-        private IScreenCaptureService _screenCaptureService;
-        private Display _captureDisplay;
 
         public PWCYoloVisionEngine(CaptureSources captureSource = CaptureSources.Screen)
         {
-            _captureSource = captureSource;
+            CaptureSource = captureSource;
             _classLabels = CRUD.ReadCOCOClassLabels();
-
-            _screenCaptureService = new DX11ScreenCaptureService();
-            IEnumerable<GraphicsCard> graphicsCards = _screenCaptureService.GetGraphicsCards();
-            IEnumerable<Display> displays = _screenCaptureService.GetDisplays(graphicsCards.First());
-            _captureDisplay = displays.First();
 
             try
             {
@@ -56,18 +45,23 @@ namespace AtaraxiaAI.Business.Services
         {
             AI.Log.Logger.Information("Initializing vision engine.");
 
-            if (_captureSource == CaptureSources.Screen)
+            if (CaptureSource == CaptureSources.Screen)
             {
-                using IScreenCapture screenCapture = _screenCaptureService.GetScreenCapture(_captureDisplay);
+                IScreenCaptureService screenCaptureService = new DX11ScreenCaptureService();
+                IEnumerable<GraphicsCard> graphicsCards = screenCaptureService.GetGraphicsCards();
+                IEnumerable<Display> displays = screenCaptureService.GetDisplays(graphicsCards.First());
+                Display captureDisplay = displays.First();
+
+                using IScreenCapture screenCapture = screenCaptureService.GetScreenCapture(captureDisplay);
                 CaptureZone captureZone = screenCapture.RegisterCaptureZone(0, 0, screenCapture.Display.Width, screenCapture.Display.Height);
                 while (!cancelToken.IsCancellationRequested)
                 {
-                    Image<Bgra, byte> frame = GetScreenImage(screenCapture, captureZone).Result;
+                    Image<Bgra, byte> frame = GetScreenshotImage(screenCapture, captureZone).Result;
 
-                    updateFrameAction(ProcessFrame(frame.Mat).ToJpegData());
+                    updateFrameAction(ProcessFrame(frame.Mat));
                 }
             }
-            else if (_captureSource == CaptureSources.Webcam)
+            else if (CaptureSource == CaptureSources.Webcam)
             {
                 Mat frame = new Mat();
 
@@ -76,12 +70,12 @@ namespace AtaraxiaAI.Business.Services
                 {
                     vc.Read(frame);
 
-                    updateFrameAction(ProcessFrame(frame).ToJpegData());
+                    updateFrameAction(ProcessFrame(frame));
                 }
             }
         }
 
-        private Image<Bgr, byte> ProcessFrame(Mat frame)
+        private byte[] ProcessFrame(Mat frame)
         {
             CvInvoke.Resize(frame, frame, new System.Drawing.Size(0, 0), .4, .4);
 
@@ -149,10 +143,10 @@ namespace AtaraxiaAI.Business.Services
 
             CvInvoke.Resize(frameOut, frameOut, new System.Drawing.Size(0, 0), 4, 4);
 
-            return frameOut;
+            return frameOut.ToJpegData();
         }
 
-        private static Task<Image<Bgra, byte>> GetScreenImage(IScreenCapture screenCapture, CaptureZone captureZone)
+        private static Task<Image<Bgra, byte>> GetScreenshotImage(IScreenCapture screenCapture, CaptureZone captureZone)
         {
             return Task.Run(() =>
             {
