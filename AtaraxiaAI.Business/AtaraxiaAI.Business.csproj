@@ -10,12 +10,10 @@
 	
   <ItemGroup>
     <Folder Include="Base\" />
-    <Folder Include="Componants\" />
     <Folder Include="Services\IPAddress\" />
     <Folder Include="Services\Location\" />
     <Folder Include="Services\Speech\TextToSpeech\" />
     <Folder Include="Services\Speech\SpeechToText\" />
-    <Folder Include="Services\Vision\" />
     <Folder Include="Skills\Domains\" />
   </ItemGroup>
 
@@ -26,6 +24,7 @@
     <PackageReference Include="Google.Cloud.TextToSpeech.V1" Version="2.5.0" />
     <PackageReference Include="Microsoft.CognitiveServices.Speech" Version="1.24.2" />
     <PackageReference Include="NAudio" Version="1.10.0" />
+    <PackageReference Include="ScreenCapture.NET" Version="1.2.0" />
     <PackageReference Include="Serilog" Version="2.12.0" />
     <PackageReference Include="System.Management" Version="7.0.0" />
     <PackageReference Include="System.Speech" Version="7.0.0" />
