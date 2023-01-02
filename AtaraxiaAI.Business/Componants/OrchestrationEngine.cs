@@ -1,9 +1,18 @@
 ﻿using AtaraxiaAI.Business.Skills;
+using System;
+using System.Linq;
 
 namespace AtaraxiaAI.Business.Componants
 {
     public class OrchestrationEngine
     {
+        public const string WAKE_COMMAND = "Hey Robot";
+
+        public enum SkillMessages
+        {
+            TellMeAJoke
+        }
+
         private SpeechEngine _speechEngine;
 
         public OrchestrationEngine(SpeechEngine speechEngine)
@@ -13,14 +22,25 @@ namespace AtaraxiaAI.Business.Componants
 
         public void Heard(string message)
         {
-            AI.Log.Logger.Information($"Heard \"{message}\".");
-
-            switch (message.ToLower())
+            if (!string.IsNullOrEmpty(message))
             {
-                case "tell me a joke":
-                    JokeSkill.TellMeAJoke(_speechEngine);
-                    break;
+                AI.Log.Logger.Information($"Heard \"{message}\".");
+
+                if (message.StartsWith(WAKE_COMMAND))
+                {
+                    int wakeIndex = message.IndexOf(WAKE_COMMAND);
+                    string command = message.Remove(wakeIndex, WAKE_COMMAND.Length);
+                    string cleanCommand = string.Concat(command.Where(c => !char.IsWhiteSpace(c)));
+
+                    switch ((SkillMessages)Enum.Parse(typeof(SkillMessages), cleanCommand))
+                    {
+                        case SkillMessages.TellMeAJoke:
+                            JokeSkill.TellMeAJoke(_speechEngine);
+                            break;
+                    }
+                }
             }
+
         }
     }
 }

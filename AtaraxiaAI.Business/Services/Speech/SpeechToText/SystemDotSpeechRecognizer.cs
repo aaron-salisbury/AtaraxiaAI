@@ -1,7 +1,5 @@
-﻿using AtaraxiaAI.Data;
-using AtaraxiaAI.Data.Domains;
+﻿using AtaraxiaAI.Business.Componants;
 using System;
-using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -11,56 +9,71 @@ namespace AtaraxiaAI.Business.Services
 {
     public class SystemDotSpeechRecognizer : IRecognizer
     {
+        private CultureInfo _culture;
         private SpeechRecognitionEngine _recognizer;
 
-        public SystemDotSpeechRecognizer(CultureInfo culture = null, Grammar recognitionGrammar = null)
+        public SystemDotSpeechRecognizer(CultureInfo culture = null)
         {
-            if (IsAvailable())
-            {
-                culture = culture ?? new CultureInfo("en-US");
+            _culture = culture ?? new CultureInfo("en-US");
 
-                _recognizer = new SpeechRecognitionEngine(culture);
-                _recognizer.SetInputToDefaultAudioDevice();
-                _recognizer.LoadGrammarAsync(recognitionGrammar ?? GetDefaultGrammar());
-            }
+            BuildRecognizer();
         }
 
         public bool IsAvailable() => RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
 
         public void Listen(Action<string> speechRecognizedAction)
         {
-            if (IsAvailable())
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
                 AI.Log.Logger.Information("Beginning to listen.");
 
-                _recognizer.SpeechRecognized += (s, e) => { speechRecognizedAction(e.Result.Text); };
+                if (_recognizer == null)
+                {
+                    BuildRecognizer();
+                }
+
+                _recognizer.SpeechRecognized += (s, e) => { speechRecognizedAction(RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? e.Result.Text : string.Empty); };
 
                 _recognizer.RecognizeAsync(RecognizeMode.Multiple);
             }
         }
 
-        public static Grammar GetDefaultGrammar()
+        public void Shutdown()
         {
-            Choices choices = new Choices();
-            List<GrammarChoice> grammarChoices = CRUD.CreateDefaultGrammarChoices(AI.Log.Logger);
-
-            foreach (GrammarChoice choice in grammarChoices.Where(gc => gc.Classification == null))
+            if (_recognizer != null && RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                choices.Add(choice.Word);
+                _recognizer.RecognizeAsyncStop();
+                _recognizer.Dispose();
+                _recognizer = null;
+            }
+        }
+
+        private void BuildRecognizer()
+        {
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                _recognizer = new SpeechRecognitionEngine(_culture);
+                _recognizer.SetInputToDefaultAudioDevice();
+                _recognizer.LoadGrammarAsync(GetWakeSkillsGrammar());
+            }
+        }
+
+        private static Grammar GetWakeSkillsGrammar()
+        {
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                GrammarBuilder wakeSkills = new GrammarBuilder(OrchestrationEngine.WAKE_COMMAND);
+
+                wakeSkills.Append(new Choices(
+                    Enum.GetValues(typeof(OrchestrationEngine.SkillMessages))
+                        .Cast<OrchestrationEngine.SkillMessages>()
+                        .Select(e => string.Concat(e.ToString().Select(x => char.IsUpper(x) ? " " + x : x.ToString())).TrimStart(' '))
+                        .ToArray()));
+
+                return new Grammar(wakeSkills);
             }
 
-            foreach (GrammarChoice verbChoice in grammarChoices.Where(gc => gc.Classification == GrammarChoice.Classifications.Verb))
-            {
-                foreach (GrammarChoice placeChoice in grammarChoices.Where(gc => gc.NounType == GrammarChoice.NounTypes.Place))
-                {
-                    choices.Add($"{verbChoice.Word} {placeChoice.Word}");
-                }
-            }
-
-            GrammarBuilder gb = new GrammarBuilder();
-            gb.Append(choices);
-
-            return new Grammar(gb);
+            return null;
         }
     }
 }

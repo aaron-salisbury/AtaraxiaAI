@@ -26,7 +26,7 @@ namespace AtaraxiaAI.Business.Componants
 
         public void Speak(string message)
         {
-            if (Synthesizer != null) // Could be null if cloud services are maxed and not running on Windows.
+            if (Synthesizer != null) // Could be null if cloud services are maxed and also not running on Windows.
             {
                 if (!Synthesizer.SpeakAsync(message).Result)
                 {

@@ -6,6 +6,8 @@ namespace AtaraxiaAI.Business.Services
     {
         bool IsAvailable();
 
+        void Shutdown();
+
         void Listen(Action<string> speechRecognizedAction);
     }
 }

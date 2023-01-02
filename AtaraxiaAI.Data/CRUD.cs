@@ -1,5 +1,4 @@
 ﻿using AtaraxiaAI.Data.Base;
-using AtaraxiaAI.Data.Domains;
 using Serilog;
 using System;
 using System.Collections.Generic;
@@ -14,33 +13,6 @@ namespace AtaraxiaAI.Data
         private const string YOLO_CFG_PATH = "AtaraxiaAI.Data.Detection.PWCVision.yolov3-tiny.cfg";
         private const string YOLO_WEIGHTS_PATH = "AtaraxiaAI.Data.Detection.PWCVision.yolov3-tiny.weights";
         private const string COCO_NAMES_PATH = "AtaraxiaAI.Data.Detection.PWCVision.coco.names";
-
-        public static List<GrammarChoice> CreateDefaultGrammarChoices(ILogger logger)
-        {
-            List<GrammarChoice> grammarChoices = new List<GrammarChoice>
-            {
-                new GrammarChoice() { Word = "Hey Robot" },
-                new GrammarChoice() { Word = "tell me a joke" },
-                new GrammarChoice() { Word = "tell me a dark joke" },
-                new GrammarChoice() { Word = "Move", Classification = GrammarChoice.Classifications.Verb },
-                new GrammarChoice() { Word = "Go", Classification = GrammarChoice.Classifications.Verb },
-                new GrammarChoice() { Word = "Start", Classification = GrammarChoice.Classifications.Verb },
-                new GrammarChoice() { Word = "Stop", Classification = GrammarChoice.Classifications.Verb },
-                new GrammarChoice() { Word = "Get", Classification = GrammarChoice.Classifications.Verb },
-                new GrammarChoice() { Word = "Left", Classification = GrammarChoice.Classifications.Noun, NounType = GrammarChoice.NounTypes.Place },
-                new GrammarChoice() { Word = "Right", Classification = GrammarChoice.Classifications.Noun, NounType = GrammarChoice.NounTypes.Place },
-                new GrammarChoice() { Word = "Up", Classification = GrammarChoice.Classifications.Noun, NounType = GrammarChoice.NounTypes.Place },
-                new GrammarChoice() { Word = "Down", Classification = GrammarChoice.Classifications.Noun, NounType = GrammarChoice.NounTypes.Place },
-                new GrammarChoice() { Word = "North", Classification = GrammarChoice.Classifications.Noun, NounType = GrammarChoice.NounTypes.Place },
-                new GrammarChoice() { Word = "South", Classification = GrammarChoice.Classifications.Noun, NounType = GrammarChoice.NounTypes.Place },
-                new GrammarChoice() { Word = "West", Classification = GrammarChoice.Classifications.Noun, NounType = GrammarChoice.NounTypes.Place },
-                new GrammarChoice() { Word = "East", Classification = GrammarChoice.Classifications.Noun, NounType = GrammarChoice.NounTypes.Place }
-            };
-
-            Task.Run(() => { UpdateDomainsAsync<GrammarChoice>(grammarChoices, logger).Wait(); });
-
-            return grammarChoices;
-        }
 
         public static async Task<T> ReadDataAsync<T>(ILogger logger)
         {

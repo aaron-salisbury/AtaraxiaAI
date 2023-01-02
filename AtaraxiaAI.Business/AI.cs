@@ -109,6 +109,7 @@ namespace AtaraxiaAI.Business
         public void Shutdown()
         {
             DeactivateVision();
+            SpeechEngine.Recognizer.Shutdown();
         }
     }
 }
