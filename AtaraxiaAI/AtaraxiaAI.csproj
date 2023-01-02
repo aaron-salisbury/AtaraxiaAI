@@ -44,4 +44,7 @@
     <Folder Include="Base\Controls\AvaloniaGif\Decoding\" />
     <Folder Include="Base\Controls\AvaloniaGif\Extensions\" />
   </ItemGroup>
+  <ItemGroup>
+    <UpToDateCheckInput Remove="Views\LogsView.axaml" />
+  </ItemGroup>
 </Project>

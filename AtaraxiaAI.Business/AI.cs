@@ -108,8 +108,14 @@ namespace AtaraxiaAI.Business
         /// </summary>
         public void Shutdown()
         {
+            Log.Logger.Information("Shutting down ...");
+
             DeactivateVision();
-            SpeechEngine.Recognizer.Shutdown();
+
+            if (SpeechEngine != null)
+            {
+                SpeechEngine.Recognizer.Shutdown();
+            }
         }
     }
 }

@@ -4,13 +4,13 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace AtaraxiaAI.Views
 {
-    public partial class SettingsView : UserControl
+    public partial class LogsView : UserControl
     {
-        public SettingsView()
+        public LogsView()
         {
             InitializeComponent();
 
-            DataContext = App.Current?.Services?.GetService<SettingsViewModel>();
+            DataContext = App.Current?.Services?.GetService<LogsViewModel>();
         }
     }
 }

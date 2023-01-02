@@ -4,7 +4,6 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Material.Icons;
 using Microsoft.Extensions.DependencyInjection;
-using System.Collections.Specialized;
 using System.IO;
 using System.Threading.Tasks;
 
@@ -19,9 +18,6 @@ namespace AtaraxiaAI.ViewModels
         public RelayCommand OnSettingsClickCommand { get; }
 
         public AI AI { get; set; }
-
-        [ObservableProperty]
-        private string _logMessages;
 
         [ObservableProperty]
         private string? _backgroundGifPath;
@@ -42,6 +38,9 @@ namespace AtaraxiaAI.ViewModels
         private MaterialIconKind _logsIcon;
 
         [ObservableProperty]
+        private object? _logsView;
+
+        [ObservableProperty]
         private bool _showSettings;
 
         [ObservableProperty]
@@ -52,28 +51,23 @@ namespace AtaraxiaAI.ViewModels
 
         public MainWindowViewModel()
         {
+            AI = new AI();
+
             _showVisionFeed = false;
             _visionIcon = MaterialIconKind.EyeOff;
             _showLogs = false;
             _logsIcon = MaterialIconKind.ClipboardTextOff;
+            _logsView = App.Current?.Services?.GetService<LogsViewModel>();
             _showSettings = false;
             _settingsIcon = MaterialIconKind.CogOff;
-            _backgroundGifPath = BKGRND_GIF_PATH;
-            _logMessages = string.Empty;
             _settingsView = App.Current?.Services?.GetService<SettingsViewModel>();
+            _backgroundGifPath = BKGRND_GIF_PATH;
 
             OnVisionClickCommand = new RelayCommand(() => OnVisionClick());
             OnLogsClickCommand = new RelayCommand(() => OnLogsClick());
             OnSettingsClickCommand = new RelayCommand(() => OnSettingsClick());
 
-            AI = new AI();
-            AI.Log.InMemorySink.Messages.CollectionChanged += new NotifyCollectionChangedEventHandler(OnLogsPropertyChanged);
             Task.Run(() => { AI.Initiate().Wait(); });
-        }
-
-        private void OnLogsPropertyChanged(object? sender, NotifyCollectionChangedEventArgs e)
-        {
-            LogMessages = string.Concat(AI.Log.InMemorySink.Messages);
         }
 
         public void Shutdown()
