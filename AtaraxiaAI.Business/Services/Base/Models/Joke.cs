@@ -25,5 +25,14 @@ namespace AtaraxiaAI.Business.Services.Base.Models
                 Delivery = sv443Joke.Delivery
             };
         }
+
+        internal static Joke ConvertFromCanHazDadJoke(CanHazDadJoke canHazDadJoke)
+        {
+            return new Joke
+            {
+                JokeType = JokeTypes.Single,
+                JokeLine = canHazDadJoke.Joke
+            };
+        }
     }
 }

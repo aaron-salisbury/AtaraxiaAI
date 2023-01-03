@@ -14,7 +14,7 @@ namespace AtaraxiaAI.Business.Services
             if (!string.IsNullOrEmpty(iPAddress))
             {
                 string url = string.Format(URL_FORMAT, iPAddress);
-                string json = await WebRequests.SendGETAsync(url, AI.Log.Logger);
+                string json = await WebRequests.SendHTTPJsonRequestAsync(url, AI.Log.Logger);
 
                 if (!string.IsNullOrEmpty(json))
                 {

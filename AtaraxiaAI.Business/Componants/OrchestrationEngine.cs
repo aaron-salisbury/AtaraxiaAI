@@ -10,7 +10,8 @@ namespace AtaraxiaAI.Business.Componants
 
         internal enum SkillMessages
         {
-            TellMeAJoke
+            TellMeAJoke,
+            TellMeADadJoke
         }
 
         private SpeechEngine _speechEngine;
@@ -36,6 +37,9 @@ namespace AtaraxiaAI.Business.Componants
                     {
                         case SkillMessages.TellMeAJoke:
                             JokeSkill.TellMeAJoke(_speechEngine);
+                            break;
+                        case SkillMessages.TellMeADadJoke:
+                            JokeSkill.TellMeADadJoke(_speechEngine);
                             break;
                         default:
                             AGISkill.AnswerMe(command, _speechEngine);

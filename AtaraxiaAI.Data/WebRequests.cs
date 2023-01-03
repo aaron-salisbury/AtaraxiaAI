@@ -11,12 +11,19 @@ namespace AtaraxiaAI.Data
 {
     public class WebRequests
     {
-        public static async Task<string> SendGETAsync(string curlURL, ILogger logger, Dictionary<string, string> requestHeaders = null)
+        public static async Task<string> SendHTTPJsonRequestAsync(string url, ILogger logger, StringContent content = null, Dictionary<string, string> requestHeaders = null, string httpMethod = "GET", string userAgent = null)
         {
             try
             {
                 using (HttpClient client = new HttpClient())
                 {
+                    client.DefaultRequestHeaders.Add("Accept", "application/json");
+
+                    if (userAgent != null)
+                    {
+                        client.DefaultRequestHeaders.UserAgent.ParseAdd(userAgent);
+                    }
+
                     if (requestHeaders != null)
                     {
                         foreach (KeyValuePair<string, string> valueByName in requestHeaders)
@@ -25,41 +32,27 @@ namespace AtaraxiaAI.Data
                         }
                     }
 
-                    return await client.GetStringAsync(curlURL);
-                }
-            }
-            catch (Exception e)
-            {
-                logger.Error($"GET request failed: {e.Message}");
-                return null;
-            }
-        }
-
-        public static async Task<string> SendPOSTAsync(string curlURL, ILogger logger, StringContent content, Dictionary<string, string> requestHeaders = null)
-        {
-            try
-            {
-                using (HttpClient client = new HttpClient())
-                using (HttpRequestMessage request = new HttpRequestMessage(new HttpMethod("POST"), curlURL))
-                {
-                    request.Content = content;
-                    request.Content.Headers.ContentType = MediaTypeHeaderValue.Parse("application/json");
-
-                    if (requestHeaders != null)
+                    if (content == null && string.Equals(httpMethod, "GET", StringComparison.OrdinalIgnoreCase))
                     {
-                        foreach (KeyValuePair<string, string> valueByName in requestHeaders)
-                        {
-                            request.Headers.TryAddWithoutValidation(valueByName.Key, valueByName.Value);
-                        }
+                        return await client.GetStringAsync(url);
                     }
 
-                    HttpResponseMessage response = await client.SendAsync(request);
-                    return await response.Content.ReadAsStringAsync();
+                    using (HttpRequestMessage request = new HttpRequestMessage(new HttpMethod(httpMethod), url))
+                    {
+                        if (content != null)
+                        {
+                            request.Content = content;
+                            request.Content.Headers.ContentType = MediaTypeHeaderValue.Parse("application/json");
+                        }
+
+                        HttpResponseMessage response = await client.SendAsync(request);
+                        return await response.Content.ReadAsStringAsync();
+                    }
                 }
             }
             catch (Exception e)
             {
-                logger.Error($"POST request failed: {e.Message}");
+                logger.Error($"HTTP request failed: {e.Message}");
                 return null;
             }
         }

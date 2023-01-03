@@ -65,7 +65,7 @@ namespace AtaraxiaAI.Business.Services
                 url += $"?type={JokeType.ToString().ToLower()}";
             }
 
-            string json = await WebRequests.SendGETAsync(url, AI.Log.Logger);
+            string json = await WebRequests.SendHTTPJsonRequestAsync(url, AI.Log.Logger);
 
             if (!string.IsNullOrEmpty(json))
             {

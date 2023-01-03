@@ -35,11 +35,12 @@ namespace AtaraxiaAI.Business.Services
                 $"\n  \"max_tokens\": {_tokens},\n  \"top_p\": {TOP_P}," + 
                 $"\n  \"frequency_penalty\": {FREQ_PENALTY},\n  \"presence_penalty\": {PRESENCE_PENALTY}\n}}");
 
-            string json = await WebRequests.SendPOSTAsync(
-                string.Format(URL_FORMAT, ENGINE),
+            string json = await WebRequests.SendHTTPJsonRequestAsync(
+                string.Format(URL_FORMAT, ENGINE), 
                 AI.Log.Logger,
-                content,
-                new Dictionary<string, string>() { { "Authorization", $"Bearer {API_KEY}" } });
+                content: content,
+                requestHeaders: new Dictionary<string, string>() { { "Authorization", $"Bearer {API_KEY}" } },
+                httpMethod: "POST");
 
             if (!string.IsNullOrEmpty(json))
             {

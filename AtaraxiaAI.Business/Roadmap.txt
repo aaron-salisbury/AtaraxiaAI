@@ -11,4 +11,3 @@ New Skills:
   https://www.boredapi.com/
   https://fungenerators.com/api/facts/?ref=apilist.fun
   https://evilinsult.com/api/
-  https://icanhazdadjoke.com/api
