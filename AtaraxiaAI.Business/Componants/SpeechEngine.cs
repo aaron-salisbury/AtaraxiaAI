@@ -3,6 +3,7 @@ using NAudio.Wave;
 using System.Globalization;
 using System.IO;
 using System.Threading;
+using static AtaraxiaAI.Business.Base.Enums;
 
 namespace AtaraxiaAI.Business.Componants
 {
@@ -36,26 +37,50 @@ namespace AtaraxiaAI.Business.Componants
             }
         }
 
-        private void SetSynthesizer()
+        internal void SetSynthesizer(SpeechSynthesizers? synthesizerRequest = null)
         {
-            ISynthesizer googleSynthesizer = new GoogleCloudSynthesizer(_culture);
-            if (googleSynthesizer.IsAvailable())
+            if (synthesizerRequest != null)
             {
-                Synthesizer = googleSynthesizer;
+                ISynthesizer requestedSynthesizer = null;
+
+                switch (synthesizerRequest.Value)
+                {
+                    case SpeechSynthesizers.Google:
+                        requestedSynthesizer = new GoogleCloudSynthesizer(_culture);
+                        break;
+                    case SpeechSynthesizers.Microsoft:
+                        requestedSynthesizer = new MicrosoftAzureSynthesizer(_culture);
+                        break;
+                    case SpeechSynthesizers.SystemDotSpeech:
+                        requestedSynthesizer = new SystemDotSpeechSynthesizer(_culture);
+                        break;
+                }
+
+                if (requestedSynthesizer != null && requestedSynthesizer.IsAvailable())
+                {
+                    Synthesizer = requestedSynthesizer;
+                    return;
+                }
+            }
+
+            ISynthesizer synthesizer = new GoogleCloudSynthesizer(_culture);
+            if (synthesizer.IsAvailable())
+            {
+                Synthesizer = synthesizer;
                 return;
             }
 
-            ISynthesizer microsoftSynthesizer = new MicrosoftAzureSynthesizer(_culture);
-            if (microsoftSynthesizer.IsAvailable())
+            synthesizer = new MicrosoftAzureSynthesizer(_culture);
+            if (synthesizer.IsAvailable())
             {
-                Synthesizer = microsoftSynthesizer;
+                Synthesizer = synthesizer;
                 return;
             }
 
-            ISynthesizer systemDotSpeechSynthesizer = new SystemDotSpeechSynthesizer(_culture);
-            if (systemDotSpeechSynthesizer.IsAvailable())
+            synthesizer = new SystemDotSpeechSynthesizer(_culture);
+            if (synthesizer.IsAvailable())
             {
-                Synthesizer = systemDotSpeechSynthesizer;
+                Synthesizer = synthesizer;
                 return;
             }
 

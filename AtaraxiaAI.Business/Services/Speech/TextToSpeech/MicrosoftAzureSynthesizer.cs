@@ -32,7 +32,7 @@ namespace AtaraxiaAI.Business.Services
                 culture = culture ?? new CultureInfo("en-US");
                 if (string.Equals(culture.Name, "en-US", StringComparison.OrdinalIgnoreCase))
                 {
-                    _speechConfig.SpeechSynthesisVoiceName = "en-US-JasonNeural";
+                    _speechConfig.SpeechSynthesisVoiceName = "en-US-CoraNeural";
                 }
                 else
                 {
@@ -41,7 +41,7 @@ namespace AtaraxiaAI.Business.Services
                     {
                         // Voices: https://learn.microsoft.com/en-us/azure/cognitive-services/speech-service/language-support?tabs=stt-tts#prebuilt-neural-voices
                         _speechConfig.SpeechSynthesisVoiceName = voicesResult.Voices
-                            .Where(v => v.Gender == SynthesisVoiceGender.Male && string.Equals(v.Locale, culture.Name, StringComparison.OrdinalIgnoreCase))
+                            .Where(v => v.Gender == SynthesisVoiceGender.Female && string.Equals(v.Locale, culture.Name, StringComparison.OrdinalIgnoreCase))
                             .First()
                             .ShortName;
                     }

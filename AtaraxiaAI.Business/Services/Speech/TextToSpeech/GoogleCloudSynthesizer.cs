@@ -35,8 +35,8 @@ namespace AtaraxiaAI.Business.Services
                 _voice = new VoiceSelectionParams
                 {
                     LanguageCode = culture.Name,
-                    SsmlGender = SsmlVoiceGender.Male,
-                    Name = string.Equals(culture.Name, "en-US", StringComparison.OrdinalIgnoreCase) ? "en-US-Neural2-J" : null
+                    SsmlGender = SsmlVoiceGender.Female,
+                    Name = string.Equals(culture.Name, "en-US", StringComparison.OrdinalIgnoreCase) ? "en-US-Neural2-F" : null
                 };
 
                 // Credentials: https://cloud.google.com/docs/authentication/provide-credentials-adc#local-dev

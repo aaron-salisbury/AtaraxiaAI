@@ -9,5 +9,12 @@ namespace AtaraxiaAI.Business.Base
             Webcam,
             Screen
         }
+
+        public enum SpeechSynthesizers
+        {
+            Google,
+            Microsoft,
+            SystemDotSpeech
+        }
     }
 }
