@@ -37,10 +37,15 @@ namespace AtaraxiaAI.Business.Componants
                         case SkillMessages.TellMeAJoke:
                             JokeSkill.TellMeAJoke(_speechEngine);
                             break;
+                        default:
+                            if (GPT3Skill.IsAvailable())
+                            {
+                                GPT3Skill.AnswerMe(command, _speechEngine).Wait();
+                            }
+                            break;
                     }
                 }
             }
-
         }
     }
 }

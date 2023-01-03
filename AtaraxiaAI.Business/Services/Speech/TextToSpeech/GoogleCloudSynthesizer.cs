@@ -57,7 +57,7 @@ namespace AtaraxiaAI.Business.Services
 
                 try
                 {
-                    SpeechEngine.StreamSpeechToSpeaker(response.AudioContent.ToByteArray());
+                    SpeechEngine.StreamSpeechToSpeaker(response.AudioContent.ToByteArray(), message);
                     isSuccessful = true;
                 }
                 catch (Exception e)

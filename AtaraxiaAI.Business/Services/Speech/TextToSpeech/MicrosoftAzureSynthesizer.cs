@@ -74,7 +74,7 @@ namespace AtaraxiaAI.Business.Services
                         }
                         else
                         {
-                            SpeechEngine.StreamSpeechToSpeaker(result.AudioData);
+                            SpeechEngine.StreamSpeechToSpeaker(result.AudioData, message);
                             isSuccessful = true;
                         }
                     }

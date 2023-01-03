@@ -63,7 +63,7 @@ namespace AtaraxiaAI.Business.Componants
             AI.Log.Logger.Warning("No speech synthesizer is currently available.");
         }
 
-        public static void StreamSpeechToSpeaker(byte[] speechWavBuffer)
+        public static void StreamSpeechToSpeaker(byte[] speechWavBuffer, string originalText = null)
         {
             using (var ms = new MemoryStream(speechWavBuffer))
             using (var rdr = new WaveFileReader(ms))
@@ -71,6 +71,11 @@ namespace AtaraxiaAI.Business.Componants
             using (var provider = new BlockAlignReductionStream(wavStream))
             using (var waveOut = new WaveOutEvent())
             {
+                if (!string.IsNullOrEmpty(originalText))
+                {
+                    AI.Log.Logger.Information($"*Speaking* \"{originalText}\"");
+                }
+
                 waveOut.Init(provider);
                 waveOut.Play();
                 while (waveOut.PlaybackState == PlaybackState.Playing)

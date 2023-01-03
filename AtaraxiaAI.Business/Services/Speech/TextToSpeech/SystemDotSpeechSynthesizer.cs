@@ -35,7 +35,7 @@ namespace AtaraxiaAI.Business.Services
                     promptBuilder.EndVoice();
 
                     synthesizer.Speak(promptBuilder);
-                    SpeechEngine.StreamSpeechToSpeaker(audioStream.GetBuffer());
+                    SpeechEngine.StreamSpeechToSpeaker(audioStream.GetBuffer(), message);
                     isSuccessful = true;
                 }
             }

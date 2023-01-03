@@ -53,7 +53,7 @@ namespace AtaraxiaAI.Business.Skills
                 url += $"?type={jokeType.ToString().ToLower()}";
             }
 
-            string json = await WebRequests.GetCurlResponseAsync(url, AI.Log.Logger);
+            string json = await WebRequests.SendGETAsync(url, AI.Log.Logger);
 
             if (!string.IsNullOrEmpty(json))
             {
