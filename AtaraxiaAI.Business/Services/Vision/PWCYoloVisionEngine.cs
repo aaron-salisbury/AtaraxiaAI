@@ -45,6 +45,9 @@ namespace AtaraxiaAI.Business.Services
         {
             AI.Log.Logger.Information("Initializing vision engine.");
 
+            double? widthFactor = null;
+            double? heightFactor = null;
+
             if (CaptureSource == CaptureSources.Screen)
             {
                 IScreenCaptureService screenCaptureService = new DX11ScreenCaptureService();
@@ -58,7 +61,13 @@ namespace AtaraxiaAI.Business.Services
                 {
                     Image<Bgra, byte> frame = GetScreenshotImage(screenCapture, captureZone).Result;
 
-                    updateFrameAction(ProcessFrame(frame.Mat));
+                    if (widthFactor == null || heightFactor == null)
+                    {
+                        widthFactor = GetFactor(frame.Mat.Width);
+                        heightFactor = GetFactor(frame.Mat.Height);
+                    }
+
+                    updateFrameAction(ProcessFrame(frame.Mat, widthFactor.Value, heightFactor.Value));
                 }
             }
             else if (CaptureSource == CaptureSources.Webcam)
@@ -70,16 +79,38 @@ namespace AtaraxiaAI.Business.Services
                 {
                     vc.Read(frame);
 
-                    updateFrameAction(ProcessFrame(frame));
+                    if (widthFactor == null || heightFactor == null)
+                    {
+                        widthFactor = GetFactor(frame.Width);
+                        heightFactor = GetFactor(frame.Height);
+                    }
+
+                    updateFrameAction(ProcessFrame(frame, widthFactor.Value, heightFactor.Value));
                 }
             }
         }
 
-        private byte[] ProcessFrame(Mat frame)
+        // Scale factor must result in dimensions where 32 is a multiple.
+        private double GetFactor(int dimensionValue)
         {
-            CvInvoke.Resize(frame, frame, new System.Drawing.Size(0, 0), .4, .4);
+            const double defaultFactor = 0.4d;
 
-            VectorOfMat output = new VectorOfMat(); // TODO: This was never getting newed?
+            if ((dimensionValue * defaultFactor) % 32 == 0)
+            {
+                return defaultFactor;
+            }
+            else
+            {
+                double result = (int)((dimensionValue * defaultFactor) / 32);
+                return (result * 32.0d) / dimensionValue;
+            }
+        }
+
+        private byte[] ProcessFrame(Mat frame, double widthFactor, double heightFactor)
+        {
+            CvInvoke.Resize(frame, frame, new System.Drawing.Size(0, 0), widthFactor, heightFactor);
+
+            VectorOfMat output = new VectorOfMat();
             VectorOfRect boxes = new VectorOfRect();
             VectorOfFloat scores = new VectorOfFloat();
             VectorOfInt indices = new VectorOfInt();
