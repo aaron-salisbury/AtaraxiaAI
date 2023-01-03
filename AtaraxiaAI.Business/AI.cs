@@ -4,6 +4,7 @@ using AtaraxiaAI.Business.Services;
 using AtaraxiaAI.Business.Services.Base.Models;
 using AtaraxiaAI.Data.Domains;
 using Desktop.Robot;
+using Serilog.Core;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -70,6 +71,8 @@ namespace AtaraxiaAI.Business
             SpeechEngine = new SpeechEngine();
             CommandLoop = new OrchestrationEngine(SpeechEngine);
             SpeechEngine.Recognizer.Listen(CommandLoop.Heard);
+
+            Data.CRUD.CreateModels(Log.Logger);
         }
 
         public void ActivateVision(Action<byte[]> updateFrameAction)

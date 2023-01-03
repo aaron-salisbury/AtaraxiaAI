@@ -3,6 +3,7 @@ using Serilog;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Reflection;
 using System.Threading.Tasks;
 
@@ -10,9 +11,30 @@ namespace AtaraxiaAI.Data
 {
     public static class CRUD
     {
-        private const string YOLO_CFG_PATH = "AtaraxiaAI.Data.Detection.PWCVision.yolov3-tiny.cfg";
-        private const string YOLO_WEIGHTS_PATH = "AtaraxiaAI.Data.Detection.PWCVision.yolov3-tiny.weights";
-        private const string COCO_NAMES_PATH = "AtaraxiaAI.Data.Detection.PWCVision.coco.names";
+        private const string HC_CLASSIFIER_CONTENT_PATH = "./Detection/Vision/HaarCascades/haarcascade_frontalface_default.xml";
+        private const string YOLO_CFG_CONTENT_PATH = "./Detection/Vision/YOLO/yolov3-tiny.cfg";
+        private const string YOLO_WEIGHTS_CONTENT_PATH = "./Detection/Vision/YOLO/yolov3-tiny.weights";
+        private const string COCO_NAMES_CONTENT_PATH = "./Detection/Vision/YOLO/coco.names";
+        private const string VOSK_CONTENT_DIRECTORY = "./Detection/Voice/Vosk/";
+        private const string VOSK_MODEL = "vosk-model-small-en-us-0.15";
+
+        /// <summary>
+        /// Extract zipped ML models as necessary.
+        /// </summary>
+        public static void CreateModels(ILogger logger)
+        {
+            if (!Directory.Exists(Path.Combine(VOSK_CONTENT_DIRECTORY, VOSK_MODEL)))
+            {
+                try
+                {
+                    ZipFile.ExtractToDirectory(Path.Combine(VOSK_CONTENT_DIRECTORY, $"{VOSK_MODEL}.zip"), VOSK_CONTENT_DIRECTORY);
+                }
+                catch (Exception e)
+                {
+                    logger.Error($"Failed to extract Vosk model: {e.Message}");
+                }
+            }
+        }
 
         public static async Task<T> ReadDataAsync<T>(ILogger logger)
         {
@@ -60,9 +82,19 @@ namespace AtaraxiaAI.Data
             return null;
         }
 
+        public static string ReadHaarCascadesClassifierFaceContentPath()
+        {
+            return HC_CLASSIFIER_CONTENT_PATH;
+        }
+
+        public static string ReadVoskModelContentPath()
+        {
+            return Path.Combine(VOSK_CONTENT_DIRECTORY, VOSK_MODEL);
+        }
+
         public static byte[] ReadYoloCFGBuffer()
         {
-            using (Stream stream = GetEmbeddedResourceStream(YOLO_CFG_PATH))
+            using (FileStream stream = File.OpenRead(YOLO_CFG_CONTENT_PATH))
             using (var memoryStream = new MemoryStream())
             {
                 stream.CopyTo(memoryStream);
@@ -73,7 +105,7 @@ namespace AtaraxiaAI.Data
 
         public static byte[] ReadYoloWeightsBuffer()
         {
-            using (Stream stream = GetEmbeddedResourceStream(YOLO_WEIGHTS_PATH))
+            using (FileStream stream = File.OpenRead(YOLO_WEIGHTS_CONTENT_PATH))
             using (var memoryStream = new MemoryStream())
             {
                 stream.CopyTo(memoryStream);
@@ -86,7 +118,7 @@ namespace AtaraxiaAI.Data
         {
             List<string> labels = new List<string>();
 
-            using (Stream stream = GetEmbeddedResourceStream(COCO_NAMES_PATH))
+            using (FileStream stream = File.OpenRead(COCO_NAMES_CONTENT_PATH))
             using (StreamReader streamReader = new StreamReader(stream))
             {
                 string line;

@@ -5,22 +5,36 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="Detection\PWCVision\coco.names" />
-    <None Remove="Detection\PWCVision\haarcascade_frontalface_default.xml" />
-    <None Remove="Detection\PWCVision\yolov3-tiny.cfg" />
-    <None Remove="Detection\PWCVision\yolov3-tiny.weights" />
+    <None Remove="Detection\Vision\YOLO\coco.names" />
+    <None Remove="Detection\Vision\YOLO\haarcascade_frontalface_default.xml" />
+    <None Remove="Detection\Vision\YOLO\yolov3-tiny.cfg" />
+    <None Remove="Detection\Vision\YOLO\yolov3-tiny.weights" />
+    <None Remove="Detection\Voice\Vosk\test.wav" />
+    <None Remove="Detection\Voice\Vosk\vosk-model-small-en-us-0.15.zip" />
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="Detection\PWCVision\haarcascade_frontalface_default.xml">
+    <Content Include="Detection\Vision\HaarCascades\haarcascade_frontalface_default.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Detection\Voice\Vosk\test.wav">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Detection\Voice\Vosk\vosk-model-small-en-us-0.15.zip">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="Detection\PWCVision\coco.names" />
-    <EmbeddedResource Include="Detection\PWCVision\yolov3-tiny.cfg" />
-    <EmbeddedResource Include="Detection\PWCVision\yolov3-tiny.weights" />
+    <Content Include="Detection\Vision\YOLO\coco.names">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Detection\Vision\YOLO\yolov3-tiny.cfg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Detection\Vision\YOLO\yolov3-tiny.weights">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
   <ItemGroup>

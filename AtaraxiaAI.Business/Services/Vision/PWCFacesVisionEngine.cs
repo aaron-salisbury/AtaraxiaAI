@@ -13,7 +13,7 @@ namespace AtaraxiaAI.Business.Services
 
         internal PWCFacesVisionEngine()
         {
-            _faceCascade = new CascadeClassifier("./Detection/PWCVision/haarcascade_frontalface_default.xml");
+            _faceCascade = new CascadeClassifier(Data.CRUD.ReadHaarCascadesClassifierFaceContentPath());
         }
 
         void IVisionEngine.Initiate(Action<byte[]> updateFrameAction, CancellationToken cancelToken)
