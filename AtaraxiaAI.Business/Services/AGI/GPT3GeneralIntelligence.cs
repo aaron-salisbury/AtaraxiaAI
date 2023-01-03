@@ -9,7 +9,7 @@ namespace AtaraxiaAI.Business.Services
     // Inspired by https://learnwithhasan.com/ai-writer-with-open-ai/
     internal class GPT3GeneralIntelligence : IGeneralIntelligence
     {
-        private const string API_KEY = "API_KEY"; //TODO: Apply your own key.
+        private const string API_KEY = null; //TODO: Apply your own key.
         private const string URL_FORMAT = "https://api.openai.com/v1/engines/{0}/completions"; // {0}Engine
         private const string ENGINE = "text-davinci-003";
         private const double TEMPERATURE = 0.7d;
@@ -24,7 +24,7 @@ namespace AtaraxiaAI.Business.Services
             _tokens = tokens;
         }
 
-        bool IGeneralIntelligence.IsAvailable() => false; //TODO: Flip when using real API key.
+        bool IGeneralIntelligence.IsAvailable() => !string.IsNullOrEmpty(API_KEY);
 
         async Task<string> IGeneralIntelligence.AnswerMe(string message)
         {

@@ -17,17 +17,17 @@ namespace AtaraxiaAI.Business.Services
     /// </summary>
     internal class MicrosoftAzureSynthesizer : ISynthesizer
     {
+        private const string API_KEY = null; //TODO: Apply your own key.
+        private const string REGION = null; //TODO: Your own subscription project region. https://learn.microsoft.com/en-us/azure/cognitive-services/speech-service/regions
         private const int FREE_LIMIT = 500000;
-        private const bool CREDENTIALS_SET = false; //TODO: Flip when using real credentials.
 
         private SpeechConfig _speechConfig;
 
         internal MicrosoftAzureSynthesizer(CultureInfo culture = null)
         {
-            if (AI.AppData.MicrosoftAzureSpeechToTextCharCount < FREE_LIMIT && CREDENTIALS_SET)
+            if (AI.AppData.MicrosoftAzureSpeechToTextCharCount < FREE_LIMIT && AreCredentialsSet())
             {
-                // Regions: https://learn.microsoft.com/en-us/azure/cognitive-services/speech-service/regions
-                _speechConfig = SpeechConfig.FromSubscription("YourSubscriptionKey", "YourServiceRegion"); //TODO: Add your key and region.
+                _speechConfig = SpeechConfig.FromSubscription(API_KEY, REGION);
 
                 culture = culture ?? new CultureInfo("en-US");
                 if (string.Equals(culture.Name, "en-US", StringComparison.OrdinalIgnoreCase))
@@ -49,7 +49,9 @@ namespace AtaraxiaAI.Business.Services
             }
         }
 
-        bool ISynthesizer.IsAvailable() => AI.AppData.MicrosoftAzureSpeechToTextCharCount < FREE_LIMIT && CREDENTIALS_SET;
+        private bool AreCredentialsSet() => !string.IsNullOrEmpty(API_KEY) && !string.IsNullOrEmpty(REGION);
+
+        bool ISynthesizer.IsAvailable() => AI.AppData.MicrosoftAzureSpeechToTextCharCount < FREE_LIMIT && AreCredentialsSet();
 
         async Task<bool> ISynthesizer.SpeakAsync(string message)
         {
