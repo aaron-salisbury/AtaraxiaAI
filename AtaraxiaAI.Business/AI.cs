@@ -1,6 +1,7 @@
 ﻿using AtaraxiaAI.Business.Base;
 using AtaraxiaAI.Business.Componants;
 using AtaraxiaAI.Business.Services;
+using AtaraxiaAI.Business.Services.Base.Models;
 using AtaraxiaAI.Data.Domains;
 using Desktop.Robot;
 using System;
@@ -63,8 +64,8 @@ namespace AtaraxiaAI.Business
             Peripherals = new Robot { AutoDelay = 250 };
 
             IIPLocationService locationService = new IPAPIIPLocationService();
-            Data.Domains.Location location = await locationService.GetLocationByIPAsync(SystemInfo.IPAddress);
-            Log.Logger.Information($"Location: {location.City}, {location.Region} {location.Zip}");
+            Location location = await locationService.GetLocationByIPAsync(SystemInfo.IPAddress);
+            Log.Logger.Information(location.ToString());
 
             SpeechEngine = new SpeechEngine();
             CommandLoop = new OrchestrationEngine(SpeechEngine);

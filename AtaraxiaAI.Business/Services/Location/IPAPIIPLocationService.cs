@@ -1,6 +1,7 @@
-﻿using AtaraxiaAI.Data;
+﻿using AtaraxiaAI.Business.Services.Base.Domains;
+using AtaraxiaAI.Business.Services.Base.Models;
+using AtaraxiaAI.Data;
 using AtaraxiaAI.Data.Base;
-using AtaraxiaAI.Data.Domains;
 using System.Threading.Tasks;
 
 namespace AtaraxiaAI.Business.Services
@@ -18,11 +19,16 @@ namespace AtaraxiaAI.Business.Services
 
                 if (!string.IsNullOrEmpty(json))
                 {
-                    Location location = await Json.ToObjectAsync<Location>(json);
+                    IPAPILocation iPAPILocation = await Json.ToObjectAsync<IPAPILocation>(json);
 
-                    if (location != null)
+                    if (iPAPILocation != null)
                     {
-                        return location;
+                        return new Location
+                        {
+                            City = iPAPILocation.City,
+                            Region = iPAPILocation.Region,
+                            Zip = iPAPILocation.Zip
+                        };
                     }
                     else
                     {
