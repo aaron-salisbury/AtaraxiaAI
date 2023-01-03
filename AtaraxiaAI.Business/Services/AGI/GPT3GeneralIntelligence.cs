@@ -1,7 +1,8 @@
-﻿using AtaraxiaAI.Data;
-using Newtonsoft.Json;
+﻿using AtaraxiaAI.Business.Services.Base.Domains;
+using AtaraxiaAI.Data;
+using AtaraxiaAI.Data.Base;
 using System.Collections.Generic;
-using System.Net.Http;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace AtaraxiaAI.Business.Services
@@ -30,10 +31,10 @@ namespace AtaraxiaAI.Business.Services
         {
             string response = null;
 
-            StringContent content = new StringContent(
+            string content = 
                 $"{{\n  \"prompt\": \"{message}\",\n  \"temperature\": {TEMPERATURE}," + 
                 $"\n  \"max_tokens\": {_tokens},\n  \"top_p\": {TOP_P}," + 
-                $"\n  \"frequency_penalty\": {FREQ_PENALTY},\n  \"presence_penalty\": {PRESENCE_PENALTY}\n}}");
+                $"\n  \"frequency_penalty\": {FREQ_PENALTY},\n  \"presence_penalty\": {PRESENCE_PENALTY}\n}}";
 
             string json = await WebRequests.SendHTTPJsonRequestAsync(
                 string.Format(URL_FORMAT, ENGINE), 
@@ -44,11 +45,11 @@ namespace AtaraxiaAI.Business.Services
 
             if (!string.IsNullOrEmpty(json))
             {
-                //TODO: Deserialize to actual domain.
-                dynamic dynObj = JsonConvert.DeserializeObject(json);
-                if (dynObj != null)
+                GPT3Root gPT3Root = await Json.ToObjectAsync<GPT3Root>(json);
+
+                if (gPT3Root != null && gPT3Root.Choices.Count > 0)
                 {
-                    response = dynObj.choices[0].text.ToString();
+                    response = gPT3Root.Choices.First().Text;
                 }
             }
 

@@ -11,7 +11,7 @@ namespace AtaraxiaAI.Data
 {
     public class WebRequests
     {
-        public static async Task<string> SendHTTPJsonRequestAsync(string url, ILogger logger, StringContent content = null, Dictionary<string, string> requestHeaders = null, string httpMethod = "GET", string userAgent = null)
+        public static async Task<string> SendHTTPJsonRequestAsync(string url, ILogger logger, string content = null, Dictionary<string, string> requestHeaders = null, string httpMethod = "GET", string userAgent = null)
         {
             try
             {
@@ -32,16 +32,16 @@ namespace AtaraxiaAI.Data
                         }
                     }
 
-                    if (content == null && string.Equals(httpMethod, "GET", StringComparison.OrdinalIgnoreCase))
+                    if (string.IsNullOrEmpty(content) && string.Equals(httpMethod, "GET", StringComparison.OrdinalIgnoreCase))
                     {
                         return await client.GetStringAsync(url);
                     }
 
                     using (HttpRequestMessage request = new HttpRequestMessage(new HttpMethod(httpMethod), url))
                     {
-                        if (content != null)
+                        if (!string.IsNullOrEmpty(content))
                         {
-                            request.Content = content;
+                            request.Content = new StringContent(content);
                             request.Content.Headers.ContentType = MediaTypeHeaderValue.Parse("application/json");
                         }
 
