@@ -5,11 +5,11 @@ using System.Threading.Tasks;
 
 namespace AtaraxiaAI.Business.Services
 {
-    public class IPAPIIPLocationService : IIPLocationService
+    internal class IPAPIIPLocationService : IIPLocationService
     {
         private const string URL_FORMAT = "http://ip-api.com/json/{0}"; // {0}IP Address
 
-        public async Task<Location> GetLocationByIPAsync(string iPAddress)
+        async Task<Location> IIPLocationService.GetLocationByIPAsync(string iPAddress)
         {
             if (!string.IsNullOrEmpty(iPAddress))
             {

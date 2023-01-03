@@ -8,25 +8,25 @@ using System.Text;
 
 namespace AtaraxiaAI.Business.Componants
 {
-    public class SystemInfo
+    internal class SystemInfo
     {
-        public string OSDescription { get; set; }
-        public string OSArchitecture { get; set; }
-        public string IPAddress { get; set; }
-        public string Name { get; set; }
-        public string DeviceID { get; set; }
-        public string AdapterRAM { get; set; }
-        public string AdapterDACType { get; set; }
-        public string Monochrome { get; set; }
-        public string InstalledDisplayDrivers { get; set; }
-        public string DriverVersion { get; set; }
-        public string VideoProcessor { get; set; }
-        public string VideoArchitecture { get; set; }
-        public string VideoMemoryType { get; set; }
-        public string LogicalProcessors { get; set; }
-        public string Memory { get; set; }
+        internal string OSDescription { get; set; }
+        internal string OSArchitecture { get; set; }
+        internal string IPAddress { get; set; }
+        internal string Name { get; set; }
+        internal string DeviceID { get; set; }
+        internal string AdapterRAM { get; set; }
+        internal string AdapterDACType { get; set; }
+        internal string Monochrome { get; set; }
+        internal string InstalledDisplayDrivers { get; set; }
+        internal string DriverVersion { get; set; }
+        internal string VideoProcessor { get; set; }
+        internal string VideoArchitecture { get; set; }
+        internal string VideoMemoryType { get; set; }
+        internal string LogicalProcessors { get; set; }
+        internal string Memory { get; set; }
 
-        public SystemInfo()
+        internal SystemInfo()
         {
             OSDescription = RuntimeInformation.OSDescription;
             OSArchitecture = RuntimeInformation.OSArchitecture.ToString();
@@ -34,29 +34,32 @@ namespace AtaraxiaAI.Business.Componants
             IIPAddressService iPService = new IPIFYIPAddressService();
             IPAddress = iPService.GetPublicIPAddressAsync().Result;
 
-            using (var searcher = new ManagementObjectSearcher("SELECT * FROM Win32_VideoController"))
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                foreach (ManagementObject obj in searcher.Get().Cast<ManagementObject>())
+                using (var searcher = new ManagementObjectSearcher("SELECT * FROM Win32_VideoController"))
                 {
-                    Name = obj["Name"].ToString();
-                    DeviceID = obj["DeviceID"].ToString();
-                    AdapterRAM = obj["AdapterRAM"].ToString();
-                    AdapterDACType = obj["AdapterDACType"].ToString();
-                    Monochrome = obj["Monochrome"].ToString();
-                    InstalledDisplayDrivers = obj["InstalledDisplayDrivers"].ToString();
-                    DriverVersion = obj["DriverVersion"].ToString();
-                    VideoProcessor = obj["VideoProcessor"].ToString();
-                    VideoArchitecture = obj["VideoArchitecture"].ToString();
-                    VideoMemoryType = obj["VideoMemoryType"].ToString();
+                    foreach (ManagementObject obj in searcher.Get().Cast<ManagementObject>())
+                    {
+                        Name = obj["Name"].ToString();
+                        DeviceID = obj["DeviceID"].ToString();
+                        AdapterRAM = obj["AdapterRAM"].ToString();
+                        AdapterDACType = obj["AdapterDACType"].ToString();
+                        Monochrome = obj["Monochrome"].ToString();
+                        InstalledDisplayDrivers = obj["InstalledDisplayDrivers"].ToString();
+                        DriverVersion = obj["DriverVersion"].ToString();
+                        VideoProcessor = obj["VideoProcessor"].ToString();
+                        VideoArchitecture = obj["VideoArchitecture"].ToString();
+                        VideoMemoryType = obj["VideoMemoryType"].ToString();
+                    }
                 }
-            }
 
-            using (var searcher = new ManagementObjectSearcher("SELECT * FROM Win32_ComputerSystem"))
-            {
-                foreach (ManagementObject obj in searcher.Get().Cast<ManagementObject>())
+                using (var searcher = new ManagementObjectSearcher("SELECT * FROM Win32_ComputerSystem"))
                 {
-                    Memory = FormatBytes(Convert.ToInt64(obj["TotalPhysicalMemory"])).ToString();
-                    LogicalProcessors = obj["NumberOfLogicalProcessors"].ToString();
+                    foreach (ManagementObject obj in searcher.Get().Cast<ManagementObject>())
+                    {
+                        Memory = FormatBytes(Convert.ToInt64(obj["TotalPhysicalMemory"])).ToString();
+                        LogicalProcessors = obj["NumberOfLogicalProcessors"].ToString();
+                    }
                 }
             }
         }

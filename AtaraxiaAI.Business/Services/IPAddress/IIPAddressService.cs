@@ -2,7 +2,7 @@
 
 namespace AtaraxiaAI.Business.Services
 {
-    public interface IIPAddressService
+    internal interface IIPAddressService
     {
         Task<string> GetPublicIPAddressAsync();
     }

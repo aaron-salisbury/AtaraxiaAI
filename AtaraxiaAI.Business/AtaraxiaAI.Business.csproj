@@ -13,7 +13,6 @@
     <Folder Include="Services\Location\" />
     <Folder Include="Services\Speech\TextToSpeech\" />
     <Folder Include="Services\Speech\SpeechToText\" />
-    <Folder Include="Skills\Domains\" />
   </ItemGroup>
 
   <ItemGroup>

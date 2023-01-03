@@ -15,16 +15,16 @@ namespace AtaraxiaAI.Business.Services
     /// https://azure.microsoft.com/en-us/products/cognitive-services/text-to-speech/
     /// To use, you need your own Azure subscription key.
     /// </summary>
-    public class MicrosoftAzureSynthesizer : ISynthesizer
+    internal class MicrosoftAzureSynthesizer : ISynthesizer
     {
         private const int FREE_LIMIT = 500000;
         private const bool CREDENTIALS_SET = false; //TODO: Flip when using real credentials.
 
         private SpeechConfig _speechConfig;
 
-        public MicrosoftAzureSynthesizer(CultureInfo culture = null)
+        internal MicrosoftAzureSynthesizer(CultureInfo culture = null)
         {
-            if (IsAvailable())
+            if (AI.AppData.MicrosoftAzureSpeechToTextCharCount < FREE_LIMIT && CREDENTIALS_SET)
             {
                 // Regions: https://learn.microsoft.com/en-us/azure/cognitive-services/speech-service/regions
                 _speechConfig = SpeechConfig.FromSubscription("YourSubscriptionKey", "YourServiceRegion"); //TODO: Add your key and region.
@@ -49,9 +49,9 @@ namespace AtaraxiaAI.Business.Services
             }
         }
 
-        public bool IsAvailable() => AI.AppData.MicrosoftAzureSpeechToTextCharCount < FREE_LIMIT && CREDENTIALS_SET;
+        bool ISynthesizer.IsAvailable() => AI.AppData.MicrosoftAzureSpeechToTextCharCount < FREE_LIMIT && CREDENTIALS_SET;
 
-        public async Task<bool> SpeakAsync(string message)
+        async Task<bool> ISynthesizer.SpeakAsync(string message)
         {
             bool isSuccessful = false;
 

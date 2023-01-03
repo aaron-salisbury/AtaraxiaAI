@@ -2,10 +2,10 @@
 
 namespace AtaraxiaAI.Business.Services
 {
-    internal interface ISynthesizer
+    internal interface IGeneralIntelligence
     {
         bool IsAvailable();
 
-        Task<bool> SpeakAsync(string message);
+        Task<string> AnswerMe(string message);
     }
 }

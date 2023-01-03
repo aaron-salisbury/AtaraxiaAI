@@ -1,9 +1,9 @@
 ﻿using System;
 
-namespace AtaraxiaAI.Business.Skills.Domains
+namespace AtaraxiaAI.Business.Services.Base.Domains
 {
     [Serializable]
-    public class Sv443Joke
+    internal class Sv443Joke
     {
         public bool Error { get; set; }
         public string Category { get; set; }

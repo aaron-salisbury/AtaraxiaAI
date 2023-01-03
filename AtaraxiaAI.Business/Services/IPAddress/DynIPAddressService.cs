@@ -7,7 +7,7 @@ namespace AtaraxiaAI.Business.Services
     {
         private const string REQUEST_URL = "http://checkip.dyndns.org/";
 
-        public async Task<string> GetPublicIPAddressAsync()
+        async Task<string> IIPAddressService.GetPublicIPAddressAsync()
         {
             AI.Log.Logger.Information("Determining IP Address.");
 

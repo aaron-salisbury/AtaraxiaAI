@@ -6,14 +6,14 @@ using System.Threading;
 
 namespace AtaraxiaAI.Business.Componants
 {
-    public class SpeechEngine
+    internal class SpeechEngine
     {
-        public IRecognizer Recognizer { get; set; }
-        public ISynthesizer Synthesizer { get; set; }
+        internal IRecognizer Recognizer { get; set; }
+        internal ISynthesizer Synthesizer { get; set; }
 
         private CultureInfo _culture;
 
-        public SpeechEngine(CultureInfo culture = null)
+        internal SpeechEngine(CultureInfo culture = null)
         {
             AI.Log.Logger.Information("Initializing speech engine.");
 
@@ -24,7 +24,7 @@ namespace AtaraxiaAI.Business.Componants
             SetSynthesizer();
         }
 
-        public void Speak(string message)
+        internal void Speak(string message)
         {
             if (Synthesizer != null) // Could be null if cloud services are maxed and also not running on Windows.
             {
@@ -63,7 +63,7 @@ namespace AtaraxiaAI.Business.Componants
             AI.Log.Logger.Warning("No speech synthesizer is currently available.");
         }
 
-        public static void StreamSpeechToSpeaker(byte[] speechWavBuffer, string originalText = null)
+        internal static void StreamSpeechToSpeaker(byte[] speechWavBuffer, string originalText = null)
         {
             using (var ms = new MemoryStream(speechWavBuffer))
             using (var rdr = new WaveFileReader(ms))

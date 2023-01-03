@@ -16,7 +16,7 @@ namespace AtaraxiaAI.Business.Services
     ///     A Service Account for credential authetication.
     /// See https://codelabs.developers.google.com/codelabs/cloud-text-speech-csharp/
     /// </summary>
-    public class GoogleCloudSynthesizer : ISynthesizer
+    internal class GoogleCloudSynthesizer : ISynthesizer
     {
         private const int FREE_LIMIT = 1000000;
         private const bool CREDENTIALS_SET = false; //TODO: Flip when using real credentials.
@@ -25,9 +25,9 @@ namespace AtaraxiaAI.Business.Services
         private AudioConfig _audioConfig;
         private VoiceSelectionParams _voice;
 
-        public GoogleCloudSynthesizer(CultureInfo culture = null)
+        internal GoogleCloudSynthesizer(CultureInfo culture = null)
         {
-            if (IsAvailable())
+            if (AI.AppData.GoogleCloudSpeechToTextByteCount < FREE_LIMIT && CREDENTIALS_SET)
             {
                 culture = culture ?? new CultureInfo("en-US");
                 _audioConfig = new AudioConfig { AudioEncoding = AudioEncoding.Linear16 };
@@ -44,9 +44,9 @@ namespace AtaraxiaAI.Business.Services
             }
         }
 
-        public bool IsAvailable() => AI.AppData.GoogleCloudSpeechToTextByteCount < FREE_LIMIT && CREDENTIALS_SET;
+        bool ISynthesizer.IsAvailable() => AI.AppData.GoogleCloudSpeechToTextByteCount < FREE_LIMIT && CREDENTIALS_SET;
 
-        public async Task<bool> SpeakAsync(string message)
+        async Task<bool> ISynthesizer.SpeakAsync(string message)
         {
             bool isSuccessful = false;
 

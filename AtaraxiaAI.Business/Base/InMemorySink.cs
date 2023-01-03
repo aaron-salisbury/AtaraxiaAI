@@ -10,7 +10,7 @@ using System.IO;
 
 namespace AtaraxiaAI.Business.Base
 {
-    public class InMemorySink : ObservableObject, ILogEventSink
+    public class InMemorySink : ILogEventSink
     {
         readonly ITextFormatter _textFormatter = new MessageTemplateTextFormatter("{Timestamp:HH:mm:ss} {Level:u3} | {Message:lj}{NewLine}{Exception}", CultureInfo.InvariantCulture);
 
@@ -53,7 +53,7 @@ namespace AtaraxiaAI.Business.Base
         public InMemorySink()
         {
             _events = new ConcurrentQueue<string>();
-            Messages = new TimeOutObservableCollection<string>();
+            Messages = new ObservableCollection<string>();
         }
 
         public void Emit(LogEvent logEvent)

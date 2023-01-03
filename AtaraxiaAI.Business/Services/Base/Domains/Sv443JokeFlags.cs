@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace AtaraxiaAI.Business.Skills.Domains
+namespace AtaraxiaAI.Business.Services.Base.Domains
 {
     [Serializable]
-    public class Sv443JokeFlags
+    internal class Sv443JokeFlags
     {
         public bool NSFW { get; set; }
         public bool Religious { get; set; }
@@ -13,7 +13,7 @@ namespace AtaraxiaAI.Business.Skills.Domains
         public bool Sexist { get; set; }
         public bool Explicit { get; set; }
 
-        public string GetBlacklistParams()
+        internal string GetBlacklistParams()
         {
             List<string> bps = new List<string>();
 
@@ -27,7 +27,7 @@ namespace AtaraxiaAI.Business.Skills.Domains
             return string.Join(",", bps);
         }
 
-        public static Sv443JokeFlags BuildSafeFlags()
+        internal static Sv443JokeFlags BuildSafeFlags()
         {
             return new Sv443JokeFlags
             {

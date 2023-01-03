@@ -7,22 +7,22 @@ using System.Threading.Tasks;
 
 namespace AtaraxiaAI.Business.Services
 {
-    public class SystemDotSpeechSynthesizer : ISynthesizer
+    internal class SystemDotSpeechSynthesizer : ISynthesizer
     {
         private CultureInfo _culture;
 
-        public SystemDotSpeechSynthesizer(CultureInfo culture = null)
+        internal SystemDotSpeechSynthesizer(CultureInfo culture = null)
         {
             _culture = culture ?? new CultureInfo("en-US");
         }
 
-        public bool IsAvailable() => RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
+        bool ISynthesizer.IsAvailable() => RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
 
-        public Task<bool> SpeakAsync(string message)
+        Task<bool> ISynthesizer.SpeakAsync(string message)
         {
             bool isSuccessful = false;
 
-            if (IsAvailable())
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
                 using (var synthesizer = new SpeechSynthesizer())
                 using (var audioStream = new MemoryStream())

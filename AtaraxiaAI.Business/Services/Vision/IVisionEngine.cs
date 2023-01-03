@@ -3,7 +3,7 @@ using System.Threading;
 
 namespace AtaraxiaAI.Business.Services
 {
-    public interface IVisionEngine
+    internal interface IVisionEngine
     {
         void Initiate(Action<byte[]> updateFrameAction, CancellationToken cancelToken);
     }

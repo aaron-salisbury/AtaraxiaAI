@@ -2,7 +2,7 @@
 
 namespace AtaraxiaAI.Business.Services
 {
-    public interface IRecognizer
+    internal interface IRecognizer
     {
         bool IsAvailable();
 

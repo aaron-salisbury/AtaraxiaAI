@@ -7,7 +7,7 @@ namespace AtaraxiaAI.Business.Services
     {
         private const string REQUEST_URL = "https://api.ipify.org";
 
-        public async Task<string> GetPublicIPAddressAsync()
+        async Task<string> IIPAddressService.GetPublicIPAddressAsync()
         {
             string ip = null;
 

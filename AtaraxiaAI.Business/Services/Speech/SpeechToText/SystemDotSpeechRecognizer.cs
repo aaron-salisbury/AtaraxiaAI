@@ -7,21 +7,21 @@ using System.Speech.Recognition;
 
 namespace AtaraxiaAI.Business.Services
 {
-    public class SystemDotSpeechRecognizer : IRecognizer
+    internal class SystemDotSpeechRecognizer : IRecognizer
     {
         private CultureInfo _culture;
         private SpeechRecognitionEngine _recognizer;
 
-        public SystemDotSpeechRecognizer(CultureInfo culture = null)
+        internal SystemDotSpeechRecognizer(CultureInfo culture = null)
         {
             _culture = culture ?? new CultureInfo("en-US");
 
             BuildRecognizer();
         }
 
-        public bool IsAvailable() => RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
+        bool IRecognizer.IsAvailable() => RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
 
-        public void Listen(Action<string> speechRecognizedAction)
+        void IRecognizer.Listen(Action<string> speechRecognizedAction)
         {
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
@@ -38,7 +38,7 @@ namespace AtaraxiaAI.Business.Services
             }
         }
 
-        public void Shutdown()
+        void IRecognizer.Shutdown()
         {
             if (_recognizer != null && RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {

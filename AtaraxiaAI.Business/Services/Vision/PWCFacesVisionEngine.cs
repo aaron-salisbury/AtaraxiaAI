@@ -11,12 +11,12 @@ namespace AtaraxiaAI.Business.Services
     {
         private CascadeClassifier _faceCascade;
 
-        public PWCFacesVisionEngine()
+        internal PWCFacesVisionEngine()
         {
             _faceCascade = new CascadeClassifier("./Detection/PWCVision/haarcascade_frontalface_default.xml");
         }
 
-        public void Initiate(Action<byte[]> updateFrameAction, CancellationToken cancelToken)
+        void IVisionEngine.Initiate(Action<byte[]> updateFrameAction, CancellationToken cancelToken)
         {
             AI.Log.Logger.Information("Initializing vision engine.");
 

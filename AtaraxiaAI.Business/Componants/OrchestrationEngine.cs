@@ -4,23 +4,23 @@ using System.Linq;
 
 namespace AtaraxiaAI.Business.Componants
 {
-    public class OrchestrationEngine
+    internal class OrchestrationEngine
     {
         public const string WAKE_COMMAND = "Hey Robot";
 
-        public enum SkillMessages
+        internal enum SkillMessages
         {
             TellMeAJoke
         }
 
         private SpeechEngine _speechEngine;
 
-        public OrchestrationEngine(SpeechEngine speechEngine)
+        internal OrchestrationEngine(SpeechEngine speechEngine)
         {
             _speechEngine = speechEngine;
         }
 
-        public void Heard(string message)
+        internal void Heard(string message)
         {
             if (!string.IsNullOrEmpty(message))
             {
@@ -38,10 +38,7 @@ namespace AtaraxiaAI.Business.Componants
                             JokeSkill.TellMeAJoke(_speechEngine);
                             break;
                         default:
-                            if (GPT3Skill.IsAvailable())
-                            {
-                                GPT3Skill.AnswerMe(command, _speechEngine).Wait();
-                            }
+                            AGISkill.AnswerMe(command, _speechEngine);
                             break;
                     }
                 }

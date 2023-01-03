@@ -17,12 +17,12 @@ namespace AtaraxiaAI.Business.Services
     // https://youtu.be/v7_g1Zoapkg
     internal class PWCYoloVisionEngine : IVisionEngine
     {
-        public CaptureSources CaptureSource { get; set; }
+        internal CaptureSources CaptureSource { get; set; }
 
         private Net _net;
         private string[] _classLabels;
 
-        public PWCYoloVisionEngine(CaptureSources captureSource = CaptureSources.Screen)
+        internal PWCYoloVisionEngine(CaptureSources captureSource = CaptureSources.Screen)
         {
             CaptureSource = captureSource;
             _classLabels = CRUD.ReadCOCOClassLabels();
@@ -41,7 +41,7 @@ namespace AtaraxiaAI.Business.Services
             }
         }
 
-        public void Initiate(Action<byte[]> updateFrameAction, CancellationToken cancelToken)
+        void IVisionEngine.Initiate(Action<byte[]> updateFrameAction, CancellationToken cancelToken)
         {
             AI.Log.Logger.Information("Initializing vision engine.");
 

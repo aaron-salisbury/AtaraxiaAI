@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 
 namespace AtaraxiaAI.Business.Services
 {
-    public interface IIPLocationService
+    internal interface IIPLocationService
     {
         Task<Location> GetLocationByIPAsync(string iPAddress);
     }

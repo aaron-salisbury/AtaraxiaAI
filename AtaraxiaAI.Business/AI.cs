@@ -15,11 +15,11 @@ namespace AtaraxiaAI.Business
         public static InMemoryLogger Log { get; set; }
         public static AppData AppData { get; set; }
 
-        public SystemInfo SystemInfo { get; set; }
-        public Robot Peripherals { get; set; }
-        public OrchestrationEngine CommandLoop { get; set; }
-        public SpeechEngine SpeechEngine { get; set; }
-        public IVisionEngine VisionEngine { get; set; }
+        internal SystemInfo SystemInfo { get; set; }
+        internal Robot Peripherals { get; set; }
+        internal OrchestrationEngine CommandLoop { get; set; }
+        internal SpeechEngine SpeechEngine { get; set; }
+        internal IVisionEngine VisionEngine { get; set; }
 
         private Action<byte[]> _updateFrameAction;
 
