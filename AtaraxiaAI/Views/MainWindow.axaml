@@ -35,13 +35,6 @@
 	<Grid RowDefinitions="30, *">
 
 		<!-- Background -->
-		<!-- <gif:GifImage ZIndex="-2"
-					  Grid.RowSpan="2"
-					  Stretch="Fill"
-					  StretchDirection="Both"
-					  SourceUriRaw="{Binding Path=BackgroundGifPath}"
-					  IsVisible="{Binding IsBackgroundGifVisible}"
-					  IsHitTestVisible="False" /> -->
 		<Border Grid.RowSpan="2" ZIndex="-3" BorderThickness="1" Opacity="0.85" IsHitTestVisible="False">
 			<Border.BorderBrush>
 				<LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
@@ -53,7 +46,6 @@
 				</LinearGradientBrush>
 			</Border.BorderBrush>
 			<Border.Background>
-				<!-- <SolidColorBrush Opacity="0.5" Color="#1b1448" /> -->
 				<LinearGradientBrush StartPoint="0%,100%" EndPoint="100%,0%">
 					<LinearGradientBrush.GradientStops>
 						<GradientStop Offset="0.0" Color="#060531" />

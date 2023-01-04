@@ -11,16 +11,11 @@ namespace AtaraxiaAI.ViewModels
 {
     public partial class MainWindowViewModel : ObservableObject
     {
-        private const string BKGRND_GIF_PATH = "avares://AtaraxiaAI/Base/Assets/278284.gif";
-
         public RelayCommand OnVisionClickCommand { get; }
         public RelayCommand OnLogsClickCommand { get; }
         public RelayCommand OnSettingsClickCommand { get; }
 
         public AI AI { get; set; }
-
-        [ObservableProperty]
-        private string? _backgroundGifPath;
 
         [ObservableProperty]
         private IBitmap? _visionFrame;
@@ -61,7 +56,6 @@ namespace AtaraxiaAI.ViewModels
             _showSettings = false;
             _settingsIcon = MaterialIconKind.CogOff;
             _settingsView = App.Current?.Services?.GetService<SettingsViewModel>();
-            _backgroundGifPath = BKGRND_GIF_PATH;
 
             OnVisionClickCommand = new RelayCommand(() => OnVisionClick());
             OnLogsClickCommand = new RelayCommand(() => OnLogsClick());

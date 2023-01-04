@@ -1,9 +1,6 @@
 ﻿Application icon "AI" by photo3idea_studio: 
 https://www.flaticon.com/free-icon/ai_1693857
 
-Default gif background "Generic Network Connectivity Array | DARK BLUE" by Xponentialdesign:
-https://giphy.com/gifs/network-technologies-connectivity-ITRemFlr5tS39AzQUL
-
 System log font "ProFont" by SQ Software:
 https://www.fontsquirrel.com/fonts/ProFontWindows
 
