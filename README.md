@@ -10,8 +10,6 @@ Attributions
 
 Application icon "[AI](https://www.flaticon.com/free-icon/ai_1693857)" by photo3idea_studio.
 
-Default gif background "[Generic Network Connectivity Array | DARK BLUE](https://giphy.com/gifs/network-technologies-connectivity-ITRemFlr5tS39AzQUL)" by Xponentialdesign.
-
 System log font "[ProFont](https://www.fontsquirrel.com/fonts/ProFontWindows)" by SQ Software.
 
 General font "[Heavy Data](https://www.fontsquirrel.com/fonts/Heavy-Data)" by Vic Fieger.
