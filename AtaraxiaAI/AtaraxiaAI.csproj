@@ -9,11 +9,13 @@
   </PropertyGroup>
   <ItemGroup>
     <None Remove=".gitignore" />
+    <None Remove="Base\Assets\background.jpg" />
     <None Remove="Base\Assets\Fonts\heavy_data.ttf" />
     <None Remove="Base\Assets\Fonts\ProFontWindows.ttf" />
     <None Remove="Base\Assets\logo.ico" />
   </ItemGroup>
   <ItemGroup>
+    <AvaloniaResource Include="Base\Assets\background.jpg" />
     <AvaloniaResource Include="Base\Assets\Fonts\heavy_data.ttf" />
     <AvaloniaResource Include="Base\Assets\Fonts\ProFontWindows.ttf" />
     <AvaloniaResource Include="Base\Assets\logo.ico" />

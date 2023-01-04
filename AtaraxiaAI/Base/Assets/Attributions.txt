@@ -1,6 +1,9 @@
 ﻿Application icon "AI" by photo3idea_studio: 
 https://www.flaticon.com/free-icon/ai_1693857
 
+Background image "Gradient network connection background" by freepik:
+https://www.freepik.com/free-vector/gradient-network-connection-background_12643219.htm
+
 System log font "ProFont" by SQ Software:
 https://www.fontsquirrel.com/fonts/ProFontWindows
 

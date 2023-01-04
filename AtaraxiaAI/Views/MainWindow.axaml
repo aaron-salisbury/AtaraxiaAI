@@ -35,7 +35,12 @@
 	<Grid RowDefinitions="30, *">
 
 		<!-- Background -->
-		<Border Grid.RowSpan="2" ZIndex="-3" BorderThickness="1" Opacity="0.85" IsHitTestVisible="False">
+		<Image Grid.RowSpan="2" 
+			   ZIndex="-3"
+			   Stretch="Fill"
+			   Source="avares://AtaraxiaAI/Base/Assets/background.jpg"
+			   IsHitTestVisible="False"/>
+		<Border Grid.RowSpan="2" ZIndex="-2" BorderThickness="1" Opacity="0.8" IsHitTestVisible="False">
 			<Border.BorderBrush>
 				<LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
 					<LinearGradientBrush.GradientStops>
