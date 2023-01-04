@@ -19,7 +19,9 @@ namespace AtaraxiaAI.Data
         private const string VOSK_CONTENT_DIRECTORY = "./Detection/Voice/Vosk/";
         private const string VOSK_MODEL = "vosk-model-small-en-us-0.15";
 
-        //TODO: Update vision engine to use the full model and cfg.
+        //TODO: Perhaps download the 128mb version of the vosk model, similar to the yolo file process. - https://alphacephei.com/vosk/models   https://alphacephei.com/vosk/models/vosk-model-en-us-0.22-lgraph.zip
+
+        //TODO: Update vision engine to use the full model and cfg. Maybe have the tiny/small yolo and Vosk models still for backup logic if downloads were to fail.
         private const string YOLO_FULL_WEIGHTS_CONTENT_PATH = "./Detection/Vision/YOLO/yolov3.weights";
 
         /// <summary>
