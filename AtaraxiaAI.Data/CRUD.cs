@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
+using System.Net;
 using System.Reflection;
 using System.Threading.Tasks;
 
@@ -18,8 +19,11 @@ namespace AtaraxiaAI.Data
         private const string VOSK_CONTENT_DIRECTORY = "./Detection/Voice/Vosk/";
         private const string VOSK_MODEL = "vosk-model-small-en-us-0.15";
 
+        //TODO: Update vision engine to use the full model and cfg.
+        private const string YOLO_FULL_WEIGHTS_CONTENT_PATH = "./Detection/Vision/YOLO/yolov3.weights";
+
         /// <summary>
-        /// Extract zipped ML models as necessary.
+        /// Download and extract zipped ML models as necessary.
         /// </summary>
         public static void CreateModels(ILogger logger)
         {
@@ -32,6 +36,23 @@ namespace AtaraxiaAI.Data
                 catch (Exception e)
                 {
                     logger.Error($"Failed to extract Vosk model: {e.Message}");
+                }
+            }
+
+            if (!File.Exists(YOLO_FULL_WEIGHTS_CONTENT_PATH))
+            {
+                try
+                {
+                    using (WebClient client = new WebClient())
+                    {
+                        //TODO: I might want to block thread if I'm waiting for this to finish before letting the user use vision.
+                        //client.DownloadFileAsync(new Uri("https://pjreddie.com/media/files/yolov3.weights"), YOLO_FULL_WEIGHTS_CONTENT_PATH);
+                        client.DownloadFile(new Uri("https://pjreddie.com/media/files/yolov3.weights"), YOLO_FULL_WEIGHTS_CONTENT_PATH);
+                    }
+                }
+                catch (Exception e)
+                {
+                    logger.Error($"Failed to download YOLOv3 model: {e.Message}");
                 }
             }
         }

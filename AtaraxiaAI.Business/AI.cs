@@ -4,7 +4,6 @@ using AtaraxiaAI.Business.Services;
 using AtaraxiaAI.Business.Services.Base.Models;
 using AtaraxiaAI.Data.Domains;
 using Desktop.Robot;
-using Serilog.Core;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -36,6 +35,7 @@ namespace AtaraxiaAI.Business
         public AI()
         {
             Log = new InMemoryLogger();
+            //TODO: Maybe do a file exists check first instead of letting it fail before creating it for the first time.
             AppData = Task.Run(async () => await Data.CRUD.ReadDataAsync<AppData>(Log.Logger)).Result;
 
             int currentMonth = DateTime.Now.Month;
