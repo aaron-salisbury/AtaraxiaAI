@@ -79,6 +79,9 @@ namespace AtaraxiaAI.Business
             IIPLocationService locationService = new IPAPIIPLocationService();
             Location location = await locationService.GetLocationByIPAsync(SystemInfo.IPAddress);
 
+            Log.Logger.Information("... Verifying ML models.");
+            Data.CRUD.CreateModels(Log.Logger);
+
             Log.Logger.Information("... Initializing vision engine.");
             VisionEngine = new PWCYoloVisionEngine();
 
@@ -86,9 +89,6 @@ namespace AtaraxiaAI.Business
             SpeechEngine = new SpeechEngine();
             CommandLoop = new OrchestrationEngine(SpeechEngine);
             SpeechEngine.Recognizer.Listen(CommandLoop.Heard);
-
-            Log.Logger.Information("... Verifying ML models.");
-            Data.CRUD.CreateModels(Log.Logger);
 
             IsInitialized = true;
             Log.Logger.Information("Initialization complete.");
