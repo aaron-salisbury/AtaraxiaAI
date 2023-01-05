@@ -40,14 +40,27 @@ namespace AtaraxiaAI.Data
                 {
                     using (WebClient client = new WebClient())
                     {
+                        logger.Information("Beginning to download Vosk model.");
                         client.DownloadFile(new Uri(VOSK_DOWNLOAD_URL), voskZipPath);
+                        logger.Information("Vosk model download complete.");
                     }
 
+                    logger.Information("Beginning to extract Vosk model.");
                     ZipFile.ExtractToDirectory(voskZipPath, VOSK_CONTENT_DIRECTORY);
+                    logger.Information("Vosk model extraction complete.");
                 }
                 catch (Exception e)
                 {
                     logger.Error($"Failed to download and extract Vosk model: {e.Message}");
+
+                    try
+                    {
+                        File.Delete(voskZipPath);
+                    }
+                    catch (Exception ex)
+                    {
+                        logger.Error($"Failed to clean-up Vosk model after previous extract failure: {ex.Message}");
+                    }
                 }
             }
 
@@ -57,12 +70,14 @@ namespace AtaraxiaAI.Data
                 {
                     using (WebClient client = new WebClient())
                     {
+                        logger.Information("Beginning to download YOLO model.");
                         client.DownloadFile(new Uri(YOLO_WEIGHTS_DOWNLOAD_URL), YOLO_WEIGHTS_CONTENT_PATH);
+                        logger.Information("YOLO model download complete.");
                     }
                 }
                 catch (Exception e)
                 {
-                    logger.Error($"Failed to download YOLOv3 model: {e.Message}");
+                    logger.Error($"Failed to download YOLO model: {e.Message}");
                 }
             }
         }

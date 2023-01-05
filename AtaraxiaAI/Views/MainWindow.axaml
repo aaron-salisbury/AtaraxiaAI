@@ -2,6 +2,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+		xmlns:progRing="clr-namespace:AvaloniaProgressRing;assembly=AvaloniaProgressRing"
 		xmlns:material="using:Material.Icons.Avalonia"
 		xmlns:gif="using:AvaloniaGif"
         mc:Ignorable="d" 
@@ -14,7 +15,6 @@
 		ExtendClientAreaToDecorationsHint="True">
 
 	<Window.Styles>
-		<!-- Regular styles. -->
 		<Style Selector="#MainMenu Button">
 			<Setter Property="Background" Value="Transparent"/>
 			<Setter Property="Height" Value="30"/>
@@ -69,7 +69,7 @@
 				<Border Name="MainMenu" Margin="9,9,0,0" CornerRadius="7" Background="#2B2B2B">
 					<!-- Icons: https://materialdesignicons.com/ -->
 					<StackPanel Margin="5">
-						<Button Command="{Binding OnVisionClickCommand}">
+						<Button Command="{Binding OnVisionClickCommand}" IsEnabled="{Binding AI.IsInitialized}">
 							<material:MaterialIcon Kind="{Binding VisionIcon}" />
 						</Button>
 
@@ -77,7 +77,7 @@
 							<material:MaterialIcon Kind="{Binding LogsIcon}" />
 						</Button>
 
-						<Button Command="{Binding OnSettingsClickCommand}">
+						<Button Command="{Binding OnSettingsClickCommand}" IsEnabled="{Binding AI.IsInitialized}">
 							<material:MaterialIcon Kind="{Binding SettingsIcon}" />
 						</Button>
 					</StackPanel>
@@ -87,6 +87,15 @@
 			<!-- Content Area -->
 			<Border Grid.Column="1" Padding="20">
 				<Grid RowDefinitions="1.5*, 1*">
+
+					<progRing:ProgressRing Grid.Row="0"
+										   Width="80"
+										   Height="80"
+										   IsActive="{Binding !AI.IsInitialized}"
+										   HorizontalAlignment="Left"
+										   VerticalAlignment="Top"
+										   Foreground="#DA34AE" />
+
 					<!-- Vision Feed -->
 					<Image Grid.Row="0"
 						   Stretch="Uniform"

@@ -41,8 +41,6 @@ namespace AtaraxiaAI.Business.Services
 
         void IVisionEngine.Initiate(Action<byte[]> updateFrameAction, CancellationToken cancelToken)
         {
-            AI.Log.Logger.Information("Initializing vision engine.");
-
             double? widthFactor = null;
             double? heightFactor = null;
 
