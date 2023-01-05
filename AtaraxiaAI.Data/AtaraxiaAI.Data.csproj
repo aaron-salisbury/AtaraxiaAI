@@ -9,12 +9,16 @@
     <None Remove="Detection\Vision\YOLO\haarcascade_frontalface_default.xml" />
     <None Remove="Detection\Vision\YOLO\yolov3-tiny.cfg" />
     <None Remove="Detection\Vision\YOLO\yolov3-tiny.weights" />
+    <None Remove="Detection\Vision\YOLO\yolov3.cfg" />
     <None Remove="Detection\Voice\Vosk\test.wav" />
     <None Remove="Detection\Voice\Vosk\vosk-model-small-en-us-0.15.zip" />
   </ItemGroup>
 
   <ItemGroup>
     <Content Include="Detection\Vision\HaarCascades\haarcascade_frontalface_default.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Detection\Vision\YOLO\yolov3.cfg">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Detection\Voice\Vosk\test.wav">

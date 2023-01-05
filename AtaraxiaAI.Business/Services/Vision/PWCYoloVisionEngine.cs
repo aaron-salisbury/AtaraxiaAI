@@ -29,8 +29,6 @@ namespace AtaraxiaAI.Business.Services
 
             try
             {
-                // Got files from https://pjreddie.com/darknet/yolo/
-                // Using the "tiny" version since the regular weights file exceeds github file size limit.
                 _net = DnnInvoke.ReadNetFromDarknet(CRUD.ReadYoloCFGBuffer(), CRUD.ReadYoloWeightsBuffer());
                 _net.SetPreferableBackend(Emgu.CV.Dnn.Backend.OpenCV);
                 _net.SetPreferableTarget(Emgu.CV.Dnn.Target.Cpu);
