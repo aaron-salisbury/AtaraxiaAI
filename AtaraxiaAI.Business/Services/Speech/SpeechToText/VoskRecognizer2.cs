@@ -62,15 +62,17 @@ namespace AtaraxiaAI.Business.Services
         {
             _timer?.Stop();
             _timer?.Dispose();
+            _timer = null;
+
             _micSource?.StopRecording();
             _micSource?.Dispose();
+            _micSource = null;
+
             _soundCardSource?.StopRecording();
             _soundCardSource?.Dispose();
+            _soundCardSource = null;
 
             _audio = null;
-            _timer = null;
-            _micSource = null;
-            _soundCardSource = null;
         }
 
         private void BuildDisposables()
