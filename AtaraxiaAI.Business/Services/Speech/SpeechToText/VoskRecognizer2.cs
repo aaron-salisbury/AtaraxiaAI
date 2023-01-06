@@ -90,16 +90,21 @@ namespace AtaraxiaAI.Business.Services
             };
             _timer.Elapsed += OnTimerElapsed;
 
-            _micSource = new WaveInEvent
+            if (CaptureSource == SoundCaptureSources.Microphone)
             {
-                WaveFormat = new WaveFormat(Convert.ToInt32(SAMPLE_RATE), bits: 16, channels: 1),
-                BufferMilliseconds = 20
-            };
-
-            _soundCardSource = new WasapiLoopbackCapture()
+                _micSource = new WaveInEvent
+                {
+                    WaveFormat = new WaveFormat(Convert.ToInt32(SAMPLE_RATE), bits: 16, channels: 1),
+                    BufferMilliseconds = 20
+                };
+            }
+            else if (CaptureSource == SoundCaptureSources.SoundCard)
             {
-                WaveFormat = new WaveFormat(Convert.ToInt32(SAMPLE_RATE), bits: 16, channels: 1)
-            };
+                _soundCardSource = new WasapiLoopbackCapture()
+                {
+                    WaveFormat = new WaveFormat(Convert.ToInt32(SAMPLE_RATE), bits: 16, channels: 1)
+                };
+            }
         }
 
         // Inspired by https://github.com/nhannt201/VoiceNET.Library
