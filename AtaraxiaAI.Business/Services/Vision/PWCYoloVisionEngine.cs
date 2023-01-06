@@ -17,12 +17,12 @@ namespace AtaraxiaAI.Business.Services
     // https://youtu.be/v7_g1Zoapkg
     internal class PWCYoloVisionEngine : IVisionEngine
     {
-        internal CaptureSources CaptureSource { get; set; }
+        internal VisionCaptureSources CaptureSource { get; set; }
 
         private Net _net;
         private string[] _classLabels;
 
-        internal PWCYoloVisionEngine(CaptureSources captureSource = CaptureSources.Screen)
+        internal PWCYoloVisionEngine(VisionCaptureSources captureSource = VisionCaptureSources.Screen)
         {
             CaptureSource = captureSource;
             _classLabels = CRUD.ReadCOCOClassLabels();
@@ -48,7 +48,7 @@ namespace AtaraxiaAI.Business.Services
             double? widthFactor = null;
             double? heightFactor = null;
 
-            if (CaptureSource == CaptureSources.Screen)
+            if (CaptureSource == VisionCaptureSources.Screen)
             {
                 IScreenCaptureService screenCaptureService = new DX11ScreenCaptureService();
                 IEnumerable<GraphicsCard> graphicsCards = screenCaptureService.GetGraphicsCards();
@@ -70,7 +70,7 @@ namespace AtaraxiaAI.Business.Services
                     updateFrameAction(ProcessFrame(frame.Mat, widthFactor.Value, heightFactor.Value));
                 }
             }
-            else if (CaptureSource == CaptureSources.Webcam)
+            else if (CaptureSource == VisionCaptureSources.Webcam)
             {
                 Mat frame = new Mat();
 

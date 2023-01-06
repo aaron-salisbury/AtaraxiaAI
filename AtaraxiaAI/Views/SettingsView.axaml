@@ -17,16 +17,29 @@
 	<StackPanel HorizontalAlignment="Right">
 		<StackPanel>
 			<TextBlock Text="Vision Capture Source" Classes="propertyLabel" />
-			<ComboBox SelectedItem="{Binding SelectedCaptureSource}"
-					  Items="{Binding CaptureSourceTypes}" 
+			<ComboBox SelectedItem="{Binding SelectedVisionCaptureSource}"
+					  Items="{Binding VisionCaptureSourceTypes}" 
 					  HorizontalAlignment="Right"
-					  Width="110">
+					  Width="125"
+                      Margin="0,0,0,15">
 				<ComboBox.ItemTemplate>
 					<DataTemplate>
 						<TextBlock Text="{Binding Text}" />
 					</DataTemplate>
 				</ComboBox.ItemTemplate>
 			</ComboBox>
+
+            <TextBlock Text="Sound Capture Source" Classes="propertyLabel" />
+            <ComboBox SelectedItem="{Binding SelectedSoundCaptureSource}"
+					  Items="{Binding SoundCaptureSourceTypes}"
+					  HorizontalAlignment="Right"
+					  Width="125">
+                <ComboBox.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock Text="{Binding Text}" />
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
 		</StackPanel>
 	</StackPanel>
 	

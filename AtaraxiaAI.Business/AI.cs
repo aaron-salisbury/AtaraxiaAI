@@ -23,6 +23,7 @@ namespace AtaraxiaAI.Business
         internal IVisionEngine VisionEngine { get; set; }
 
         private Action<byte[]> _updateFrameAction;
+        private Action<string> _speechRecognizedAction;
 
         public bool IsVisionEngineRunning
         {
@@ -70,7 +71,7 @@ namespace AtaraxiaAI.Business
 
             SpeechEngine = new SpeechEngine();
             CommandLoop = new OrchestrationEngine(SpeechEngine);
-            SpeechEngine.Recognizer.Listen(CommandLoop.Heard);
+            ActivateSound(CommandLoop.Heard);
 
             Data.CRUD.CreateModels(Log.Logger);
         }
@@ -80,6 +81,12 @@ namespace AtaraxiaAI.Business
             _updateFrameAction = updateFrameAction;
             _visionTokenSource = new CancellationTokenSource();
             _visionTask = Task.Run(() => VisionEngine.Initiate(updateFrameAction, _visionTokenSource.Token));
+        }
+
+        public void ActivateSound(Action<string> speechRecognizedAction)
+        {
+            _speechRecognizedAction = speechRecognizedAction;
+            SpeechEngine.Recognizer.Listen(_speechRecognizedAction);
         }
 
         public void DeactivateVision()
@@ -93,7 +100,7 @@ namespace AtaraxiaAI.Business
             }
         }
 
-        public void UpdateCaptureSource(CaptureSources captureSource)
+        public void UpdateVisionCaptureSource(VisionCaptureSources captureSource)
         {
             if (VisionEngine is PWCYoloVisionEngine yoloEngine)
             {
@@ -107,6 +114,19 @@ namespace AtaraxiaAI.Business
             }
         }
 
+        public void UpdateSoundCaptureSource(SoundCaptureSources captureSource)
+        {
+            if (SpeechEngine.Recognizer is VoskRecognizer2 voskRecognizer)
+            {
+                voskRecognizer.CaptureSource = captureSource;
+                //TODO: The setter of CaptureSource maybe could do the dispose and reactivate.
+                // Same with the vision update, but that one has to care about the token and task.
+            }
+
+            SpeechEngine.Recognizer.Dispose();
+            ActivateSound(_speechRecognizedAction);
+        }
+
         /// <summary>
         /// Release resources.
         /// </summary>
@@ -118,7 +138,7 @@ namespace AtaraxiaAI.Business
 
             if (SpeechEngine != null)
             {
-                SpeechEngine.Recognizer.Shutdown();
+                SpeechEngine.Recognizer.Dispose();
             }
         }
     }

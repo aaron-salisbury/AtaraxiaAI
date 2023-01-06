@@ -4,10 +4,16 @@ namespace AtaraxiaAI.Business.Base
 {
     public class Enums
     {
-        public enum CaptureSources
+        public enum VisionCaptureSources
         {
             Webcam,
             Screen
+        }
+
+        public enum SoundCaptureSources
+        {
+            Microphone,
+            SoundCard
         }
 
         public enum SpeechSynthesizers

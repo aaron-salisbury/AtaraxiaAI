@@ -2,11 +2,9 @@
 
 namespace AtaraxiaAI.Business.Services
 {
-    internal interface IRecognizer
+    internal interface IRecognizer : IDisposable
     {
         bool IsAvailable();
-
-        void Shutdown();
 
         void Listen(Action<string> speechRecognizedAction);
 

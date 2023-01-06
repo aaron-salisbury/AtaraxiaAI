@@ -47,7 +47,7 @@ namespace AtaraxiaAI.Business.Services
             throw new NotImplementedException();
         }
 
-        void IRecognizer.Shutdown()
+        public void Dispose()
         {
             throw new NotImplementedException();
         }

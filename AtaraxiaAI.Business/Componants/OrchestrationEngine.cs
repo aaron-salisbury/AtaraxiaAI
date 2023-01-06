@@ -25,15 +25,15 @@ namespace AtaraxiaAI.Business.Componants
         {
             if (!string.IsNullOrEmpty(message))
             {
-                AI.Log.Logger.Information($"Heard \"{message}\".");
+                AI.Log.Logger.Information($"*Heard* \"{message}\".");
 
-                if (message.StartsWith(WAKE_COMMAND))
+                if (message.StartsWith(WAKE_COMMAND, StringComparison.OrdinalIgnoreCase))
                 {
-                    int wakeIndex = message.IndexOf(WAKE_COMMAND);
+                    int wakeIndex = message.IndexOf(WAKE_COMMAND, StringComparison.OrdinalIgnoreCase);
                     string command = message.Remove(wakeIndex, WAKE_COMMAND.Length);
                     string cleanCommand = string.Concat(command.Where(c => !char.IsWhiteSpace(c)));
 
-                    switch ((SkillMessages)Enum.Parse(typeof(SkillMessages), cleanCommand))
+                    switch ((SkillMessages)Enum.Parse(typeof(SkillMessages), cleanCommand, true))
                     {
                         case SkillMessages.TellMeAJoke:
                             JokeSkill.TellMeAJoke(_speechEngine);

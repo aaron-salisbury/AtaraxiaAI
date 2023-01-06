@@ -38,7 +38,7 @@ namespace AtaraxiaAI.Business.Services
             }
         }
 
-        void IRecognizer.Shutdown()
+        public void Dispose()
         {
             if (_recognizer != null && RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {

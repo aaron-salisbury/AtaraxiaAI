@@ -11,33 +11,62 @@ namespace AtaraxiaAI.ViewModels
     public partial class SettingsViewModel : ObservableObject
     {
         [ObservableProperty]
-        private List<ComboBoxEnumItem> _captureSourceTypes;
+        private List<ComboBoxEnumItem> _visionCaptureSourceTypes;
 
-        private ComboBoxEnumItem _selectedCaptureSource;
-        public ComboBoxEnumItem SelectedCaptureSource
+        [ObservableProperty]
+        private List<ComboBoxEnumItem> _soundCaptureSourceTypes;
+
+        private ComboBoxEnumItem _selectedVisionCaptureSource;
+        public ComboBoxEnumItem SelectedVisionCaptureSource
         {
-            get { return _selectedCaptureSource; }
+            get { return _selectedVisionCaptureSource; }
             set
             { 
-                SetProperty(ref _selectedCaptureSource, value);
+                SetProperty(ref _selectedVisionCaptureSource, value);
 
                 MainWindowViewModel? mainVM = App.Current?.Services?.GetService<MainWindowViewModel>();
                 if (mainVM != null)
                 {
-                    mainVM.AI.UpdateCaptureSource((CaptureSources)value.Value);
+                    mainVM.AI.UpdateVisionCaptureSource((VisionCaptureSources)value.Value);
+                }
+            }
+        }
+
+        private ComboBoxEnumItem _selectedSoundCaptureSource;
+        public ComboBoxEnumItem SelectedSoundCaptureSource
+        {
+            get { return _selectedSoundCaptureSource; }
+            set
+            {
+                SetProperty(ref _selectedSoundCaptureSource, value);
+
+                MainWindowViewModel? mainVM = App.Current?.Services?.GetService<MainWindowViewModel>();
+                if (mainVM != null)
+                {
+                    mainVM.AI.UpdateSoundCaptureSource((SoundCaptureSources)value.Value);
                 }
             }
         }
 
         public SettingsViewModel()
         {
-            _captureSourceTypes = Enum.GetValues(typeof(CaptureSources))
-                .Cast<CaptureSources>()
-                .Select(st => new ComboBoxEnumItem() { Value = (int)st, Text = st.ToString() })
+            _visionCaptureSourceTypes = Enum.GetValues(typeof(VisionCaptureSources))
+                .Cast<VisionCaptureSources>()
+                .Select(cs => new ComboBoxEnumItem() { Value = (int)cs, Text = cs.ToString() })
                 .ToList();
 
-            _selectedCaptureSource = CaptureSourceTypes
-                .Where(cbi => cbi.Value == (int)CaptureSources.Screen)
+            _soundCaptureSourceTypes = Enum.GetValues(typeof(SoundCaptureSources))
+                .Cast<SoundCaptureSources>()
+                .Select(cs => new ComboBoxEnumItem() { Value = (int)cs, Text = cs.ToString() })
+                .ToList();
+
+            //TODO: Single source setting these.
+            _selectedVisionCaptureSource = VisionCaptureSourceTypes
+                .Where(cbi => cbi.Value == (int)VisionCaptureSources.Screen)
+                .First();
+
+            _selectedSoundCaptureSource = SoundCaptureSourceTypes
+                .Where(cbi => cbi.Value == (int)SoundCaptureSources.SoundCard)
                 .First();
         }
     }
