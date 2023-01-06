@@ -50,12 +50,12 @@ namespace AtaraxiaAI.ViewModels
 
             _showVisionFeed = false;
             _visionIcon = MaterialIconKind.EyeOff;
-            _showLogs = false;
-            _logsIcon = MaterialIconKind.ClipboardTextOff;
             _logsView = App.Current?.Services?.GetService<LogsViewModel>();
+            _showLogs = true;
+            _logsIcon = MaterialIconKind.ClipboardText;
+            _settingsView = App.Current?.Services?.GetService<SettingsViewModel>();
             _showSettings = false;
             _settingsIcon = MaterialIconKind.CogOff;
-            _settingsView = App.Current?.Services?.GetService<SettingsViewModel>();
 
             OnVisionClickCommand = new RelayCommand(() => OnVisionClick());
             OnLogsClickCommand = new RelayCommand(() => OnLogsClick());

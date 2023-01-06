@@ -25,8 +25,6 @@ namespace AtaraxiaAI.Business.Services
         {
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                AI.Log.Logger.Information("Beginning to listen.");
-
                 if (_recognizer == null)
                 {
                     BuildRecognizer();

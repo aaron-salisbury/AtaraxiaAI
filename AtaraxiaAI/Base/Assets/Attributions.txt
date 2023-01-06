@@ -9,3 +9,9 @@ https://www.fontsquirrel.com/fonts/ProFontWindows
 
 General font "Heavy Data" by Vic Fieger:
 https://www.fontsquirrel.com/fonts/Heavy-Data
+
+Vosk voice recognition model:
+https://alphacephei.com/vosk/models
+
+YOLO real-time object detection model:
+https://pjreddie.com/darknet/yolo/

@@ -16,8 +16,6 @@ namespace AtaraxiaAI.Business.Componants
 
         internal SpeechEngine(CultureInfo culture = null)
         {
-            AI.Log.Logger.Information("Initializing speech engine.");
-
             _culture = culture ?? new CultureInfo("en-US");
 
             //Recognizer = new SystemDotSpeechRecognizer(_culture);

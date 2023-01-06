@@ -12,49 +12,72 @@ namespace AtaraxiaAI.Data
 {
     public static class CRUD
     {
-        private const string HC_CLASSIFIER_CONTENT_PATH = "./Detection/Vision/HaarCascades/haarcascade_frontalface_default.xml";
-        private const string YOLO_CFG_CONTENT_PATH = "./Detection/Vision/YOLO/yolov3-tiny.cfg";
-        private const string YOLO_WEIGHTS_CONTENT_PATH = "./Detection/Vision/YOLO/yolov3-tiny.weights";
-        private const string COCO_NAMES_CONTENT_PATH = "./Detection/Vision/YOLO/coco.names";
+        private const string VOSK_DOWNLOAD_URL = "https://alphacephei.com/vosk/models/vosk-model-en-us-0.22-lgraph.zip";
         private const string VOSK_CONTENT_DIRECTORY = "./Detection/Voice/Vosk/";
-        private const string VOSK_MODEL = "vosk-model-small-en-us-0.15";
+        private const string VOSK_MODEL = "vosk-model-en-us-0.22-lgraph";
+        private const string YOLO_WEIGHTS_DOWNLOAD_URL = "https://pjreddie.com/media/files/yolov3.weights";
+        private const string YOLO_CFG_CONTENT_PATH = "./Detection/Vision/YOLO/yolov3.cfg";
+        private const string YOLO_WEIGHTS_CONTENT_PATH = "./Detection/Vision/YOLO/yolov3.weights";
+        private const string COCO_NAMES_CONTENT_PATH = "./Detection/Vision/YOLO/coco.names";
+        private const string HC_CLASSIFIER_CONTENT_PATH = "./Detection/Vision/HaarCascades/haarcascade_frontalface_default.xml";
 
-        //TODO: Perhaps download the 128mb version of the vosk model, similar to the yolo file process. - https://alphacephei.com/vosk/models   https://alphacephei.com/vosk/models/vosk-model-en-us-0.22-lgraph.zip
-
-        //TODO: Update vision engine to use the full model and cfg. Maybe have the tiny/small yolo and Vosk models still for backup logic if downloads were to fail.
-        private const string YOLO_FULL_WEIGHTS_CONTENT_PATH = "./Detection/Vision/YOLO/yolov3.weights";
+        // Small versions incase downloading the large models becomes no longer viable.
+        private const string VOSK_SMALL_MODEL = "vosk-model-small-en-us-0.15";
+        private const string YOLO_CFG_TINY_CONTENT_PATH = "./Detection/Vision/YOLO/yolov3-tiny.cfg";
+        private const string YOLO_WEIGHTS_TINY_CONTENT_PATH = "./Detection/Vision/YOLO/yolov3-tiny.weights";
 
         /// <summary>
-        /// Download and extract zipped ML models as necessary.
+        /// Download and extract ML models as necessary.
+        /// This is done the first time the app runs since Github's 
+        /// file-size limit (100 MB) prevents them from being included in the project.
         /// </summary>
         public static void CreateModels(ILogger logger)
         {
-            if (!Directory.Exists(Path.Combine(VOSK_CONTENT_DIRECTORY, VOSK_MODEL)))
-            {
-                try
-                {
-                    ZipFile.ExtractToDirectory(Path.Combine(VOSK_CONTENT_DIRECTORY, $"{VOSK_MODEL}.zip"), VOSK_CONTENT_DIRECTORY);
-                }
-                catch (Exception e)
-                {
-                    logger.Error($"Failed to extract Vosk model: {e.Message}");
-                }
-            }
-
-            if (!File.Exists(YOLO_FULL_WEIGHTS_CONTENT_PATH))
+            string voskZipPath = Path.Combine(VOSK_CONTENT_DIRECTORY, $"{VOSK_MODEL}.zip");
+            if (!File.Exists(voskZipPath))
             {
                 try
                 {
                     using (WebClient client = new WebClient())
                     {
-                        //TODO: I might want to block thread if I'm waiting for this to finish before letting the user use vision.
-                        //client.DownloadFileAsync(new Uri("https://pjreddie.com/media/files/yolov3.weights"), YOLO_FULL_WEIGHTS_CONTENT_PATH);
-                        client.DownloadFile(new Uri("https://pjreddie.com/media/files/yolov3.weights"), YOLO_FULL_WEIGHTS_CONTENT_PATH);
+                        logger.Information("Beginning to download Vosk model.");
+                        client.DownloadFile(new Uri(VOSK_DOWNLOAD_URL), voskZipPath);
+                        logger.Information("Vosk model download complete.");
+                    }
+
+                    logger.Information("Beginning to extract Vosk model.");
+                    ZipFile.ExtractToDirectory(voskZipPath, VOSK_CONTENT_DIRECTORY);
+                    logger.Information("Vosk model extraction complete.");
+                }
+                catch (Exception e)
+                {
+                    logger.Error($"Failed to download and extract Vosk model: {e.Message}");
+
+                    try
+                    {
+                        File.Delete(voskZipPath);
+                    }
+                    catch (Exception ex)
+                    {
+                        logger.Error($"Failed to clean-up Vosk model after previous extract failure: {ex.Message}");
+                    }
+                }
+            }
+
+            if (!File.Exists(YOLO_WEIGHTS_CONTENT_PATH))
+            {
+                try
+                {
+                    using (WebClient client = new WebClient())
+                    {
+                        logger.Information("Beginning to download YOLO model.");
+                        client.DownloadFile(new Uri(YOLO_WEIGHTS_DOWNLOAD_URL), YOLO_WEIGHTS_CONTENT_PATH);
+                        logger.Information("YOLO model download complete.");
                     }
                 }
                 catch (Exception e)
                 {
-                    logger.Error($"Failed to download YOLOv3 model: {e.Message}");
+                    logger.Error($"Failed to download YOLO model: {e.Message}");
                 }
             }
         }
