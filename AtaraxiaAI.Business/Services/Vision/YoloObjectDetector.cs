@@ -14,15 +14,14 @@ using static AtaraxiaAI.Business.Base.Enums;
 
 namespace AtaraxiaAI.Business.Services
 {
-    // https://youtu.be/v7_g1Zoapkg
-    internal class PWCYoloObjectDetector : IObjectDetector
+    internal class YoloObjectDetector : IObjectDetector
     {
         internal VisionCaptureSources CaptureSource { get; set; }
 
         private Net _net;
         private string[] _classLabels;
 
-        internal PWCYoloObjectDetector(VisionCaptureSources captureSource = VisionCaptureSources.Screen)
+        internal YoloObjectDetector(VisionCaptureSources captureSource = VisionCaptureSources.Screen)
         {
             CaptureSource = captureSource;
             _classLabels = CRUD.ReadCOCOClassLabels();
@@ -106,6 +105,7 @@ namespace AtaraxiaAI.Business.Services
             }
         }
 
+        // Inspired by https://youtu.be/v7_g1Zoapkg?t=403
         private byte[] ProcessFrame(Mat frame, double widthFactor, double heightFactor)
         {
             CvInvoke.Resize(frame, frame, new System.Drawing.Size(0, 0), widthFactor, heightFactor);

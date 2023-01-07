@@ -22,7 +22,7 @@ namespace AtaraxiaAI.Business.Componants
         internal VisionEngine(Action<byte[]> updateFrameAction)
         {
             _updateFrameAction = updateFrameAction;
-            _objectDetector = new PWCYoloObjectDetector();
+            _objectDetector = new YoloObjectDetector();
         }
 
         public void Activate()
@@ -50,14 +50,20 @@ namespace AtaraxiaAI.Business.Componants
 
         public void UpdateCaptureSource(VisionCaptureSources captureSource)
         {
-            if (_objectDetector is PWCYoloObjectDetector yoloEngine)
-            {
-                yoloEngine.CaptureSource = captureSource;
-            }
+            bool wasRunningWhenChangeMade = IsEngineRunning;
 
-            if (IsEngineRunning)
+            if (wasRunningWhenChangeMade)
             {
                 Deactivate();
+            }
+
+            if (_objectDetector is YoloObjectDetector yoloObjectDetector)
+            {
+                yoloObjectDetector.CaptureSource = captureSource;
+            }
+
+            if (wasRunningWhenChangeMade)
+            {
                 Activate();
             }
         }

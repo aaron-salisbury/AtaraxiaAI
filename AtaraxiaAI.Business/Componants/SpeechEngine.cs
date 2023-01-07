@@ -21,7 +21,6 @@ namespace AtaraxiaAI.Business.Componants
         {
             _culture = culture ?? new CultureInfo("en-US");
             _commandLoop = new OrchestrationEngine(this);
-
             _recognizer = new VoskRecognizer();
 
             SetSynthesizer();
@@ -115,14 +114,20 @@ namespace AtaraxiaAI.Business.Componants
 
         public void UpdateCaptureSource(SoundCaptureSources captureSource)
         {
+            bool wasRunningWhenChangeMade = IsSpeechRecognitionRunning;
+
+            if (wasRunningWhenChangeMade)
+            {
+                DeactivateSpeechRecognition();
+            }
+
             if (_recognizer is VoskRecognizer voskRecognizer)
             {
                 voskRecognizer.CaptureSource = captureSource;
             }
 
-            if (IsSpeechRecognitionRunning)
+            if (wasRunningWhenChangeMade)
             {
-                DeactivateSpeechRecognition();
                 ActivateSpeechRecognition();
             }
         }

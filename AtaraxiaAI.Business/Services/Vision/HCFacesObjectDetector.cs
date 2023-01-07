@@ -6,12 +6,12 @@ using System.Threading;
 
 namespace AtaraxiaAI.Business.Services
 {
-    // https://youtu.be/YTBAjP-0Fto
-    internal class PWCFacesObjectDetector : IObjectDetector
+    // Inspired by https://youtu.be/v7_g1Zoapkg?t=50
+    internal class HCFacesObjectDetector : IObjectDetector
     {
         private CascadeClassifier _faceCascade;
 
-        internal PWCFacesObjectDetector()
+        internal HCFacesObjectDetector()
         {
             _faceCascade = new CascadeClassifier(Data.CRUD.ReadHaarCascadesClassifierFaceContentPath());
         }
