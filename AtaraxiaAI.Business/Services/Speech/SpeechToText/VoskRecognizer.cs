@@ -58,6 +58,34 @@ namespace AtaraxiaAI.Business.Services
             _timer.Start();
         }
 
+        void IRecognizer.Pause()
+        {
+            if (CaptureSource == SoundCaptureSources.Microphone)
+            {
+                _micSource.StopRecording();
+            }
+            else if (CaptureSource == SoundCaptureSources.SoundCard)
+            {
+                _soundCardSource.StopRecording();
+            }
+
+            _timer?.Stop();
+        }
+
+        void IRecognizer.Unpause()
+        {
+            if (CaptureSource == SoundCaptureSources.Microphone)
+            {
+                _micSource.StartRecording();
+            }
+            else if (CaptureSource == SoundCaptureSources.SoundCard)
+            {
+                _soundCardSource.StartRecording();
+            }
+
+            _timer.Start();
+        }
+
         public void Dispose()
         {
             _timer?.Stop();

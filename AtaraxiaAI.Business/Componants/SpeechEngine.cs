@@ -27,7 +27,11 @@ namespace AtaraxiaAI.Business.Componants
         {
             if (Synthesizer != null) // Could be null if cloud services are maxed and also not running on Windows.
             {
-                if (!Synthesizer.SpeakAsync(message).Result)
+                Recognizer.Pause();
+                bool spoke = Synthesizer.SpeakAsync(message).Result;
+                Recognizer.Unpause();
+
+                if (!spoke)
                 {
                     SetSynthesizer();
                     Speak(message);

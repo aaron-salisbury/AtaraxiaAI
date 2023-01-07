@@ -8,7 +8,9 @@ namespace AtaraxiaAI.Business.Services
 
         void Listen(Action<string> speechRecognizedAction);
 
-        //TODO: Add a pause method so that we can stop recording when the speech synthesizer is speaking.
+        void Pause();
+
+        void Unpause();
 
         //TODO: Potential future implementations:
         //    https://fosspost.org/open-source-speech-recognition/

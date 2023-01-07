@@ -36,6 +36,22 @@ namespace AtaraxiaAI.Business.Services
             }
         }
 
+        void IRecognizer.Pause()
+        {
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                _recognizer.RecognizeAsyncStop();
+            }
+        }
+
+        void IRecognizer.Unpause()
+        {
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                _recognizer.RecognizeAsync(RecognizeMode.Multiple);
+            }
+        }
+
         public void Dispose()
         {
             if (_recognizer != null && RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
