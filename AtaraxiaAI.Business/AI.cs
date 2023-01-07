@@ -149,8 +149,6 @@ namespace AtaraxiaAI.Business
             if (SpeechEngine.Recognizer is VoskRecognizer voskRecognizer)
             {
                 voskRecognizer.CaptureSource = captureSource;
-                //TODO: The setter of CaptureSource maybe could do the dispose and reactivate.
-                // Same with the vision update, but that one has to care about the token and task.
             }
 
             if (IsSpeechRecognitionRunning)
