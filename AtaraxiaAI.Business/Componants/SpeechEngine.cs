@@ -1,6 +1,5 @@
 ﻿using AtaraxiaAI.Business.Services;
 using NAudio.Wave;
-using Serilog;
 using System.Globalization;
 using System.IO;
 using System.Threading;
@@ -95,7 +94,7 @@ namespace AtaraxiaAI.Business.Componants
 
         public void ActivateSpeechRecognition()
         {
-            Log.Logger.Information("Beginning speech recognition.");
+            AI.Log.Logger.Information("Beginning speech recognition.");
 
             DeactivateSpeechRecognition();
             _recognizer.Listen(_commandLoop.Heard);
@@ -107,7 +106,7 @@ namespace AtaraxiaAI.Business.Componants
             if (IsSpeechRecognitionRunning)
             {
                 _recognizer.Dispose();
-                Log.Logger.Information("Ended speech recognition.");
+                AI.Log.Logger.Information("Ended speech recognition.");
                 IsSpeechRecognitionRunning = false;
             }
         }

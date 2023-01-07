@@ -1,5 +1,4 @@
 ﻿using AtaraxiaAI.Business.Services;
-using Serilog;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -27,7 +26,7 @@ namespace AtaraxiaAI.Business.Componants
 
         public void Activate()
         {
-            Log.Logger.Information("Beginning object detection.");
+            AI.Log.Logger.Information("Beginning object detection.");
 
             Deactivate();
             _visionTokenSource = new CancellationTokenSource();
@@ -44,7 +43,7 @@ namespace AtaraxiaAI.Business.Componants
                 _visionTokenSource.Dispose();
                 _visionTask.Dispose();
 
-                Log.Logger.Information("Ended object detection.");
+                AI.Log.Logger.Information("Ended object detection.");
             }
         }
 
