@@ -1,5 +1,6 @@
 ﻿using AtaraxiaAI.Business.Services.Base.Domains;
 using AtaraxiaAI.Data.Base;
+using Emgu.CV.ImgHash;
 using NAudio.CoreAudioApi;
 using NAudio.Wave;
 using System;
@@ -19,6 +20,7 @@ namespace AtaraxiaAI.Business.Services
 
         private WaveInEvent _micSource;
         private WasapiCapture _soundCardSource;
+        private int _bytesPerSample;
         private List<double> _audio;
         private Timer _timer;
         private Action<string> _speechRecognizedAction;
@@ -118,11 +120,14 @@ namespace AtaraxiaAI.Business.Services
             };
             _timer.Elapsed += OnTimerElapsed;
 
+            WaveFormat waveFormat = new WaveFormat(Convert.ToInt32(SAMPLE_RATE), bits: 16, channels: 1);
+            _bytesPerSample = waveFormat.BitsPerSample / 8;
+
             if (CaptureSource == SoundCaptureSources.Microphone)
             {
                 _micSource = new WaveInEvent
                 {
-                    WaveFormat = new WaveFormat(Convert.ToInt32(SAMPLE_RATE), bits: 16, channels: 1),
+                    WaveFormat = waveFormat,
                     BufferMilliseconds = 20
                 };
             }
@@ -130,7 +135,7 @@ namespace AtaraxiaAI.Business.Services
             {
                 _soundCardSource = new WasapiLoopbackCapture()
                 {
-                    WaveFormat = new WaveFormat(Convert.ToInt32(SAMPLE_RATE), bits: 16, channels: 1)
+                    WaveFormat = waveFormat
                 };
             }
         }
@@ -139,13 +144,12 @@ namespace AtaraxiaAI.Business.Services
         {
             // Inspired by https://github.com/nhannt201/VoiceNET.Library
 
-            int bytesPerSample = _micSource.WaveFormat.BitsPerSample / 8;
-            int newSampleCount = a.BytesRecorded / bytesPerSample;
+            int newSampleCount = a.BytesRecorded / _bytesPerSample;
             double[] buffer = new double[newSampleCount];
             double peak = 0;
             for (int i = 0; i < newSampleCount; i++)
             {
-                buffer[i] = BitConverter.ToInt16(a.Buffer, i * bytesPerSample);
+                buffer[i] = BitConverter.ToInt16(a.Buffer, i * _bytesPerSample);
                 peak = Math.Max(peak, buffer[i]);
             }
             lock (_audio)
@@ -178,8 +182,6 @@ namespace AtaraxiaAI.Business.Services
             // https://alphacephei.com/vosk/
             // https://github.com/alphacep/vosk-api/blob/master/csharp/demo/VoskDemo.cs
 
-            const string silenceRecognizedAs = "huh"; // For some reason this happens.
-
             if (_recognizer == null || _speechRecognizedAction == null) { return; }
 
             bool heard = false;
@@ -206,15 +208,17 @@ namespace AtaraxiaAI.Business.Services
             }
 
             VoskRoot finalResultRoot = Json.ToObjectAsync<VoskRoot>(_recognizer.FinalResult()).Result;
-            if (!string.IsNullOrEmpty(finalResultRoot?.Text) && !string.Equals(silenceRecognizedAs, finalResultRoot.Text))
+            if (!string.IsNullOrEmpty(finalResultRoot?.Text))
             {
                 heard = true;
                 resultsBuilder.Append(finalResultRoot.Text);
             }
 
-            if (heard)
+            string phrase = resultsBuilder.ToString();
+            if (heard && 
+                phrase.Split(' ').Length > 1) // Sometimes silence or other little noices get interpreted as single words, like "huh" and "the".
             {
-                _speechRecognizedAction(resultsBuilder.ToString());
+                _speechRecognizedAction(phrase);
             }
         }
     }

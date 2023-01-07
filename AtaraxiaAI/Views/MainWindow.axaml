@@ -73,6 +73,10 @@
 							<material:MaterialIcon Kind="{Binding VisionIcon}" />
 						</Button>
 
+						<Button Command="{Binding OnSoundClickCommand}" IsEnabled="{Binding AI.IsInitialized}">
+							<material:MaterialIcon Kind="{Binding SoundIcon}" />
+						</Button>
+
 						<Button Command="{Binding OnLogsClickCommand}">
 							<material:MaterialIcon Kind="{Binding LogsIcon}" />
 						</Button>

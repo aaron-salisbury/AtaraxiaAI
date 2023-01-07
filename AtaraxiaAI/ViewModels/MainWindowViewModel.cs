@@ -12,6 +12,7 @@ namespace AtaraxiaAI.ViewModels
     public partial class MainWindowViewModel : ObservableObject
     {
         public RelayCommand OnVisionClickCommand { get; }
+        public RelayCommand OnSoundClickCommand { get; }
         public RelayCommand OnLogsClickCommand { get; }
         public RelayCommand OnSettingsClickCommand { get; }
 
@@ -25,6 +26,9 @@ namespace AtaraxiaAI.ViewModels
 
         [ObservableProperty]
         private MaterialIconKind _visionIcon;
+
+        [ObservableProperty]
+        private MaterialIconKind _soundIcon;
 
         [ObservableProperty]
         private bool _showLogs;
@@ -50,6 +54,7 @@ namespace AtaraxiaAI.ViewModels
 
             _showVisionFeed = false;
             _visionIcon = MaterialIconKind.EyeOff;
+            _soundIcon = MaterialIconKind.MicOff;
             _logsView = App.Current?.Services?.GetService<LogsViewModel>();
             _showLogs = true;
             _logsIcon = MaterialIconKind.ClipboardText;
@@ -58,6 +63,7 @@ namespace AtaraxiaAI.ViewModels
             _settingsIcon = MaterialIconKind.CogOff;
 
             OnVisionClickCommand = new RelayCommand(() => OnVisionClick());
+            OnSoundClickCommand = new RelayCommand(() => OnSoundClick());
             OnLogsClickCommand = new RelayCommand(() => OnLogsClick());
             OnSettingsClickCommand = new RelayCommand(() => OnSettingsClick());
 
@@ -82,6 +88,20 @@ namespace AtaraxiaAI.ViewModels
                 VisionIcon = MaterialIconKind.Eye;
                 AI.ActivateVision(SetVisionFrame);
                 ShowVisionFeed = true;
+            }
+        }
+
+        private void OnSoundClick()
+        {
+            if (AI.IsSpeechRecognitionRunning)
+            {
+                SoundIcon = MaterialIconKind.MicOff;
+                AI.DeactivateSpeechRecognition();
+            }
+            else
+            {
+                SoundIcon = MaterialIconKind.Microphone;
+                AI.ActivateSpeechRecognition();
             }
         }
 

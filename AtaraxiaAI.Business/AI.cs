@@ -27,6 +27,7 @@ namespace AtaraxiaAI.Business
             }
         }
 
+        public bool IsSpeechRecognitionRunning { get; set; }
         public bool IsVisionEngineRunning
         {
             get { return _visionTask != null && _visionTask.Status == TaskStatus.Running; }
@@ -89,7 +90,6 @@ namespace AtaraxiaAI.Business
             Log.Logger.Information("... Initializing speech engine.");
             SpeechEngine = new SpeechEngine();
             CommandLoop = new OrchestrationEngine(SpeechEngine);
-            ActivateSound(CommandLoop.Heard);
 
             IsInitialized = true;
             Log.Logger.Information("Initialization complete.");
@@ -103,10 +103,12 @@ namespace AtaraxiaAI.Business
             _visionTask = Task.Run(() => VisionEngine.Initiate(updateFrameAction, _visionTokenSource.Token));
         }
 
-        public void ActivateSound(Action<string> speechRecognizedAction)
+        public void ActivateSpeechRecognition()
         {
-            _speechRecognizedAction = speechRecognizedAction;
+            Log.Logger.Information("Beginning speech recognition.");
+            _speechRecognizedAction = CommandLoop.Heard;
             SpeechEngine.Recognizer.Listen(_speechRecognizedAction);
+            IsSpeechRecognitionRunning = true;
         }
 
         public void DeactivateVision()
@@ -119,6 +121,13 @@ namespace AtaraxiaAI.Business
                 _visionTask.Dispose();
                 Log.Logger.Information("Ended object detection.");
             }
+        }
+
+        public void DeactivateSpeechRecognition()
+        {
+            SpeechEngine?.Recognizer.Dispose();
+            Log.Logger.Information("Ended speech recognition.");
+            IsSpeechRecognitionRunning = false;
         }
 
         public void UpdateVisionCaptureSource(VisionCaptureSources captureSource)
@@ -137,15 +146,18 @@ namespace AtaraxiaAI.Business
 
         public void UpdateSoundCaptureSource(SoundCaptureSources captureSource)
         {
-            if (SpeechEngine.Recognizer is VoskRecognizer2 voskRecognizer)
+            if (SpeechEngine.Recognizer is VoskRecognizer voskRecognizer)
             {
                 voskRecognizer.CaptureSource = captureSource;
                 //TODO: The setter of CaptureSource maybe could do the dispose and reactivate.
                 // Same with the vision update, but that one has to care about the token and task.
             }
 
-            SpeechEngine.Recognizer.Dispose();
-            ActivateSound(_speechRecognizedAction);
+            if (IsSpeechRecognitionRunning)
+            {
+                DeactivateSpeechRecognition();
+                ActivateSpeechRecognition();
+            }
         }
 
         /// <summary>
@@ -156,11 +168,7 @@ namespace AtaraxiaAI.Business
             Log.Logger.Information("Shutting down.");
 
             DeactivateVision();
-
-            if (SpeechEngine != null)
-            {
-                SpeechEngine.Recognizer.Dispose();
-            }
+            DeactivateSpeechRecognition();
         }
     }
 }
