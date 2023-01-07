@@ -6,13 +6,13 @@ using AtaraxiaAI.Data.Domains;
 using Desktop.Robot;
 using System;
 using System.Threading.Tasks;
-using static AtaraxiaAI.Business.Base.Enums;
 
 namespace AtaraxiaAI.Business
 {
     public class AI : ObservableObject
     {
         public static InMemoryLogger Log { get; set; }
+
         internal static AppData AppData { get; set; }
 
         private bool _isInitialized;
@@ -26,15 +26,11 @@ namespace AtaraxiaAI.Business
             }
         }
 
+        public SpeechEngine SpeechEngine { get; set; }
         public VisionEngine VisionEngine { get; set; }
-        public bool IsSpeechRecognitionRunning { get; set; }
 
         internal SystemInfo SystemInfo { get; set; }
         internal Robot Peripherals { get; set; }
-        internal OrchestrationEngine CommandLoop { get; set; }
-        internal SpeechEngine SpeechEngine { get; set; }
-
-        private Action<string> _speechRecognizedAction;
 
         public AI()
         {
@@ -81,39 +77,9 @@ namespace AtaraxiaAI.Business
 
             Log.Logger.Information("... Initializing speech engine.");
             SpeechEngine = new SpeechEngine();
-            CommandLoop = new OrchestrationEngine(SpeechEngine);
 
             IsInitialized = true;
             Log.Logger.Information("Initialization complete.");
-        }
-
-        public void ActivateSpeechRecognition()
-        {
-            Log.Logger.Information("Beginning speech recognition.");
-            _speechRecognizedAction = CommandLoop.Heard;
-            SpeechEngine.Recognizer.Listen(_speechRecognizedAction);
-            IsSpeechRecognitionRunning = true;
-        }
-
-        public void DeactivateSpeechRecognition()
-        {
-            SpeechEngine?.Recognizer.Dispose();
-            Log.Logger.Information("Ended speech recognition.");
-            IsSpeechRecognitionRunning = false;
-        }
-
-        public void UpdateSoundCaptureSource(SoundCaptureSources captureSource)
-        {
-            if (SpeechEngine.Recognizer is VoskRecognizer voskRecognizer)
-            {
-                voskRecognizer.CaptureSource = captureSource;
-            }
-
-            if (IsSpeechRecognitionRunning)
-            {
-                DeactivateSpeechRecognition();
-                ActivateSpeechRecognition();
-            }
         }
 
         /// <summary>
@@ -124,7 +90,7 @@ namespace AtaraxiaAI.Business
             Log.Logger.Information("Shutting down.");
 
             VisionEngine.Deactivate();
-            DeactivateSpeechRecognition();
+            SpeechEngine.DeactivateSpeechRecognition();
         }
     }
 }

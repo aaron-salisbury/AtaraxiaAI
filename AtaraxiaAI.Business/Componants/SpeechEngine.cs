@@ -1,5 +1,6 @@
 ﻿using AtaraxiaAI.Business.Services;
 using NAudio.Wave;
+using Serilog;
 using System.Globalization;
 using System.IO;
 using System.Threading;
@@ -7,29 +8,32 @@ using static AtaraxiaAI.Business.Base.Enums;
 
 namespace AtaraxiaAI.Business.Componants
 {
-    internal class SpeechEngine
+    public class SpeechEngine
     {
-        internal IRecognizer Recognizer { get; set; }
-        internal ISynthesizer Synthesizer { get; set; }
+        public bool IsSpeechRecognitionRunning { get; set; }
 
         private CultureInfo _culture;
+        private OrchestrationEngine _commandLoop { get; set; }
+        private IRecognizer _recognizer;
+        private ISynthesizer _synthesizer;
 
         internal SpeechEngine(CultureInfo culture = null)
         {
             _culture = culture ?? new CultureInfo("en-US");
+            _commandLoop = new OrchestrationEngine(this);
 
-            Recognizer = new VoskRecognizer();
+            _recognizer = new VoskRecognizer();
 
             SetSynthesizer();
         }
 
         internal void Speak(string message)
         {
-            if (Synthesizer != null) // Could be null if cloud services are maxed and also not running on Windows.
+            if (_synthesizer != null) // Could be null if cloud services are maxed and also not running on Windows.
             {
-                Recognizer.Pause();
-                bool spoke = Synthesizer.SpeakAsync(message).Result;
-                Recognizer.Unpause();
+                _recognizer.Pause();
+                bool spoke = _synthesizer.SpeakAsync(message).Result;
+                _recognizer.Unpause();
 
                 if (!spoke)
                 {
@@ -60,7 +64,7 @@ namespace AtaraxiaAI.Business.Componants
 
                 if (requestedSynthesizer != null && requestedSynthesizer.IsAvailable())
                 {
-                    Synthesizer = requestedSynthesizer;
+                    _synthesizer = requestedSynthesizer;
                     return;
                 }
             }
@@ -68,26 +72,59 @@ namespace AtaraxiaAI.Business.Componants
             ISynthesizer synthesizer = new GoogleCloudSynthesizer(_culture);
             if (synthesizer.IsAvailable())
             {
-                Synthesizer = synthesizer;
+                _synthesizer = synthesizer;
                 return;
             }
 
             synthesizer = new MicrosoftAzureSynthesizer(_culture);
             if (synthesizer.IsAvailable())
             {
-                Synthesizer = synthesizer;
+                _synthesizer = synthesizer;
                 return;
             }
 
             synthesizer = new SystemDotSpeechSynthesizer(_culture);
             if (synthesizer.IsAvailable())
             {
-                Synthesizer = synthesizer;
+                _synthesizer = synthesizer;
                 return;
             }
 
-            Synthesizer = null;
+            _synthesizer = null;
             AI.Log.Logger.Warning("No speech synthesizer is currently available.");
+        }
+
+        public void ActivateSpeechRecognition()
+        {
+            Log.Logger.Information("Beginning speech recognition.");
+
+            DeactivateSpeechRecognition();
+            _recognizer.Listen(_commandLoop.Heard);
+            IsSpeechRecognitionRunning = true;
+        }
+
+        public void DeactivateSpeechRecognition()
+        {
+            if (IsSpeechRecognitionRunning)
+            {
+                _recognizer.Dispose();
+                Log.Logger.Information("Ended speech recognition.");
+                IsSpeechRecognitionRunning = false;
+            }
+        }
+
+        public void UpdateCaptureSource(SoundCaptureSources captureSource)
+        {
+            if (_recognizer is VoskRecognizer voskRecognizer)
+            {
+                voskRecognizer.CaptureSource = captureSource;
+            }
+
+            if (IsSpeechRecognitionRunning)
+            {
+                DeactivateSpeechRecognition();
+                ActivateSpeechRecognition();
+            }
         }
 
         internal static void StreamSpeechToSpeaker(byte[] speechWavBuffer, string originalText = null)

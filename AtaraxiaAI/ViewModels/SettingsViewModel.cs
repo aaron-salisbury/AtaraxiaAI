@@ -43,7 +43,7 @@ namespace AtaraxiaAI.ViewModels
                 MainWindowViewModel? mainVM = App.Current?.Services?.GetService<MainWindowViewModel>();
                 if (mainVM != null)
                 {
-                    mainVM.AI.UpdateSoundCaptureSource((SoundCaptureSources)value.Value);
+                    mainVM.AI.SpeechEngine.UpdateCaptureSource((SoundCaptureSources)value.Value);
                 }
             }
         }

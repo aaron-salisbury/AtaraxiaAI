@@ -93,15 +93,15 @@ namespace AtaraxiaAI.ViewModels
 
         private void OnSoundClick()
         {
-            if (AI.IsSpeechRecognitionRunning)
+            if (AI.SpeechEngine.IsSpeechRecognitionRunning)
             {
                 SoundIcon = MaterialIconKind.MicOff;
-                AI.DeactivateSpeechRecognition();
+                AI.SpeechEngine.DeactivateSpeechRecognition();
             }
             else
             {
                 SoundIcon = MaterialIconKind.Microphone;
-                AI.ActivateSpeechRecognition();
+                AI.SpeechEngine.ActivateSpeechRecognition();
             }
         }
 
