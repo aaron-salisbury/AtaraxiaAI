@@ -67,7 +67,7 @@ namespace AtaraxiaAI.ViewModels
             OnLogsClickCommand = new RelayCommand(() => OnLogsClick());
             OnSettingsClickCommand = new RelayCommand(() => OnSettingsClick());
 
-            Task.Run(() => { AI.Initiate().Wait(); });
+            Task.Run(() => { AI.Initiate(updateFrameAction: SetVisionFrame).Wait(); });
         }
 
         public void Shutdown()
@@ -77,16 +77,16 @@ namespace AtaraxiaAI.ViewModels
 
         private void OnVisionClick()
         {
-            if (AI.IsVisionEngineRunning)
+            if (AI.VisionEngine.IsEngineRunning)
             {
                 VisionIcon = MaterialIconKind.EyeOff;
-                AI.DeactivateVision();
+                AI.VisionEngine.Deactivate();
                 ShowVisionFeed = false;
             }
             else
             {
                 VisionIcon = MaterialIconKind.Eye;
-                AI.ActivateVision(SetVisionFrame);
+                AI.VisionEngine.Activate();
                 ShowVisionFeed = true;
             }
         }

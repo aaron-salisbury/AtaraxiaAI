@@ -27,7 +27,7 @@ namespace AtaraxiaAI.ViewModels
                 MainWindowViewModel? mainVM = App.Current?.Services?.GetService<MainWindowViewModel>();
                 if (mainVM != null)
                 {
-                    mainVM.AI.UpdateVisionCaptureSource((VisionCaptureSources)value.Value);
+                    mainVM.AI.VisionEngine.UpdateCaptureSource((VisionCaptureSources)value.Value);
                 }
             }
         }

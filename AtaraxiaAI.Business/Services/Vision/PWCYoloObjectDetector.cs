@@ -15,20 +15,22 @@ using static AtaraxiaAI.Business.Base.Enums;
 namespace AtaraxiaAI.Business.Services
 {
     // https://youtu.be/v7_g1Zoapkg
-    internal class PWCYoloVisionEngine : IVisionEngine
+    internal class PWCYoloObjectDetector : IObjectDetector
     {
         internal VisionCaptureSources CaptureSource { get; set; }
 
         private Net _net;
         private string[] _classLabels;
 
-        internal PWCYoloVisionEngine(VisionCaptureSources captureSource = VisionCaptureSources.Screen)
+        internal PWCYoloObjectDetector(VisionCaptureSources captureSource = VisionCaptureSources.Screen)
         {
             CaptureSource = captureSource;
             _classLabels = CRUD.ReadCOCOClassLabels();
 
             try
             {
+                // Got files from https://pjreddie.com/darknet/yolo/
+                // Using the "tiny" version since the regular weights file exceeds github file size limit.
                 _net = DnnInvoke.ReadNetFromDarknet(CRUD.ReadYoloCFGBuffer(), CRUD.ReadYoloWeightsBuffer());
                 _net.SetPreferableBackend(Emgu.CV.Dnn.Backend.OpenCV);
                 _net.SetPreferableTarget(Emgu.CV.Dnn.Target.Cpu);
@@ -39,8 +41,10 @@ namespace AtaraxiaAI.Business.Services
             }
         }
 
-        void IVisionEngine.Initiate(Action<byte[]> updateFrameAction, CancellationToken cancelToken)
+        void IObjectDetector.Initiate(Action<byte[]> updateFrameAction, CancellationToken cancelToken)
         {
+            AI.Log.Logger.Information("Initializing vision engine.");
+
             double? widthFactor = null;
             double? heightFactor = null;
 

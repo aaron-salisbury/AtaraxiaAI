@@ -7,16 +7,16 @@ using System.Threading;
 namespace AtaraxiaAI.Business.Services
 {
     // https://youtu.be/YTBAjP-0Fto
-    internal class PWCFacesVisionEngine : IVisionEngine
+    internal class PWCFacesObjectDetector : IObjectDetector
     {
         private CascadeClassifier _faceCascade;
 
-        internal PWCFacesVisionEngine()
+        internal PWCFacesObjectDetector()
         {
             _faceCascade = new CascadeClassifier(Data.CRUD.ReadHaarCascadesClassifierFaceContentPath());
         }
 
-        void IVisionEngine.Initiate(Action<byte[]> updateFrameAction, CancellationToken cancelToken)
+        void IObjectDetector.Initiate(Action<byte[]> updateFrameAction, CancellationToken cancelToken)
         {
             AI.Log.Logger.Information("Initializing vision engine.");
 

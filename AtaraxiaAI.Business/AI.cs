@@ -5,7 +5,6 @@ using AtaraxiaAI.Business.Services.Base.Models;
 using AtaraxiaAI.Data.Domains;
 using Desktop.Robot;
 using System;
-using System.Threading;
 using System.Threading.Tasks;
 using static AtaraxiaAI.Business.Base.Enums;
 
@@ -27,22 +26,15 @@ namespace AtaraxiaAI.Business
             }
         }
 
+        public VisionEngine VisionEngine { get; set; }
         public bool IsSpeechRecognitionRunning { get; set; }
-        public bool IsVisionEngineRunning
-        {
-            get { return _visionTask != null && _visionTask.Status == TaskStatus.Running; }
-        }
 
         internal SystemInfo SystemInfo { get; set; }
         internal Robot Peripherals { get; set; }
         internal OrchestrationEngine CommandLoop { get; set; }
         internal SpeechEngine SpeechEngine { get; set; }
-        internal IVisionEngine VisionEngine { get; set; }
 
-        private Action<byte[]> _updateFrameAction;
         private Action<string> _speechRecognizedAction;
-        private CancellationTokenSource _visionTokenSource;
-        private Task _visionTask;
 
         public AI()
         {
@@ -67,7 +59,7 @@ namespace AtaraxiaAI.Business
             }
         }
 
-        public async Task Initiate()
+        public async Task Initiate(Action<byte[]> updateFrameAction)
         {
             Log.Logger.Information("Initializing ...");
 
@@ -85,7 +77,7 @@ namespace AtaraxiaAI.Business
             Data.CRUD.CreateModels(Log.Logger);
 
             Log.Logger.Information("... Initializing vision engine.");
-            VisionEngine = new PWCYoloVisionEngine();
+            VisionEngine = new VisionEngine(updateFrameAction);
 
             Log.Logger.Information("... Initializing speech engine.");
             SpeechEngine = new SpeechEngine();
@@ -93,14 +85,6 @@ namespace AtaraxiaAI.Business
 
             IsInitialized = true;
             Log.Logger.Information("Initialization complete.");
-        }
-
-        public void ActivateVision(Action<byte[]> updateFrameAction)
-        {
-            Log.Logger.Information("Beginning object detection.");
-            _updateFrameAction = updateFrameAction;
-            _visionTokenSource = new CancellationTokenSource();
-            _visionTask = Task.Run(() => VisionEngine.Initiate(updateFrameAction, _visionTokenSource.Token));
         }
 
         public void ActivateSpeechRecognition()
@@ -111,37 +95,11 @@ namespace AtaraxiaAI.Business
             IsSpeechRecognitionRunning = true;
         }
 
-        public void DeactivateVision()
-        {
-            if (IsVisionEngineRunning)
-            {
-                _visionTokenSource.Cancel();
-                _visionTokenSource.Dispose();
-                _visionTask.Wait();
-                _visionTask.Dispose();
-                Log.Logger.Information("Ended object detection.");
-            }
-        }
-
         public void DeactivateSpeechRecognition()
         {
             SpeechEngine?.Recognizer.Dispose();
             Log.Logger.Information("Ended speech recognition.");
             IsSpeechRecognitionRunning = false;
-        }
-
-        public void UpdateVisionCaptureSource(VisionCaptureSources captureSource)
-        {
-            if (VisionEngine is PWCYoloVisionEngine yoloEngine)
-            {
-                yoloEngine.CaptureSource = captureSource;
-            }
-
-            if (IsVisionEngineRunning)
-            {
-                DeactivateVision();
-                ActivateVision(_updateFrameAction);
-            }
         }
 
         public void UpdateSoundCaptureSource(SoundCaptureSources captureSource)
@@ -165,7 +123,7 @@ namespace AtaraxiaAI.Business
         {
             Log.Logger.Information("Shutting down.");
 
-            DeactivateVision();
+            VisionEngine.Deactivate();
             DeactivateSpeechRecognition();
         }
     }
