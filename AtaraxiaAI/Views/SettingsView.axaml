@@ -11,17 +11,25 @@
 			<Setter Property="FontFamily" Value="/Base/Assets/Fonts/heavy_data.ttf#Heavy Data" />
 			<Setter Property="FontSize" Value="17" />
 			<Setter Property="Margin" Value="0,0,0,5" />
+			<Setter Property="HorizontalAlignment" Value="Right" />
 		</Style>
 	</UserControl.Styles>
-	
-	<StackPanel HorizontalAlignment="Right">
-		<StackPanel>
+
+	<ScrollViewer>
+		<StackPanel HorizontalAlignment="Right" Margin="0,0,20,0">
+
+			<TextBlock Text="Storage Location" Classes="propertyLabel" />
+			<StackPanel Orientation="Horizontal" Margin="0,0,0,15">
+				<TextBox IsReadOnly="True" Width="200" Text="{Binding UserStorageDirectory}" />
+				<Button Name="StorageLocationBtn" Content="Select Folder" Margin="5,0,0,0" />
+			</StackPanel>
+
 			<TextBlock Text="Vision Capture Source" Classes="propertyLabel" />
 			<ComboBox SelectedItem="{Binding SelectedVisionCaptureSource}"
-					  Items="{Binding VisionCaptureSourceTypes}" 
-					  HorizontalAlignment="Right"
+					  Items="{Binding VisionCaptureSourceTypes}"
 					  Width="125"
-                      Margin="0,0,0,15">
+					  HorizontalAlignment="Right"
+					  Margin="0,0,0,15">
 				<ComboBox.ItemTemplate>
 					<DataTemplate>
 						<TextBlock Text="{Binding Text}" />
@@ -29,18 +37,18 @@
 				</ComboBox.ItemTemplate>
 			</ComboBox>
 
-            <TextBlock Text="Sound Capture Source" Classes="propertyLabel" />
-            <ComboBox SelectedItem="{Binding SelectedSoundCaptureSource}"
+			<TextBlock Text="Sound Capture Source" Classes="propertyLabel" />
+			<ComboBox SelectedItem="{Binding SelectedSoundCaptureSource}"
 					  Items="{Binding SoundCaptureSourceTypes}"
-					  HorizontalAlignment="Right"
-					  Width="125">
-                <ComboBox.ItemTemplate>
-                    <DataTemplate>
-                        <TextBlock Text="{Binding Text}" />
-                    </DataTemplate>
-                </ComboBox.ItemTemplate>
-            </ComboBox>
+					  Width="125"
+					  HorizontalAlignment="Right">
+				<ComboBox.ItemTemplate>
+					<DataTemplate>
+						<TextBlock Text="{Binding Text}" />
+					</DataTemplate>
+				</ComboBox.ItemTemplate>
+			</ComboBox>
+
 		</StackPanel>
-	</StackPanel>
-	
+	</ScrollViewer>
 </UserControl>

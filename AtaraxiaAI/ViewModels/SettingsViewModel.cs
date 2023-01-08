@@ -1,6 +1,5 @@
 using AtaraxiaAI.Base;
 using CommunityToolkit.Mvvm.ComponentModel;
-using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -23,12 +22,7 @@ namespace AtaraxiaAI.ViewModels
             set
             { 
                 SetProperty(ref _selectedVisionCaptureSource, value);
-
-                MainWindowViewModel? mainVM = App.Current?.Services?.GetService<MainWindowViewModel>();
-                if (mainVM != null)
-                {
-                    mainVM.AI.VisionEngine.UpdateCaptureSource((VisionCaptureSources)value.Value);
-                }
+                MainWindowViewModel.AI?.VisionEngine.UpdateCaptureSource((VisionCaptureSources)value.Value);
             }
         }
 
@@ -39,17 +33,25 @@ namespace AtaraxiaAI.ViewModels
             set
             {
                 SetProperty(ref _selectedSoundCaptureSource, value);
+                MainWindowViewModel.AI?.SpeechEngine.UpdateCaptureSource((SoundCaptureSources)value.Value);
+            }
+        }
 
-                MainWindowViewModel? mainVM = App.Current?.Services?.GetService<MainWindowViewModel>();
-                if (mainVM != null)
-                {
-                    mainVM.AI.SpeechEngine.UpdateCaptureSource((SoundCaptureSources)value.Value);
-                }
+        private string _userStorageDirectory;
+        public string UserStorageDirectory
+        {
+            get { return _userStorageDirectory; }
+            set
+            {
+                SetProperty(ref _userStorageDirectory, value);
+                MainWindowViewModel.AI?.UpdateUserStorageDirectory(_userStorageDirectory);
             }
         }
 
         public SettingsViewModel()
         {
+            _userStorageDirectory = MainWindowViewModel.AI?.GetUserStorageDirectory() ?? string.Empty;
+
             _visionCaptureSourceTypes = Enum.GetValues(typeof(VisionCaptureSources))
                 .Cast<VisionCaptureSources>()
                 .Select(cs => new ComboBoxEnumItem() { Value = (int)cs, Text = cs.ToString() })

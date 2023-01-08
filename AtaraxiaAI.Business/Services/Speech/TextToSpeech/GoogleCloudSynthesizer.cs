@@ -66,13 +66,13 @@ namespace AtaraxiaAI.Business.Services
                 }
 
                 AI.AppData.GoogleCloudSpeechToTextByteCount += input.ToByteArray().Length;
-                await Data.CRUD.UpdateDataAsync<AppData>(AI.AppData, AI.Log.Logger);
+                await Data.CRUD.UpdateDataAsync<AppData>(AI.AppData, AI.InternalStorage.UserStorageDirectory, AI.Log.Logger);
             }
             else
             {
                 // If we're this close to the limit, just max it out and don't bother to try again until next month.
                 AI.AppData.GoogleCloudSpeechToTextByteCount = FREE_LIMIT;
-                await Data.CRUD.UpdateDataAsync<AppData>(AI.AppData, AI.Log.Logger);
+                await Data.CRUD.UpdateDataAsync<AppData>(AI.AppData, AI.InternalStorage.UserStorageDirectory, AI.Log.Logger);
             }
 
             return isSuccessful;

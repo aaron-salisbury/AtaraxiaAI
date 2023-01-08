@@ -16,7 +16,7 @@ namespace AtaraxiaAI.ViewModels
         public RelayCommand OnLogsClickCommand { get; }
         public RelayCommand OnSettingsClickCommand { get; }
 
-        public AI AI { get; set; }
+        public static AI? AI { get; set; }
 
         [ObservableProperty]
         private IBitmap? _visionFrame;
@@ -72,12 +72,12 @@ namespace AtaraxiaAI.ViewModels
 
         public void Shutdown()
         {
-            AI.Shutdown();
+            AI?.Shutdown();
         }
 
         private void OnVisionClick()
         {
-            if (AI.VisionEngine.IsEngineRunning)
+            if (AI != null && AI.VisionEngine.IsEngineRunning)
             {
                 VisionIcon = MaterialIconKind.EyeOff;
                 AI.VisionEngine.Deactivate();
@@ -86,14 +86,14 @@ namespace AtaraxiaAI.ViewModels
             else
             {
                 VisionIcon = MaterialIconKind.Eye;
-                AI.VisionEngine.Activate();
+                AI?.VisionEngine.Activate();
                 ShowVisionFeed = true;
             }
         }
 
         private void OnSoundClick()
         {
-            if (AI.SpeechEngine.IsSpeechRecognitionRunning)
+            if (AI != null && AI.SpeechEngine.IsSpeechRecognitionRunning)
             {
                 SoundIcon = MaterialIconKind.MicOff;
                 AI.SpeechEngine.DeactivateSpeechRecognition();
@@ -101,7 +101,7 @@ namespace AtaraxiaAI.ViewModels
             else
             {
                 SoundIcon = MaterialIconKind.Microphone;
-                AI.SpeechEngine.ActivateSpeechRecognition();
+                AI?.SpeechEngine.ActivateSpeechRecognition();
             }
         }
 

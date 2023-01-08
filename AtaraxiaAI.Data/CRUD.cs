@@ -1,12 +1,17 @@
 ﻿using AtaraxiaAI.Data.Base;
+using AtaraxiaAI.Data.Domains;
 using Serilog;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Net;
+using System.Net.Http;
+using System.Net.Mime;
 using System.Reflection;
+using System.Reflection.Metadata;
 using System.Threading.Tasks;
+using File = System.IO.File;
 
 namespace AtaraxiaAI.Data
 {
@@ -31,17 +36,17 @@ namespace AtaraxiaAI.Data
         /// This is done the first time the app runs since Github's 
         /// file-size limit (100 MB) prevents them from being included in the project.
         /// </summary>
-        public static void CreateModels(ILogger logger)
+        public static async Task CreateModels(ILogger logger)
         {
             string voskZipPath = Path.Combine(VOSK_CONTENT_DIRECTORY, $"{VOSK_MODEL}.zip");
             if (!File.Exists(voskZipPath))
             {
                 try
                 {
-                    using (WebClient client = new WebClient())
+                    using (HttpClient client = new HttpClient())
                     {
                         logger.Information("Beginning to download Vosk model.");
-                        client.DownloadFile(new Uri(VOSK_DOWNLOAD_URL), voskZipPath);
+                        await client.DownloadFileTaskAsync(new Uri(VOSK_DOWNLOAD_URL), voskZipPath);
                         logger.Information("Vosk model download complete.");
                     }
 
@@ -68,10 +73,10 @@ namespace AtaraxiaAI.Data
             {
                 try
                 {
-                    using (WebClient client = new WebClient())
+                    using (HttpClient client = new HttpClient())
                     {
                         logger.Information("Beginning to download YOLO model.");
-                        client.DownloadFile(new Uri(YOLO_WEIGHTS_DOWNLOAD_URL), YOLO_WEIGHTS_CONTENT_PATH);
+                        await client.DownloadFileTaskAsync(new Uri(YOLO_WEIGHTS_DOWNLOAD_URL), YOLO_WEIGHTS_CONTENT_PATH);
                         logger.Information("YOLO model download complete.");
                     }
                 }
@@ -82,13 +87,11 @@ namespace AtaraxiaAI.Data
             }
         }
 
-        public static async Task<T> ReadDataAsync<T>(ILogger logger)
+        public static async Task<T> ReadDataAsync<T>(string directoryPath, ILogger logger)
         {
-            logger.Information("Reading from file system.");
-
             try
             {
-                string filePath = Path.Combine(GetAppDirectoryPath(), GetJsonFileNameForType<T>());
+                string filePath = Path.Combine(directoryPath, GetJsonFileNameForType<T>());
 
                 string json = File.ReadAllText(filePath);
 
@@ -105,13 +108,11 @@ namespace AtaraxiaAI.Data
             return default(T);
         }
 
-        public static async Task<IEnumerable<T>> ReadDomainsAsync<T>(ILogger logger)
+        public static async Task<IEnumerable<T>> ReadDomainsAsync<T>(string directoryPath, ILogger logger)
         {
-            logger.Information("Reading from file system.");
-
             try
             {
-                string filePath = Path.Combine(GetAppDirectoryPath(), GetJsonFileNameForType<T>());
+                string filePath = Path.Combine(directoryPath, GetJsonFileNameForType<T>());
 
                 string json = File.ReadAllText(filePath);
 
@@ -177,13 +178,81 @@ namespace AtaraxiaAI.Data
             return labels.ToArray();
         }
 
-        public static async Task UpdateDataAsync<T>(object data, ILogger logger)
+        public static async Task<InternalStorage> ReadInternalStorage(ILogger logger)
         {
-            logger.Information("Writing to file system.");
+            const string INTERNAL_DIRECTORY = "./";
+
+            InternalStorage internalStorage = null;
 
             try
             {
-                FileInfo file = new FileInfo(Path.Combine(GetAppDirectoryPath(), GetJsonFileNameForType<T>()));
+                string filePath = Path.Combine(INTERNAL_DIRECTORY, GetJsonFileNameForType<InternalStorage>());
+
+                if (File.Exists(filePath))
+                {
+                    internalStorage = await ReadDataAsync<InternalStorage>(INTERNAL_DIRECTORY, logger);
+                }
+                else
+                {
+                    internalStorage = new InternalStorage
+                    {
+                        UserStorageDirectory = GetAppDirectoryPath()
+                    };
+
+                    await UpdateDataAsync<InternalStorage>(internalStorage, INTERNAL_DIRECTORY, logger);
+                }
+            }
+            catch (Exception e)
+            {
+                logger.Error($"Failed to read internal storage: {e.Message}");
+            }
+
+            return internalStorage;
+        }
+
+        public static async Task UpdateInternalStorage(InternalStorage internalStorage, ILogger logger, string newUserDirectory = null)
+        {
+            const string INTERNAL_DIRECTORY = "./";
+
+            try
+            {
+                if (!string.IsNullOrEmpty(newUserDirectory))
+                {
+                    string previousUserStorageDirectory = internalStorage.UserStorageDirectory;
+
+                    if (!string.IsNullOrEmpty(previousUserStorageDirectory))
+                    {
+                        foreach (string file in Directory.GetFiles(previousUserStorageDirectory))
+                        {
+                            string fileName = Path.GetFileName(file);
+                            string newFilePath = Path.Combine(newUserDirectory, fileName);
+
+                            if (!File.Exists(newFilePath))
+                            {
+                                Directory.Move(file, newFilePath);
+                            }
+                        }
+                    }
+
+                    internalStorage = new InternalStorage
+                    {
+                        UserStorageDirectory = newUserDirectory
+                    };
+                }
+
+                await UpdateDataAsync<InternalStorage>(internalStorage, INTERNAL_DIRECTORY, logger);
+            }
+            catch (Exception e)
+            {
+                logger.Error($"Failed to update file: {e.Message}");
+            }
+        }
+
+        public static async Task UpdateDataAsync<T>(object data, string directoryPath, ILogger logger)
+        {
+            try
+            {
+                FileInfo file = new FileInfo(Path.Combine(directoryPath, GetJsonFileNameForType<T>()));
 
                 if (file != null && file.Directory != null)
                 {
@@ -199,13 +268,11 @@ namespace AtaraxiaAI.Data
             }
         }
 
-        public static async Task UpdateDomainsAsync<T>(IEnumerable<object> domains, ILogger logger)
+        public static async Task UpdateDomainsAsync<T>(IEnumerable<object> domains, string directoryPath, ILogger logger)
         {
-            logger.Information("Writing to file system.");
-
             try
             {
-                FileInfo file = new FileInfo(Path.Combine(GetAppDirectoryPath(), GetJsonFileNameForType<T>()));
+                FileInfo file = new FileInfo(Path.Combine(directoryPath, GetJsonFileNameForType<T>()));
 
                 if (file != null && file.Directory != null)
                 {
@@ -218,6 +285,23 @@ namespace AtaraxiaAI.Data
             catch (Exception e)
             {
                 logger.Error($"Failed to write to file system: {e.Message}");
+            }
+        }
+
+        public static void DeleteDomain<T>(string directoryPath, ILogger logger)
+        {
+            try
+            {
+                string filePath = Path.Combine(directoryPath, GetJsonFileNameForType<T>());
+
+                if (File.Exists(filePath))
+                {
+                    File.Delete(filePath);
+                }
+            }
+            catch (Exception e)
+            {
+                logger.Error($"Failed to delete file: {e.Message}");
             }
         }
 
@@ -252,9 +336,23 @@ namespace AtaraxiaAI.Data
 
         private static string GetJsonFileNameForType<T>()
         {
-            string typeName = typeof(T).ToString();
-            int pos = typeName.LastIndexOf('.') + 1;
-            string objectName = typeName.Substring(pos, typeName.Length - pos);
+            // I like to name the main application data file of my projects after the solution.
+            // This file is usually stored in a local app folder and isn't unrealistic that the user
+            // would interact with it, or configure it to instead be stored in a network location.
+            // All other data can just be named after its type, assuming no more than one file for each.
+
+            string objectName;
+            if (typeof(T) == typeof(AppData))
+            {
+                string assemblyName = System.Reflection.Assembly.GetExecutingAssembly().GetName().Name;
+                objectName = assemblyName.Substring(0, assemblyName.IndexOf('.'));
+            }
+            else
+            {
+                string typeName = typeof(T).ToString();
+                int pos = typeName.LastIndexOf('.') + 1;
+                objectName = typeName.Substring(pos, typeName.Length - pos);
+            }
 
             return $"{objectName}.json";
         }
