@@ -61,10 +61,11 @@ namespace AtaraxiaAI.Data
         {
             try
             {
-                WebRequest request = WebRequest.Create(url);
-                WebResponse response = await request.GetResponseAsync();
-
-                return response.GetResponseStream();
+                using (HttpClient client = new HttpClient(new HttpClientHandler { UseDefaultCredentials = true }))
+                {
+                    HttpResponseMessage response = await client.GetAsync(url);
+                    return await response.Content.ReadAsStreamAsync();
+                }
             }
             catch (Exception e)
             {

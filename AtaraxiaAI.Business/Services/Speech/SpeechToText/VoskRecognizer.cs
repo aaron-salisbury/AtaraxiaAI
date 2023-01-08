@@ -1,11 +1,10 @@
 ﻿using AtaraxiaAI.Business.Services.Base.Domains;
-using AtaraxiaAI.Data.Base;
-using Emgu.CV.ImgHash;
 using NAudio.CoreAudioApi;
 using NAudio.Wave;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Text.Json;
 using System.Timers;
 using Vosk;
 using static AtaraxiaAI.Business.Base.Enums;
@@ -198,7 +197,7 @@ namespace AtaraxiaAI.Business.Services
                 }
                 if (_recognizer.AcceptWaveform(fbuffer.ToArray(), fbuffer.Count))
                 {
-                    VoskRoot resultRoot = Json.ToObjectAsync<VoskRoot>(_recognizer.Result()).Result;
+                    VoskRoot resultRoot = JsonSerializer.Deserialize<VoskRoot>(_recognizer.Result());
                     if (!string.IsNullOrEmpty(resultRoot?.Text))
                     {
                         heard = true;
@@ -207,7 +206,7 @@ namespace AtaraxiaAI.Business.Services
                 }
             }
 
-            VoskRoot finalResultRoot = Json.ToObjectAsync<VoskRoot>(_recognizer.FinalResult()).Result;
+            VoskRoot finalResultRoot = JsonSerializer.Deserialize<VoskRoot>(_recognizer.FinalResult());
             if (!string.IsNullOrEmpty(finalResultRoot?.Text))
             {
                 heard = true;

@@ -3,6 +3,7 @@ using AtaraxiaAI.Business.Services.Base.Models;
 using AtaraxiaAI.Data;
 using AtaraxiaAI.Data.Base;
 using System.Collections.Generic;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace AtaraxiaAI.Business.Services
@@ -69,7 +70,7 @@ namespace AtaraxiaAI.Business.Services
 
             if (!string.IsNullOrEmpty(json))
             {
-                Sv443Joke sv443Joke = await Json.ToObjectAsync<Sv443Joke>(json);
+                Sv443Joke sv443Joke = JsonSerializer.Deserialize<Sv443Joke>(json);
 
                 if (sv443Joke != null)
                 {

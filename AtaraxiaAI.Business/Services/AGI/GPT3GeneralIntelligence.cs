@@ -3,6 +3,7 @@ using AtaraxiaAI.Data;
 using AtaraxiaAI.Data.Base;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace AtaraxiaAI.Business.Services
@@ -45,7 +46,7 @@ namespace AtaraxiaAI.Business.Services
 
             if (!string.IsNullOrEmpty(json))
             {
-                GPT3Root gPT3Root = await Json.ToObjectAsync<GPT3Root>(json);
+                GPT3Root gPT3Root = JsonSerializer.Deserialize<GPT3Root>(json);
 
                 if (gPT3Root != null && gPT3Root.Choices.Count > 0)
                 {

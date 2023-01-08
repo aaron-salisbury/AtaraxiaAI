@@ -2,6 +2,7 @@
 using AtaraxiaAI.Business.Services.Base.Models;
 using AtaraxiaAI.Data;
 using AtaraxiaAI.Data.Base;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace AtaraxiaAI.Business.Services
@@ -28,7 +29,7 @@ namespace AtaraxiaAI.Business.Services
 
             if (!string.IsNullOrEmpty(json))
             {
-                CanHazDadJoke canHazDadJoke = await Json.ToObjectAsync<CanHazDadJoke>(json);
+                CanHazDadJoke canHazDadJoke = JsonSerializer.Deserialize<CanHazDadJoke>(json);
 
                 if (canHazDadJoke != null)
                 {

@@ -5,11 +5,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
-using System.Net;
 using System.Net.Http;
-using System.Net.Mime;
 using System.Reflection;
-using System.Reflection.Metadata;
+using System.Text.Json;
 using System.Threading.Tasks;
 using File = System.IO.File;
 
@@ -93,11 +91,12 @@ namespace AtaraxiaAI.Data
             {
                 string filePath = Path.Combine(directoryPath, GetJsonFileNameForType<T>());
 
-                string json = File.ReadAllText(filePath);
-
-                if (!string.IsNullOrEmpty(json))
+                if (File.Exists(filePath))
                 {
-                    return await Json.ToObjectAsync<T>(json);
+                    using (FileStream openStream = File.OpenRead(filePath))
+                    {
+                        return await JsonSerializer.DeserializeAsync<T>(openStream);
+                    }
                 }
             }
             catch (Exception e)
@@ -105,7 +104,7 @@ namespace AtaraxiaAI.Data
                 logger.Error($"Failed to read from file system: {e.Message}");
             }
 
-            return default(T);
+            return default;
         }
 
         public static async Task<IEnumerable<T>> ReadDomainsAsync<T>(string directoryPath, ILogger logger)
@@ -114,11 +113,12 @@ namespace AtaraxiaAI.Data
             {
                 string filePath = Path.Combine(directoryPath, GetJsonFileNameForType<T>());
 
-                string json = File.ReadAllText(filePath);
-
-                if (!string.IsNullOrEmpty(json))
+                if (File.Exists(filePath))
                 {
-                    return await Json.ToObjectAsync<IEnumerable<T>>(json);
+                    using (FileStream openStream = File.OpenRead(filePath))
+                    {
+                        return await JsonSerializer.DeserializeAsync<IEnumerable<T>>(openStream);
+                    }
                 }
             }
             catch (Exception e)
@@ -248,7 +248,7 @@ namespace AtaraxiaAI.Data
             }
         }
 
-        public static async Task UpdateDataAsync<T>(object data, string directoryPath, ILogger logger)
+        public static async Task UpdateDataAsync<T>(T data, string directoryPath, ILogger logger)
         {
             try
             {
@@ -257,9 +257,11 @@ namespace AtaraxiaAI.Data
                 if (file != null && file.Directory != null)
                 {
                     file.Directory.Create();
-                    string json = await Json.StringifyAsync(data);
 
-                    File.WriteAllText(file.FullName, json);
+                    using (FileStream createStream = File.Create(file.FullName))
+                    {
+                        await JsonSerializer.SerializeAsync<T>(createStream, data);
+                    }
                 }
             }
             catch (Exception e)
@@ -268,7 +270,7 @@ namespace AtaraxiaAI.Data
             }
         }
 
-        public static async Task UpdateDomainsAsync<T>(IEnumerable<object> domains, string directoryPath, ILogger logger)
+        public static async Task UpdateDomainsAsync<T>(IEnumerable<T> domains, string directoryPath, ILogger logger)
         {
             try
             {
@@ -277,9 +279,11 @@ namespace AtaraxiaAI.Data
                 if (file != null && file.Directory != null)
                 {
                     file.Directory.Create();
-                    string json = await Json.StringifyAsync(domains);
 
-                    File.WriteAllText(file.FullName, json);
+                    using (FileStream createStream = File.Create(file.FullName))
+                    {
+                        await JsonSerializer.SerializeAsync<IEnumerable<T>>(createStream, domains);
+                    }
                 }
             }
             catch (Exception e)

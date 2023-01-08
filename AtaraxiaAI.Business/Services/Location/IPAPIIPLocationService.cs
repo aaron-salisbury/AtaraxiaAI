@@ -2,6 +2,7 @@
 using AtaraxiaAI.Business.Services.Base.Models;
 using AtaraxiaAI.Data;
 using AtaraxiaAI.Data.Base;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace AtaraxiaAI.Business.Services
@@ -19,7 +20,7 @@ namespace AtaraxiaAI.Business.Services
 
                 if (!string.IsNullOrEmpty(json))
                 {
-                    IPAPILocation iPAPILocation = await Json.ToObjectAsync<IPAPILocation>(json);
+                    IPAPILocation iPAPILocation = JsonSerializer.Deserialize<IPAPILocation>(json);
 
                     if (iPAPILocation != null)
                     {

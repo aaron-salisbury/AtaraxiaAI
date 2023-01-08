@@ -5,6 +5,9 @@ Logs should write to the UI like they're being typed, scroll up automatically, a
 Maybe use something like this to talk through the microphone: https://vb-audio.com/Cable/index.htm
 Virtual UI keyboard, maybe like https://github.com/AvaloniaUI/Avalonia/issues/6775
 Do something real with SystemDotSpeechRecognizer, instead of loading fake Grammar and saving it every time.
+Services that await json string, instead await a stream and do like:
+    using FileStream openStream = File.OpenRead(fileName);
+    WeatherForecast? weatherForecast = await JsonSerializer.DeserializeAsync<WeatherForecast>(openStream);
 
 New Skills:
   https://api.adviceslip.com/?ref=apilist.fun
