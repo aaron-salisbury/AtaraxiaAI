@@ -10,8 +10,7 @@
         x:Class="AtaraxiaAI.Views.MainWindow"
         Icon="/Base/Assets/logo.ico"
         Title="AtaraxiaAI"
-		Background="Transparent"
-		TransparencyLevelHint="AcrylicBlur"
+
 		ExtendClientAreaToDecorationsHint="True">
 
 	<Window.Styles>
@@ -35,30 +34,14 @@
 	<Grid RowDefinitions="30, *">
 
 		<!-- Background -->
-		<Image Grid.RowSpan="2" 
-			   ZIndex="-3"
-			   Stretch="Fill"
-			   Source="avares://AtaraxiaAI/Base/Assets/background.jpg"
-			   IsHitTestVisible="False"/>
-		<Border Grid.RowSpan="2" ZIndex="-2" BorderThickness="1" Opacity="0.8" IsHitTestVisible="False">
-			<Border.BorderBrush>
-				<LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
-					<LinearGradientBrush.GradientStops>
-						<GradientStop Offset="0.0" Color="#462AD8" />
-						<GradientStop Offset="0.75" Color="#DA34AE" />
-						<GradientStop Offset="1.0" Color="#8A16C1" />
-					</LinearGradientBrush.GradientStops>
-				</LinearGradientBrush>
-			</Border.BorderBrush>
-			<Border.Background>
-				<LinearGradientBrush StartPoint="0%,100%" EndPoint="100%,0%">
-					<LinearGradientBrush.GradientStops>
-						<GradientStop Offset="0.0" Color="#060531" />
-						<GradientStop Offset="0.5" Color="#1B1448" />
-					</LinearGradientBrush.GradientStops>
-				</LinearGradientBrush>
-			</Border.Background>
-		</Border>
+        <Grid Grid.RowSpan="2" IsHitTestVisible="False">
+            <Image ZIndex="-3" Stretch="Fill" Source="{SvgImage /Base/Assets/background.svg}" />
+            <Border ZIndex="-2">
+                <Border.Background>
+                    <SolidColorBrush Color="Black" Opacity="0.6" />
+                </Border.Background>
+            </Border>
+        </Grid>
 
 		<!-- Window Drag Area -->
 		<Border Grid.Row="0" IsHitTestVisible="False" />

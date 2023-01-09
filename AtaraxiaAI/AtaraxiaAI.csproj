@@ -9,13 +9,13 @@
   </PropertyGroup>
   <ItemGroup>
     <None Remove=".gitignore" />
-    <None Remove="Base\Assets\background.jpg" />
+    <None Remove="Base\Assets\background.svg" />
     <None Remove="Base\Assets\Fonts\heavy_data.ttf" />
     <None Remove="Base\Assets\Fonts\ProFontWindows.ttf" />
     <None Remove="Base\Assets\logo.ico" />
   </ItemGroup>
   <ItemGroup>
-    <AvaloniaResource Include="Base\Assets\background.jpg" />
+    <AvaloniaResource Include="Base\Assets\background.svg" />
     <AvaloniaResource Include="Base\Assets\Fonts\heavy_data.ttf" />
     <AvaloniaResource Include="Base\Assets\Fonts\ProFontWindows.ttf" />
     <AvaloniaResource Include="Base\Assets\logo.ico" />
@@ -32,6 +32,7 @@
     <PackageReference Include="Avalonia.Desktop" Version="0.10.18" />
     <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
     <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="0.10.18" />
+    <PackageReference Include="Avalonia.Svg.Skia" Version="0.10.18" />
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.0.0" />
     <PackageReference Include="Deadpikle.AvaloniaProgressRing" Version="0.9.8" />
     <PackageReference Include="Material.Icons.Avalonia" Version="1.1.10" />
