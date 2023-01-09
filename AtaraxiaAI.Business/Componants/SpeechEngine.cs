@@ -20,7 +20,7 @@ namespace AtaraxiaAI.Business.Componants
         {
             _culture = culture ?? new CultureInfo("en-US");
             _commandLoop = new OrchestrationEngine(this);
-            _recognizer = new VoskRecognizer();
+            _recognizer = new SystemDotSpeechRecognizer(_culture);
 
             SetSynthesizer();
         }

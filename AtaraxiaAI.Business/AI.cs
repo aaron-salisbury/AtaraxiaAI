@@ -5,6 +5,7 @@ using AtaraxiaAI.Business.Services.Base.Models;
 using AtaraxiaAI.Data.Domains;
 using Desktop.Robot;
 using System;
+using System.Net.Http;
 using System.Threading.Tasks;
 
 namespace AtaraxiaAI.Business
@@ -13,6 +14,7 @@ namespace AtaraxiaAI.Business
     {
         public static InMemoryLogger Log { get; set; }
 
+        internal static IHttpClientFactory HttpClientFactory { get; set; }
         internal static InternalStorage InternalStorage { get; set; }
         internal static AppData AppData { get; set; }
 
@@ -33,13 +35,14 @@ namespace AtaraxiaAI.Business
         internal SystemInfo SystemInfo { get; set; }
         internal Robot Peripherals { get; set; }
 
-        public AI()
+        public AI(IHttpClientFactory httpClientFactory)
         {
             _isInitialized = false;
 
+            HttpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
             Log = new InMemoryLogger();
-
             InternalStorage = Task.Run(async () => await Data.CRUD.ReadInternalStorage(Log.Logger)).Result;
+
             //TODO: Maybe do a file exists check first instead of letting it fail before creating it for the first time.
             AppData = Task.Run(async () => await Data.CRUD.ReadDataAsync<AppData>(InternalStorage.UserStorageDirectory, Log.Logger)).Result;
 
@@ -73,7 +76,7 @@ namespace AtaraxiaAI.Business
             Location location = await locationService.GetLocationByIPAsync(SystemInfo.IPAddress);
 
             Log.Logger.Information("... Verifying ML models.");
-            await Data.CRUD.CreateModels(Log.Logger);
+            await Data.CRUD.CreateModels(HttpClientFactory, Log.Logger);
 
             Log.Logger.Information("... Initializing vision engine.");
             VisionEngine = new VisionEngine(updateFrameAction);

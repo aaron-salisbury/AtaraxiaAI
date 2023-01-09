@@ -25,11 +25,11 @@ namespace AtaraxiaAI.Business.Services
 
             Joke joke = null;
 
-            string json = await WebRequests.SendHTTPJsonRequestAsync(URL, AI.Log.Logger, userAgent: _userAgent);
+            string json = await WebRequests.SendHTTPJsonRequestAsync(URL, AI.HttpClientFactory, AI.Log.Logger, userAgent: _userAgent);
 
             if (!string.IsNullOrEmpty(json))
             {
-                CanHazDadJoke canHazDadJoke = JsonSerializer.Deserialize<CanHazDadJoke>(json);
+                CanHazDadJoke canHazDadJoke = JsonSerializer.Deserialize<CanHazDadJoke>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
                 if (canHazDadJoke != null)
                 {

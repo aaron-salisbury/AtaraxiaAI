@@ -5,6 +5,7 @@ using CommunityToolkit.Mvvm.Input;
 using Material.Icons;
 using Microsoft.Extensions.DependencyInjection;
 using System.IO;
+using System.Net.Http;
 using System.Threading.Tasks;
 
 namespace AtaraxiaAI.ViewModels
@@ -48,9 +49,9 @@ namespace AtaraxiaAI.ViewModels
         [ObservableProperty]
         private object? _settingsView;
 
-        public MainWindowViewModel()
+        public MainWindowViewModel(IHttpClientFactory httpClientFactory)
         {
-            AI = new AI();
+            AI = new AI(httpClientFactory);
 
             _showVisionFeed = false;
             _visionIcon = MaterialIconKind.EyeOff;

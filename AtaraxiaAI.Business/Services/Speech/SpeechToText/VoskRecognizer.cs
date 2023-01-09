@@ -197,7 +197,7 @@ namespace AtaraxiaAI.Business.Services
                 }
                 if (_recognizer.AcceptWaveform(fbuffer.ToArray(), fbuffer.Count))
                 {
-                    VoskRoot resultRoot = JsonSerializer.Deserialize<VoskRoot>(_recognizer.Result());
+                    VoskRoot resultRoot = JsonSerializer.Deserialize<VoskRoot>(_recognizer.Result(), new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
                     if (!string.IsNullOrEmpty(resultRoot?.Text))
                     {
                         heard = true;
@@ -206,7 +206,7 @@ namespace AtaraxiaAI.Business.Services
                 }
             }
 
-            VoskRoot finalResultRoot = JsonSerializer.Deserialize<VoskRoot>(_recognizer.FinalResult());
+            VoskRoot finalResultRoot = JsonSerializer.Deserialize<VoskRoot>(_recognizer.FinalResult(), new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
             if (!string.IsNullOrEmpty(finalResultRoot?.Text))
             {
                 heard = true;

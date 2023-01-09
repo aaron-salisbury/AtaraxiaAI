@@ -1,7 +1,6 @@
 ﻿using AtaraxiaAI.Business.Services.Base.Domains;
 using AtaraxiaAI.Business.Services.Base.Models;
 using AtaraxiaAI.Data;
-using AtaraxiaAI.Data.Base;
 using System.Collections.Generic;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -66,11 +65,11 @@ namespace AtaraxiaAI.Business.Services
                 url += $"?type={JokeType.ToString().ToLower()}";
             }
 
-            string json = await WebRequests.SendHTTPJsonRequestAsync(url, AI.Log.Logger);
+            string json = await WebRequests.SendHTTPJsonRequestAsync(url, AI.HttpClientFactory, AI.Log.Logger);
 
             if (!string.IsNullOrEmpty(json))
             {
-                Sv443Joke sv443Joke = JsonSerializer.Deserialize<Sv443Joke>(json);
+                Sv443Joke sv443Joke = JsonSerializer.Deserialize<Sv443Joke>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
                 if (sv443Joke != null)
                 {

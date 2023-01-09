@@ -36,6 +36,7 @@
     <PackageReference Include="Deadpikle.AvaloniaProgressRing" Version="0.9.8" />
     <PackageReference Include="Material.Icons.Avalonia" Version="1.1.10" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="7.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Http" Version="7.0.0" />
     <PackageReference Include="XamlNameReferenceGenerator" Version="1.5.1" />
   </ItemGroup>
   <ItemGroup>

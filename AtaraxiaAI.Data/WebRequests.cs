@@ -9,13 +9,13 @@ using System.Threading.Tasks;
 
 namespace AtaraxiaAI.Data
 {
-    public class WebRequests
+    public static class WebRequests
     {
-        public static async Task<string> SendHTTPJsonRequestAsync(string url, ILogger logger, string content = null, Dictionary<string, string> requestHeaders = null, string httpMethod = "GET", string userAgent = null)
+        public static async Task<string> SendHTTPJsonRequestAsync(string url, IHttpClientFactory httpClientFactory, ILogger logger, string content = null, Dictionary<string, string> requestHeaders = null, string httpMethod = "GET", string userAgent = null)
         {
             try
             {
-                using (HttpClient client = new HttpClient())
+                using (HttpClient client = httpClientFactory.CreateClient())
                 {
                     client.DefaultRequestHeaders.Add("Accept", "application/json");
 
@@ -57,11 +57,11 @@ namespace AtaraxiaAI.Data
             }
         }
 
-        public static async Task<Stream> GetWebRequestStreamAsync(string url, ILogger logger)
+        public static async Task<Stream> GetWebRequestStreamAsync(string url, IHttpClientFactory httpClientFactory, ILogger logger)
         {
             try
             {
-                using (HttpClient client = new HttpClient(new HttpClientHandler { UseDefaultCredentials = true }))
+                using (HttpClient client = httpClientFactory.CreateClient())
                 {
                     HttpResponseMessage response = await client.GetAsync(url);
                     return await response.Content.ReadAsStreamAsync();

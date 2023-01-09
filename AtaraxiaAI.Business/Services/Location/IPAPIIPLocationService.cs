@@ -1,7 +1,6 @@
 ﻿using AtaraxiaAI.Business.Services.Base.Domains;
 using AtaraxiaAI.Business.Services.Base.Models;
 using AtaraxiaAI.Data;
-using AtaraxiaAI.Data.Base;
 using System.Text.Json;
 using System.Threading.Tasks;
 
@@ -16,11 +15,11 @@ namespace AtaraxiaAI.Business.Services
             if (!string.IsNullOrEmpty(iPAddress))
             {
                 string url = string.Format(URL_FORMAT, iPAddress);
-                string json = await WebRequests.SendHTTPJsonRequestAsync(url, AI.Log.Logger);
+                string json = await WebRequests.SendHTTPJsonRequestAsync(url, AI.HttpClientFactory, AI.Log.Logger);
 
                 if (!string.IsNullOrEmpty(json))
                 {
-                    IPAPILocation iPAPILocation = JsonSerializer.Deserialize<IPAPILocation>(json);
+                    IPAPILocation iPAPILocation = JsonSerializer.Deserialize<IPAPILocation>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
                     if (iPAPILocation != null)
                     {

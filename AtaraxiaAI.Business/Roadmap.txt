@@ -7,7 +7,7 @@ Virtual UI keyboard, maybe like https://github.com/AvaloniaUI/Avalonia/issues/67
 Do something real with SystemDotSpeechRecognizer, instead of loading fake Grammar and saving it every time.
 Services that await json string, instead await a stream and do like:
     using FileStream openStream = File.OpenRead(fileName);
-    WeatherForecast? weatherForecast = await JsonSerializer.DeserializeAsync<WeatherForecast>(openStream);
+    WeatherForecast? weatherForecast = await JsonSerializer.DeserializeAsync<WeatherForecast>(openStream, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
 New Skills:
   https://api.adviceslip.com/?ref=apilist.fun

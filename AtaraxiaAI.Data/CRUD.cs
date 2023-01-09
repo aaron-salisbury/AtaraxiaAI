@@ -34,14 +34,14 @@ namespace AtaraxiaAI.Data
         /// This is done the first time the app runs since Github's 
         /// file-size limit (100 MB) prevents them from being included in the project.
         /// </summary>
-        public static async Task CreateModels(ILogger logger)
+        public static async Task CreateModels(IHttpClientFactory httpClientFactory, ILogger logger)
         {
             string voskZipPath = Path.Combine(VOSK_CONTENT_DIRECTORY, $"{VOSK_MODEL}.zip");
             if (!File.Exists(voskZipPath))
             {
                 try
                 {
-                    using (HttpClient client = new HttpClient())
+                    using (HttpClient client = httpClientFactory.CreateClient())
                     {
                         logger.Information("Beginning to download Vosk model.");
                         await client.DownloadFileTaskAsync(new Uri(VOSK_DOWNLOAD_URL), voskZipPath);
@@ -71,7 +71,7 @@ namespace AtaraxiaAI.Data
             {
                 try
                 {
-                    using (HttpClient client = new HttpClient())
+                    using (HttpClient client = httpClientFactory.CreateClient())
                     {
                         logger.Information("Beginning to download YOLO model.");
                         await client.DownloadFileTaskAsync(new Uri(YOLO_WEIGHTS_DOWNLOAD_URL), YOLO_WEIGHTS_CONTENT_PATH);

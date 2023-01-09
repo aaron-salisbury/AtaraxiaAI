@@ -1,11 +1,10 @@
-using AtaraxiaAI.ViewModels;
 using AtaraxiaAI.Views;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using Microsoft.Extensions.DependencyInjection;
-using System.Reflection;
 using System;
+using System.Reflection;
 
 namespace AtaraxiaAI
 {
@@ -25,6 +24,12 @@ namespace AtaraxiaAI
         {
             // https://docs.microsoft.com/en-us/windows/communitytoolkit/mvvm/ioc
             ServiceCollection services = new ServiceCollection();
+
+            // Make IHttpClientFactory available to application.
+            // HttpClient instances created by IHttpClientFactory are intended to be short-lived.
+            // Disposing of such HttpClient instances created by the factory will not lead to socket exhaustion.
+            // AddHttpClient() is in the Microsoft.Extensions.Http nuget package.
+            services.AddHttpClient(); 
 
             // This app requires the naming convention that views end in "View" (Base.ViewLocator.cs),
             // ViewModels end in "ViewModel", and that nothing else ends in either.

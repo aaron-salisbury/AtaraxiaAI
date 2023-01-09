@@ -39,6 +39,7 @@ namespace AtaraxiaAI.Business.Services
 
             string json = await WebRequests.SendHTTPJsonRequestAsync(
                 string.Format(URL_FORMAT, ENGINE), 
+                AI.HttpClientFactory, 
                 AI.Log.Logger,
                 content: content,
                 requestHeaders: new Dictionary<string, string>() { { "Authorization", $"Bearer {API_KEY}" } },
@@ -46,7 +47,7 @@ namespace AtaraxiaAI.Business.Services
 
             if (!string.IsNullOrEmpty(json))
             {
-                GPT3Root gPT3Root = JsonSerializer.Deserialize<GPT3Root>(json);
+                GPT3Root gPT3Root = JsonSerializer.Deserialize<GPT3Root>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
                 if (gPT3Root != null && gPT3Root.Choices.Count > 0)
                 {

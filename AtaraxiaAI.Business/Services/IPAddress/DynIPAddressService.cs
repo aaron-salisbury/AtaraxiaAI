@@ -14,7 +14,7 @@ namespace AtaraxiaAI.Business.Services
             string ip = null;
 
             using (StreamReader stream = new StreamReader(
-                await Data.WebRequests.GetWebRequestStreamAsync(REQUEST_URL, AI.Log.Logger)))
+                await Data.WebRequests.GetWebRequestStreamAsync(REQUEST_URL, AI.HttpClientFactory, AI.Log.Logger)))
             {
                 string response = stream.ReadToEnd();
 
