@@ -15,6 +15,7 @@ namespace AtaraxiaAI.Data
 {
     public static class CRUD
     {
+        private const string INTERNAL_DIRECTORY = "./";
         private const string VOSK_DOWNLOAD_URL = "https://alphacephei.com/vosk/models/vosk-model-en-us-0.22-lgraph.zip";
         private const string VOSK_CONTENT_DIRECTORY = "./Detection/Voice/Vosk/";
         private const string VOSK_MODEL = "vosk-model-en-us-0.22-lgraph";
@@ -24,7 +25,7 @@ namespace AtaraxiaAI.Data
         private const string COCO_NAMES_CONTENT_PATH = "./Detection/Vision/YOLO/coco.names";
         private const string HC_CLASSIFIER_CONTENT_PATH = "./Detection/Vision/HaarCascades/haarcascade_frontalface_default.xml";
 
-        // Small versions incase downloading the large models becomes no longer viable.
+        // Small versions in case downloading the large models becomes no longer viable.
         private const string VOSK_SMALL_MODEL = "vosk-model-small-en-us-0.15";
         private const string YOLO_CFG_TINY_CONTENT_PATH = "./Detection/Vision/YOLO/yolov3-tiny.cfg";
         private const string YOLO_WEIGHTS_TINY_CONTENT_PATH = "./Detection/Vision/YOLO/yolov3-tiny.weights";
@@ -178,10 +179,45 @@ namespace AtaraxiaAI.Data
             return labels.ToArray();
         }
 
+        public static async Task<AppData> ReadAppData(string appDirectory, ILogger logger)
+        {
+            AppData appData = null;
+
+            try
+            {
+                string filePath = Path.Combine(appDirectory, GetJsonFileNameForType<AppData>());
+
+                if (File.Exists(filePath))
+                {
+                    using (FileStream openStream = File.OpenRead(filePath))
+                    {
+                        appData = await JsonSerializer.DeserializeAsync<AppData>(openStream);
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                logger.Error($"Failed to read internal storage: {e.Message}");
+            }
+
+            int currentMonth = DateTime.Now.Month;
+            if (appData == null || appData.MonthOfLastCloudServicesRoll != currentMonth)
+            {
+                appData = new AppData
+                {
+                    MonthOfLastCloudServicesRoll = currentMonth,
+                    MicrosoftAzureSpeechToTextCharCount = 0,
+                    GoogleCloudSpeechToTextByteCount = 0
+                };
+
+                await UpdateDataAsync<AppData>(appData, appDirectory, logger);
+            }
+
+            return appData;
+        }
+
         public static async Task<InternalStorage> ReadInternalStorage(ILogger logger)
         {
-            const string INTERNAL_DIRECTORY = "./";
-
             InternalStorage internalStorage = null;
 
             try
@@ -190,14 +226,14 @@ namespace AtaraxiaAI.Data
 
                 if (File.Exists(filePath))
                 {
-                    internalStorage = await ReadDataAsync<InternalStorage>(INTERNAL_DIRECTORY, logger);
+                    using (FileStream openStream = File.OpenRead(filePath))
+                    {
+                        internalStorage = await JsonSerializer.DeserializeAsync<InternalStorage>(openStream);
+                    }
                 }
                 else
                 {
-                    internalStorage = new InternalStorage
-                    {
-                        UserStorageDirectory = GetAppDirectoryPath()
-                    };
+                    internalStorage = new InternalStorage { UserStorageDirectory = GetAppDirectoryPath() };
 
                     await UpdateDataAsync<InternalStorage>(internalStorage, INTERNAL_DIRECTORY, logger);
                 }
@@ -210,34 +246,22 @@ namespace AtaraxiaAI.Data
             return internalStorage;
         }
 
-        public static async Task UpdateInternalStorage(InternalStorage internalStorage, ILogger logger, string newUserDirectory = null)
+        public static async Task<InternalStorage> UpdateInternalStorage(InternalStorage internalStorage, ILogger logger, string newUserDirectory = null)
         {
-            const string INTERNAL_DIRECTORY = "./";
-
             try
             {
                 if (!string.IsNullOrEmpty(newUserDirectory))
                 {
-                    string previousUserStorageDirectory = internalStorage.UserStorageDirectory;
+                    string appDataFileName = GetJsonFileNameForType<AppData>();
+                    string oldAppDataFilePath = Path.Combine(internalStorage.UserStorageDirectory, appDataFileName);
+                    string newAppDataFilePath = Path.Combine(newUserDirectory, appDataFileName);
 
-                    if (!string.IsNullOrEmpty(previousUserStorageDirectory))
+                    if (File.Exists(oldAppDataFilePath) && !File.Exists(newAppDataFilePath))
                     {
-                        foreach (string file in Directory.GetFiles(previousUserStorageDirectory))
-                        {
-                            string fileName = Path.GetFileName(file);
-                            string newFilePath = Path.Combine(newUserDirectory, fileName);
-
-                            if (!File.Exists(newFilePath))
-                            {
-                                Directory.Move(file, newFilePath);
-                            }
-                        }
+                        Directory.Move(oldAppDataFilePath, newAppDataFilePath);
                     }
 
-                    internalStorage = new InternalStorage
-                    {
-                        UserStorageDirectory = newUserDirectory
-                    };
+                    internalStorage = new InternalStorage { UserStorageDirectory = newUserDirectory };
                 }
 
                 await UpdateDataAsync<InternalStorage>(internalStorage, INTERNAL_DIRECTORY, logger);
@@ -246,6 +270,8 @@ namespace AtaraxiaAI.Data
             {
                 logger.Error($"Failed to update file: {e.Message}");
             }
+
+            return internalStorage;
         }
 
         public static async Task UpdateDataAsync<T>(T data, string directoryPath, ILogger logger)

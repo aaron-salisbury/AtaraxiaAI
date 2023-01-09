@@ -87,13 +87,11 @@ namespace AtaraxiaAI.Business.Services
                 }
 
                 AI.AppData.MicrosoftAzureSpeechToTextCharCount += message.Length;
-                await Data.CRUD.UpdateDataAsync<AppData>(AI.AppData, AI.InternalStorage.UserStorageDirectory, AI.Log.Logger);
             }
             else
             {
                 // If we're this close to the limit, just max it out and don't bother to try again until next month.
                 AI.AppData.MicrosoftAzureSpeechToTextCharCount = FREE_LIMIT;
-                await Data.CRUD.UpdateDataAsync<AppData>(AI.AppData, AI.InternalStorage.UserStorageDirectory, AI.Log.Logger);
             }
 
             return isSuccessful;

@@ -42,23 +42,7 @@ namespace AtaraxiaAI.Business
             HttpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
             Log = new InMemoryLogger();
             InternalStorage = Task.Run(async () => await Data.CRUD.ReadInternalStorage(Log.Logger)).Result;
-
-            //TODO: Maybe do a file exists check first instead of letting it fail before creating it for the first time.
-            AppData = Task.Run(async () => await Data.CRUD.ReadDataAsync<AppData>(InternalStorage.UserStorageDirectory, Log.Logger)).Result;
-
-            int currentMonth = DateTime.Now.Month;
-            if (AppData == null)
-            {
-                AppData = new AppData { MonthOfLastCloudServicesRoll = currentMonth };
-                Task.Run(async () => await Data.CRUD.UpdateDataAsync<AppData>(AppData, InternalStorage.UserStorageDirectory, Log.Logger));
-            }
-            else if (AppData.MonthOfLastCloudServicesRoll != currentMonth)
-            {
-                AppData.MonthOfLastCloudServicesRoll = currentMonth;
-                AppData.MicrosoftAzureSpeechToTextCharCount = 0;
-                AppData.GoogleCloudSpeechToTextByteCount = 0;
-                Task.Run(async () => await Data.CRUD.UpdateDataAsync<AppData>(AppData, InternalStorage.UserStorageDirectory, Log.Logger));
-            }
+            AppData = Task.Run(async () => await Data.CRUD.ReadAppData(InternalStorage.UserStorageDirectory, Log.Logger)).Result;
         }
 
         public async Task Initiate(Action<byte[]> updateFrameAction)
@@ -93,23 +77,31 @@ namespace AtaraxiaAI.Business
             return InternalStorage?.UserStorageDirectory;
         }
 
-        public async Task UpdateUserStorageDirectory(string userStorageDirectory)
+        public async Task UpdateUserStorageDirectory(string newUserStorageDirectory)
         {
-            await Data.CRUD.UpdateInternalStorage(InternalStorage, Log.Logger, userStorageDirectory);
+            string oldUserStorageDirectory = InternalStorage.UserStorageDirectory;
+
+            InternalStorage = await Data.CRUD.UpdateInternalStorage(InternalStorage, Log.Logger, newUserStorageDirectory);
 
             // Update AppData in case the user is selecting a network location where they already had it saved.
-            AppData = await Data.CRUD.ReadDataAsync<AppData>(InternalStorage.UserStorageDirectory, Log.Logger);
+            AppData preExistingAppData = await Data.CRUD.ReadDataAsync<AppData>(newUserStorageDirectory, Log.Logger);
+            if (preExistingAppData != null)
+            {
+                AppData = preExistingAppData;
+                Data.CRUD.DeleteDomain<AppData>(oldUserStorageDirectory, Log.Logger);
+            }
         }
 
-        /// <summary>
-        /// Release resources.
-        /// </summary>
         public void Shutdown()
         {
             Log.Logger.Information("Shutting down.");
 
             VisionEngine.Deactivate();
             SpeechEngine.DeactivateSpeechRecognition();
+
+            Data.CRUD.UpdateDataAsync<AppData>(AppData, InternalStorage.UserStorageDirectory, Log.Logger).Wait();
+
+            //TODO: Write logs.
         }
     }
 }
