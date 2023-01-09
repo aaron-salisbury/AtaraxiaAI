@@ -14,8 +14,11 @@ namespace AtaraxiaAI
 
         // Avalonia configuration, don't remove; also used by visual designer.
         public static AppBuilder BuildAvaloniaApp()
-            => AppBuilder.Configure<App>()
+        {
+            GC.KeepAlive(typeof(Avalonia.Svg.Skia.Svg).Assembly);
+            return AppBuilder.Configure<App>()
                 .UsePlatformDetect()
                 .LogToTrace();
+        }
     }
 }

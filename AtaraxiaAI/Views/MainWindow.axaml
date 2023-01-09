@@ -81,7 +81,7 @@
 										   IsActive="{Binding !AI.IsInitialized}"
 										   HorizontalAlignment="Left"
 										   VerticalAlignment="Top"
-										   Foreground="#DA34AE" />
+										   Foreground="#cc5200" />
 
 					<!-- Vision Feed -->
 					<Image Grid.Row="0"
