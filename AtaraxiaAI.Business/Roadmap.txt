@@ -13,4 +13,3 @@ New Skills:
   https://api.adviceslip.com/?ref=apilist.fun
   https://www.boredapi.com/
   https://fungenerators.com/api/facts/?ref=apilist.fun
-  https://evilinsult.com/api/

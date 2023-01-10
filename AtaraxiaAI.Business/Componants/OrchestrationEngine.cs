@@ -11,7 +11,8 @@ namespace AtaraxiaAI.Business.Componants
         internal enum SkillMessages
         {
             TellMeAJoke,
-            TellMeADadJoke
+            TellMeADadJoke,
+            RespondWithInsult
         }
 
         private SpeechEngine _speechEngine;
@@ -29,8 +30,7 @@ namespace AtaraxiaAI.Business.Componants
 
                 if (message.StartsWith(WAKE_COMMAND, StringComparison.OrdinalIgnoreCase))
                 {
-                    int wakeIndex = message.IndexOf(WAKE_COMMAND, StringComparison.OrdinalIgnoreCase);
-                    string command = message.Remove(wakeIndex, WAKE_COMMAND.Length);
+                    string command = message.Remove(0, WAKE_COMMAND.Length);
                     string cleanCommand = string.Concat(command.Where(c => !char.IsWhiteSpace(c)));
 
                     switch ((SkillMessages)Enum.Parse(typeof(SkillMessages), cleanCommand, true))
@@ -40,6 +40,9 @@ namespace AtaraxiaAI.Business.Componants
                             break;
                         case SkillMessages.TellMeADadJoke:
                             JokeSkill.TellMeADadJoke(_speechEngine);
+                            break;
+                        case SkillMessages.RespondWithInsult:
+                            ResponseSkill.AcquireInsult(_speechEngine);
                             break;
                         default:
                             AGISkill.AnswerMe(command, _speechEngine);
