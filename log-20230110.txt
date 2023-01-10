@@ -1,0 +1,60 @@
+2023-01-10 12:38:29.216 -06:00 [INF] Initializing ...
+2023-01-10 12:38:29.256 -06:00 [INF] ... Gathering system data.
+2023-01-10 12:38:29.942 -06:00 [INF] Shutting down.
+2023-01-10 12:38:30.823 -06:00 [INF] ... Mocking peripherals.
+2023-01-10 12:38:30.824 -06:00 [INF] ... Acquiring region data.
+2023-01-10 12:38:30.921 -06:00 [INF] ... Verifying ML models.
+2023-01-10 12:38:30.923 -06:00 [INF] Beginning to download Vosk model.
+2023-01-10 12:38:31.612 -06:00 [ERR] Failed to download and extract Vosk model: Could not find a part of the path 'C:\Users\aaron\source\repos\aaron-salisbury\AtaraxiaAI\Detection\Voice\Vosk\vosk-model-en-us-0.22-lgraph.zip'.
+2023-01-10 12:38:31.612 -06:00 [ERR] Failed to clean-up Vosk model after previous extract failure: Could not find a part of the path 'C:\Users\aaron\source\repos\aaron-salisbury\AtaraxiaAI\Detection\Voice\Vosk\vosk-model-en-us-0.22-lgraph.zip'.
+2023-01-10 12:38:31.612 -06:00 [INF] Beginning to download YOLO model.
+2023-01-10 12:38:31.992 -06:00 [ERR] Failed to download YOLO model: Could not find a part of the path 'C:\Users\aaron\source\repos\aaron-salisbury\AtaraxiaAI\Detection\Vision\YOLO\yolov3.weights'.
+2023-01-10 12:38:31.992 -06:00 [INF] ... Initializing vision engine.
+2023-01-10 12:42:46.966 -06:00 [INF] Initializing ...
+2023-01-10 12:42:47.005 -06:00 [INF] ... Gathering system data.
+2023-01-10 12:42:47.494 -06:00 [INF] ... Mocking peripherals.
+2023-01-10 12:42:47.494 -06:00 [INF] ... Acquiring region data.
+2023-01-10 12:42:47.589 -06:00 [INF] ... Verifying ML models.
+2023-01-10 12:42:47.591 -06:00 [INF] Beginning to download Vosk model.
+2023-01-10 12:42:48.242 -06:00 [ERR] Failed to download and extract Vosk model: Could not find a part of the path 'C:\Users\aaron\source\repos\aaron-salisbury\AtaraxiaAI\Detection\Voice\Vosk\vosk-model-en-us-0.22-lgraph.zip'.
+2023-01-10 12:42:48.242 -06:00 [ERR] Failed to clean-up Vosk model after previous extract failure: Could not find a part of the path 'C:\Users\aaron\source\repos\aaron-salisbury\AtaraxiaAI\Detection\Voice\Vosk\vosk-model-en-us-0.22-lgraph.zip'.
+2023-01-10 12:42:48.242 -06:00 [INF] Beginning to download YOLO model.
+2023-01-10 12:42:48.566 -06:00 [ERR] Failed to download YOLO model: Could not find a part of the path 'C:\Users\aaron\source\repos\aaron-salisbury\AtaraxiaAI\Detection\Vision\YOLO\yolov3.weights'.
+2023-01-10 12:42:48.567 -06:00 [INF] ... Initializing vision engine.
+2023-01-10 12:47:30.238 -06:00 [INF] Shutting down.
+2023-01-10 12:56:21.534 -06:00 [INF] Initializing ...
+2023-01-10 12:56:21.562 -06:00 [INF] ... Gathering system data.
+2023-01-10 12:56:22.088 -06:00 [INF] ... Mocking peripherals.
+2023-01-10 12:56:22.089 -06:00 [INF] ... Acquiring region data.
+2023-01-10 12:56:22.213 -06:00 [INF] ... Verifying ML models.
+2023-01-10 12:56:22.216 -06:00 [INF] Beginning to download Vosk model.
+2023-01-10 12:56:22.846 -06:00 [ERR] Failed to download and extract Vosk model: Could not find a part of the path 'C:\Users\aaron\source\repos\aaron-salisbury\AtaraxiaAI\Detection\Voice\Vosk\vosk-model-en-us-0.22-lgraph.zip'.
+2023-01-10 12:56:22.846 -06:00 [ERR] Failed to clean-up Vosk model after previous extract failure: Could not find a part of the path 'C:\Users\aaron\source\repos\aaron-salisbury\AtaraxiaAI\Detection\Voice\Vosk\vosk-model-en-us-0.22-lgraph.zip'.
+2023-01-10 12:56:22.847 -06:00 [INF] Beginning to download YOLO model.
+2023-01-10 12:56:23.160 -06:00 [ERR] Failed to download YOLO model: Could not find a part of the path 'C:\Users\aaron\source\repos\aaron-salisbury\AtaraxiaAI\Detection\Vision\YOLO\yolov3.weights'.
+2023-01-10 12:56:23.160 -06:00 [INF] ... Initializing vision engine.
+2023-01-10 12:59:41.491 -06:00 [INF] Shutting down.
+2023-01-10 12:59:42.744 -06:00 [INF] Shutting down.
+2023-01-10 12:59:48.588 -06:00 [INF] Shutting down.
+2023-01-10 12:59:49.336 -06:00 [INF] Shutting down.
+2023-01-10 12:59:55.777 -06:00 [INF] Shutting down.
+2023-01-10 13:00:01.344 -06:00 [INF] Shutting down.
+2023-01-10 13:00:02.246 -06:00 [INF] Shutting down.
+2023-01-10 13:00:03.142 -06:00 [INF] Shutting down.
+2023-01-10 13:00:03.869 -06:00 [INF] Shutting down.
+2023-01-10 13:00:16.440 -06:00 [INF] Shutting down.
+2023-01-10 13:00:26.372 -06:00 [INF] Shutting down.
+2023-01-10 13:00:27.460 -06:00 [INF] Shutting down.
+2023-01-10 13:00:32.051 -06:00 [INF] Shutting down.
+2023-01-10 13:12:51.451 -06:00 [INF] Initializing ...
+2023-01-10 13:12:51.479 -06:00 [INF] ... Gathering system data.
+2023-01-10 13:12:52.029 -06:00 [INF] ... Mocking peripherals.
+2023-01-10 13:12:52.030 -06:00 [INF] ... Acquiring region data.
+2023-01-10 13:12:52.119 -06:00 [INF] ... Verifying ML models.
+2023-01-10 13:12:52.121 -06:00 [INF] Beginning to download Vosk model.
+2023-01-10 13:12:52.783 -06:00 [ERR] Failed to download and extract Vosk model: Could not find a part of the path 'C:\Users\aaron\source\repos\aaron-salisbury\AtaraxiaAI\Detection\Voice\Vosk\vosk-model-en-us-0.22-lgraph.zip'.
+2023-01-10 13:12:52.783 -06:00 [ERR] Failed to clean-up Vosk model after previous extract failure: Could not find a part of the path 'C:\Users\aaron\source\repos\aaron-salisbury\AtaraxiaAI\Detection\Voice\Vosk\vosk-model-en-us-0.22-lgraph.zip'.
+2023-01-10 13:12:52.783 -06:00 [INF] Beginning to download YOLO model.
+2023-01-10 13:12:53.100 -06:00 [ERR] Failed to download YOLO model: Could not find a part of the path 'C:\Users\aaron\source\repos\aaron-salisbury\AtaraxiaAI\Detection\Vision\YOLO\yolov3.weights'.
+2023-01-10 13:12:53.100 -06:00 [INF] ... Initializing vision engine.
+2023-01-10 13:13:19.084 -06:00 [INF] Shutting down.

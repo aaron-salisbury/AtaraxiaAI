@@ -10,7 +10,6 @@
         x:Class="AtaraxiaAI.Views.MainWindow"
         Icon="/Base/Assets/logo.ico"
         Title="AtaraxiaAI"
-
 		ExtendClientAreaToDecorationsHint="True">
 
 	<Window.Styles>
@@ -87,11 +86,10 @@
 										   Foreground="#cc5200" />
 
 					<!-- Vision Feed -->
-					<Image Grid.Row="0"
-						   Stretch="Uniform"
-						   Source="{Binding VisionFrame}"
-						   IsVisible="{Binding ShowVisionFeed}"
-						   HorizontalAlignment="Right" />
+					<ContentControl Grid.Row="0"
+									Content="{Binding VisionFeedView}"
+									IsVisible="{Binding ActivateVision}"
+									HorizontalAlignment="Right" />
 
 					<Grid Grid.Row="1" ColumnDefinitions="*, Auto" Margin="0,25,0,0">
 						<!-- Logs -->

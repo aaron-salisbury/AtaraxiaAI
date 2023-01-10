@@ -5,7 +5,6 @@ using CommunityToolkit.Mvvm.Input;
 using Material.Icons;
 using Microsoft.Extensions.DependencyInjection;
 using Serilog;
-using System.IO;
 using System.Net.Http;
 using System.Threading.Tasks;
 
@@ -24,7 +23,7 @@ namespace AtaraxiaAI.ViewModels
         private IBitmap? _visionFrame;
 
         [ObservableProperty]
-        private bool _showVisionFeed;
+        private bool _activateVision;
 
         [ObservableProperty]
         private MaterialIconKind _visionIcon;
@@ -50,11 +49,14 @@ namespace AtaraxiaAI.ViewModels
         [ObservableProperty]
         private object? _settingsView;
 
+        [ObservableProperty]
+        private object? _visionFeedView;
+
         public MainWindowViewModel(IHttpClientFactory httpClientFactory)
         {
             AI = new AI(Log.Logger, httpClientFactory);
 
-            _showVisionFeed = false;
+            _activateVision = false;
             _visionIcon = MaterialIconKind.EyeOff;
             _soundIcon = MaterialIconKind.MicOff;
             _logsView = App.Current?.Services?.GetService<LogsViewModel>();
@@ -64,12 +66,18 @@ namespace AtaraxiaAI.ViewModels
             _showSettings = false;
             _settingsIcon = MaterialIconKind.CogOff;
 
+            VisionFeedViewModel? visionVM = App.Current?.Services?.GetService<VisionFeedViewModel>();
+            _visionFeedView = visionVM;
+
             OnVisionClickCommand = new RelayCommand(() => OnVisionClick());
             OnSoundClickCommand = new RelayCommand(() => OnSoundClick());
             OnLogsClickCommand = new RelayCommand(() => OnLogsClick());
             OnSettingsClickCommand = new RelayCommand(() => OnSettingsClick());
 
-            Task.Run(() => { AI.Initiate(updateFrameAction: SetVisionFrame).Wait(); });
+            if (visionVM != null)
+            {
+                Task.Run(() => { AI.Initiate(updateFrameAction: visionVM.SetVisionFrame).Wait(); });
+            }
         }
 
         public void Shutdown()
@@ -83,13 +91,13 @@ namespace AtaraxiaAI.ViewModels
             {
                 VisionIcon = MaterialIconKind.EyeOff;
                 AI.VisionEngine.Deactivate();
-                ShowVisionFeed = false;
+                ActivateVision = false;
             }
             else
             {
                 VisionIcon = MaterialIconKind.Eye;
                 AI?.VisionEngine.Activate();
-                ShowVisionFeed = true;
+                ActivateVision = true;
             }
         }
 
@@ -133,12 +141,6 @@ namespace AtaraxiaAI.ViewModels
                 SettingsIcon = MaterialIconKind.Cog;
                 ShowSettings = true;
             }
-        }
-
-        public void SetVisionFrame(byte[] jpeg)
-        {
-            using MemoryStream ms = new MemoryStream(jpeg);
-            VisionFrame = new Avalonia.Media.Imaging.Bitmap(ms);
         }
     }
 }
