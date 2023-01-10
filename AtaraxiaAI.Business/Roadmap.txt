@@ -1,4 +1,5 @@
 ﻿Look into open source offline synthesizers. See if any are decent.
+Allow user to change the orchestration engine's wake command. Save the user's change. Maybe put the public property on SpeechEngine.
 Continue working throgh this series: https://www.youtube.com/watch?v=Y5atyJbVsAU&t=2108s
 Look into https://wit.ai/
 Logs should write to the UI like they're being typed, scroll up automatically, and clear on their own.

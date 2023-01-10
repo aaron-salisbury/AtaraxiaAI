@@ -6,7 +6,7 @@ namespace AtaraxiaAI.Business.Componants
 {
     internal class OrchestrationEngine
     {
-        public const string WAKE_COMMAND = "Hey Robot";
+        internal const string WAKE_COMMAND = "Hey Robot";
 
         internal enum SkillMessages
         {
