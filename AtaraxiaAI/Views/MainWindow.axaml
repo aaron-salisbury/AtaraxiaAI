@@ -49,7 +49,10 @@
 		<Grid Grid.Row="1" IsHitTestVisible="True" ColumnDefinitions="Auto, *">
 			<!-- Main Menu -->
 			<Grid  Grid.Column="0" RowDefinitions="Auto, *">
-				<Border Name="MainMenu" Margin="9,9,0,0" CornerRadius="7" Background="#2B2B2B">
+				<Border Name="MainMenu" Margin="9,9,0,0" CornerRadius="7">
+					<Border.Background>
+						<SolidColorBrush Color="#2B2B2B" Opacity="0.6" />
+					</Border.Background>
 					<!-- Icons: https://materialdesignicons.com/ -->
 					<StackPanel Margin="5">
 						<Button Command="{Binding OnVisionClickCommand}" IsEnabled="{Binding AI.IsInitialized}">
