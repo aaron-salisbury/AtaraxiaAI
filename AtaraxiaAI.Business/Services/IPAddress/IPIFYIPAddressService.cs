@@ -12,7 +12,7 @@ namespace AtaraxiaAI.Business.Services
             string ip = null;
 
             using (StreamReader stream = new StreamReader(
-                await Data.WebRequests.GetWebRequestStreamAsync(REQUEST_URL, AI.HttpClientFactory, AI.Log.Logger)))
+                await Data.WebRequests.GetWebRequestStreamAsync(REQUEST_URL, AI.HttpClientFactory, AI.Logger)))
             {
                 string response = stream.ReadToEnd();
 
@@ -22,7 +22,7 @@ namespace AtaraxiaAI.Business.Services
                 }
                 else
                 {
-                    AI.Log.Logger.Error("Failed to determine IP Address.");
+                    AI.Logger.Error("Failed to determine IP Address.");
                 }
             }
 

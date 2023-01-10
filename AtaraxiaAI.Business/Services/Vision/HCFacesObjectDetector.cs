@@ -18,7 +18,7 @@ namespace AtaraxiaAI.Business.Services
 
         void IObjectDetector.Initiate(Action<byte[]> updateFrameAction, CancellationToken cancelToken)
         {
-            AI.Log.Logger.Information("Initializing vision engine.");
+            AI.Logger.Information("Initializing vision engine.");
 
             Mat frame = new Mat();
             Mat frameGray = new Mat();

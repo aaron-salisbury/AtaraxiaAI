@@ -25,7 +25,7 @@ namespace AtaraxiaAI.Business.Componants
         {
             if (!string.IsNullOrEmpty(message))
             {
-                AI.Log.Logger.Information($"*Heard* \"{message}\".");
+                AI.Logger.Information($"*Heard* \"{message}\".");
 
                 if (message.StartsWith(WAKE_COMMAND, StringComparison.OrdinalIgnoreCase))
                 {

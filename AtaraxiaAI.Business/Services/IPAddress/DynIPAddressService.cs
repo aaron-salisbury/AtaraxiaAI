@@ -9,12 +9,12 @@ namespace AtaraxiaAI.Business.Services
 
         async Task<string> IIPAddressService.GetPublicIPAddressAsync()
         {
-            AI.Log.Logger.Information("Determining IP Address.");
+            AI.Logger.Information("Determining IP Address.");
 
             string ip = null;
 
             using (StreamReader stream = new StreamReader(
-                await Data.WebRequests.GetWebRequestStreamAsync(REQUEST_URL, AI.HttpClientFactory, AI.Log.Logger)))
+                await Data.WebRequests.GetWebRequestStreamAsync(REQUEST_URL, AI.HttpClientFactory, AI.Logger)))
             {
                 string response = stream.ReadToEnd();
 
@@ -24,11 +24,11 @@ namespace AtaraxiaAI.Business.Services
                     int last = response.LastIndexOf("</body>");
                     ip = response.Substring(first, last - first);
 
-                    AI.Log.Logger.Information($"IP Address: {ip}");
+                    AI.Logger.Information($"IP Address: {ip}");
                 }
                 else
                 {
-                    AI.Log.Logger.Error("Failed to determine IP Address.");
+                    AI.Logger.Error("Failed to determine IP Address.");
                 }
             }
 

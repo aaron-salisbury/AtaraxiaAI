@@ -4,6 +4,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Material.Icons;
 using Microsoft.Extensions.DependencyInjection;
+using Serilog;
 using System.IO;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -51,7 +52,7 @@ namespace AtaraxiaAI.ViewModels
 
         public MainWindowViewModel(IHttpClientFactory httpClientFactory)
         {
-            AI = new AI(httpClientFactory);
+            AI = new AI(Log.Logger, httpClientFactory);
 
             _showVisionFeed = false;
             _visionIcon = MaterialIconKind.EyeOff;

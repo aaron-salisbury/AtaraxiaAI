@@ -89,12 +89,12 @@ namespace AtaraxiaAI.Business.Componants
             }
 
             _synthesizer = null;
-            AI.Log.Logger.Warning("No speech synthesizer is currently available.");
+            AI.Logger.Warning("No speech synthesizer is currently available.");
         }
 
         public void ActivateSpeechRecognition()
         {
-            AI.Log.Logger.Information("Beginning speech recognition.");
+            AI.Logger.Information("Beginning speech recognition.");
 
             DeactivateSpeechRecognition();
             _recognizer.Listen(_commandLoop.Heard);
@@ -106,7 +106,7 @@ namespace AtaraxiaAI.Business.Componants
             if (IsSpeechRecognitionRunning)
             {
                 _recognizer.Dispose();
-                AI.Log.Logger.Information("Ended speech recognition.");
+                AI.Logger.Information("Ended speech recognition.");
                 IsSpeechRecognitionRunning = false;
             }
         }
@@ -141,7 +141,7 @@ namespace AtaraxiaAI.Business.Componants
             {
                 if (!string.IsNullOrEmpty(originalText))
                 {
-                    AI.Log.Logger.Information($"*Speaking* \"{originalText}\"");
+                    AI.Logger.Information($"*Speaking* \"{originalText}\"");
                 }
 
                 waveOut.Init(provider);

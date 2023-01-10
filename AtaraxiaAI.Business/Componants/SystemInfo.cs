@@ -1,5 +1,4 @@
-﻿using AtaraxiaAI.Business.Base;
-using AtaraxiaAI.Business.Services;
+﻿using AtaraxiaAI.Business.Services;
 using System;
 using System.Linq;
 using System.Management;
@@ -80,12 +79,14 @@ namespace AtaraxiaAI.Business.Componants
 
         public override string ToString()
         {
+            const string NEW_LINE_PREFIX = "               ";
+
             StringBuilder builder = new StringBuilder();
             builder.AppendLine($"System: {OSDescription} ({OSArchitecture})");
-            builder.AppendLine($"{InMemoryLogger.NEW_LINE_PREFIX}Memory: {Memory}");
-            builder.AppendLine($"{InMemoryLogger.NEW_LINE_PREFIX}Logical Processors: {LogicalProcessors}");
-            builder.AppendLine($"{InMemoryLogger.NEW_LINE_PREFIX}Video Processor: {VideoProcessor}");
-            builder.Append($"{InMemoryLogger.NEW_LINE_PREFIX}IP Address: {IPAddress}");
+            builder.AppendLine($"{NEW_LINE_PREFIX}Memory: {Memory}");
+            builder.AppendLine($"{NEW_LINE_PREFIX}Logical Processors: {LogicalProcessors}");
+            builder.AppendLine($"{NEW_LINE_PREFIX}Video Processor: {VideoProcessor}");
+            builder.Append($"{NEW_LINE_PREFIX}IP Address: {IPAddress}");
 
             return builder.ToString();
         }

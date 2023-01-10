@@ -66,13 +66,14 @@ namespace AtaraxiaAI.Business.Services
                     {
                         if (result.Reason == ResultReason.Canceled)
                         {
+                            const string NEW_LINE_PREFIX = "               ";
                             SpeechSynthesisCancellationDetails cancellation = SpeechSynthesisCancellationDetails.FromResult(result);
 
                             StringBuilder builder = new StringBuilder($"Failed to synthesize speech: {cancellation.Reason}");
-                            builder.AppendLine($"{InMemoryLogger.NEW_LINE_PREFIX}ErrorCode={cancellation.ErrorCode}");
-                            builder.Append($"{InMemoryLogger.NEW_LINE_PREFIX}ErrorDetails=[{cancellation.ErrorDetails}]");
+                            builder.AppendLine($"{NEW_LINE_PREFIX}ErrorCode={cancellation.ErrorCode}");
+                            builder.Append($"{NEW_LINE_PREFIX}ErrorDetails=[{cancellation.ErrorDetails}]");
 
-                            AI.Log.Logger.Error(builder.ToString());
+                            AI.Logger.Error(builder.ToString());
                         }
                         else
                         {
@@ -83,7 +84,7 @@ namespace AtaraxiaAI.Business.Services
                 }
                 catch (Exception e)
                 {
-                    AI.Log.Logger.Error($"Failed to synthesize speech: {e.Message}");
+                    AI.Logger.Error($"Failed to synthesize speech: {e.Message}");
                 }
 
                 AI.AppData.MicrosoftAzureSpeechToTextCharCount += message.Length;

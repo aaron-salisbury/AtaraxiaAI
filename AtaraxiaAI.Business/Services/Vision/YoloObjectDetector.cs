@@ -36,13 +36,13 @@ namespace AtaraxiaAI.Business.Services
             }
             catch (Exception e)
             {
-                AI.Log.Logger.Error($"Failed to build neural net: {e.Message}");
+                AI.Logger.Error($"Failed to build neural net: {e.Message}");
             }
         }
 
         void IObjectDetector.Initiate(Action<byte[]> updateFrameAction, CancellationToken cancelToken)
         {
-            AI.Log.Logger.Information("Initializing vision engine.");
+            AI.Logger.Information("Initializing vision engine.");
 
             double? widthFactor = null;
             double? heightFactor = null;

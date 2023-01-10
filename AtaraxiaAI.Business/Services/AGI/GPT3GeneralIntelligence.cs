@@ -40,7 +40,7 @@ namespace AtaraxiaAI.Business.Services
             string json = await WebRequests.SendHTTPJsonRequestAsync(
                 string.Format(URL_FORMAT, ENGINE), 
                 AI.HttpClientFactory, 
-                AI.Log.Logger,
+                AI.Logger,
                 content: content,
                 requestHeaders: new Dictionary<string, string>() { { "Authorization", $"Bearer {API_KEY}" } },
                 httpMethod: "POST");

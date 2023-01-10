@@ -4,6 +4,7 @@ using AtaraxiaAI.Business.Services;
 using AtaraxiaAI.Business.Services.Base.Models;
 using AtaraxiaAI.Data.Domains;
 using Desktop.Robot;
+using Serilog;
 using System;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -12,8 +13,7 @@ namespace AtaraxiaAI.Business
 {
     public class AI : ObservableObject
     {
-        public static InMemoryLogger Log { get; set; }
-
+        internal static ILogger Logger { get; set; }
         internal static IHttpClientFactory HttpClientFactory { get; set; }
         internal static InternalStorage InternalStorage { get; set; }
         internal static AppData AppData { get; set; }
@@ -35,41 +35,42 @@ namespace AtaraxiaAI.Business
         internal SystemInfo SystemInfo { get; set; }
         internal Robot Peripherals { get; set; }
 
-        public AI(IHttpClientFactory httpClientFactory)
+        public AI(ILogger logger, IHttpClientFactory httpClientFactory)
         {
             _isInitialized = false;
 
+            Logger = logger ?? throw new ArgumentNullException(nameof(logger));
             HttpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
-            Log = new InMemoryLogger();
-            InternalStorage = Task.Run(async () => await Data.CRUD.ReadInternalStorage(Log.Logger)).Result;
-            AppData = Task.Run(async () => await Data.CRUD.ReadAppData(InternalStorage.UserStorageDirectory, Log.Logger)).Result;
+            
+            InternalStorage = Task.Run(async () => await Data.CRUD.ReadInternalStorage(Logger)).Result;
+            AppData = Task.Run(async () => await Data.CRUD.ReadAppData(InternalStorage.UserStorageDirectory, Logger)).Result;
         }
 
         public async Task Initiate(Action<byte[]> updateFrameAction)
         {
-            Log.Logger.Information("Initializing ...");
+            Logger.Information("Initializing ...");
 
-            Log.Logger.Information("... Gathering system data.");
+            Logger.Information("... Gathering system data.");
             SystemInfo = new SystemInfo();
 
-            Log.Logger.Information("... Mocking peripherals.");
+            Logger.Information("... Mocking peripherals.");
             Peripherals = new Robot { AutoDelay = 250 };
 
-            Log.Logger.Information("... Acquiring region data.");
+            Logger.Information("... Acquiring region data.");
             IIPLocationService locationService = new IPAPIIPLocationService();
             Location location = await locationService.GetLocationByIPAsync(SystemInfo.IPAddress);
 
-            Log.Logger.Information("... Verifying ML models.");
-            await Data.CRUD.CreateModels(HttpClientFactory, Log.Logger);
+            Logger.Information("... Verifying ML models.");
+            await Data.CRUD.CreateModels(HttpClientFactory, Logger);
 
-            Log.Logger.Information("... Initializing vision engine.");
+            Logger.Information("... Initializing vision engine.");
             VisionEngine = new VisionEngine(updateFrameAction);
 
-            Log.Logger.Information("... Initializing speech engine.");
+            Logger.Information("... Initializing speech engine.");
             SpeechEngine = new SpeechEngine();
 
             IsInitialized = true;
-            Log.Logger.Information("Initialization complete.");
+            Logger.Information("Initialization complete.");
         }
 
         public string GetUserStorageDirectory()
@@ -81,27 +82,25 @@ namespace AtaraxiaAI.Business
         {
             string oldUserStorageDirectory = InternalStorage.UserStorageDirectory;
 
-            InternalStorage = await Data.CRUD.UpdateInternalStorage(InternalStorage, Log.Logger, newUserStorageDirectory);
+            InternalStorage = await Data.CRUD.UpdateInternalStorage(InternalStorage, Logger, newUserStorageDirectory);
 
             // Update AppData in case the user is selecting a network location where they already had it saved.
-            AppData preExistingAppData = await Data.CRUD.ReadDataAsync<AppData>(newUserStorageDirectory, Log.Logger);
+            AppData preExistingAppData = await Data.CRUD.ReadDataAsync<AppData>(newUserStorageDirectory, Logger);
             if (preExistingAppData != null)
             {
                 AppData = preExistingAppData;
-                Data.CRUD.DeleteDomain<AppData>(oldUserStorageDirectory, Log.Logger);
+                Data.CRUD.DeleteDomain<AppData>(oldUserStorageDirectory, Logger);
             }
         }
 
         public void Shutdown()
         {
-            Log.Logger.Information("Shutting down.");
+            Logger.Information("Shutting down.");
 
             VisionEngine.Deactivate();
             SpeechEngine.DeactivateSpeechRecognition();
 
-            Data.CRUD.UpdateDataAsync<AppData>(AppData, InternalStorage.UserStorageDirectory, Log.Logger).Wait();
-
-            //TODO: Write logs.
+            Data.CRUD.UpdateDataAsync<AppData>(AppData, InternalStorage.UserStorageDirectory, Logger).Wait();
         }
     }
 }

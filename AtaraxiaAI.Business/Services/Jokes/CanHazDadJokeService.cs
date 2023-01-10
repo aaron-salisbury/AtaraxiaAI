@@ -21,11 +21,11 @@ namespace AtaraxiaAI.Business.Services
 
         async Task<Joke> IJokeService.GetJokeAsync()
         {
-            AI.Log.Logger.Information("Acquiring dad joke.");
+            AI.Logger.Information("Acquiring dad joke.");
 
             Joke joke = null;
 
-            string json = await WebRequests.SendHTTPJsonRequestAsync(URL, AI.HttpClientFactory, AI.Log.Logger, userAgent: _userAgent);
+            string json = await WebRequests.SendHTTPJsonRequestAsync(URL, AI.HttpClientFactory, AI.Logger, userAgent: _userAgent);
 
             if (!string.IsNullOrEmpty(json))
             {
@@ -39,7 +39,7 @@ namespace AtaraxiaAI.Business.Services
 
             if (joke == null)
             {
-                AI.Log.Logger.Error("Failed to aquire joke.");
+                AI.Logger.Error("Failed to aquire joke.");
             }
 
             return joke;

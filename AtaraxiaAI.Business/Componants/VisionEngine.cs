@@ -26,7 +26,7 @@ namespace AtaraxiaAI.Business.Componants
 
         public void Activate()
         {
-            AI.Log.Logger.Information("Beginning object detection.");
+            AI.Logger.Information("Beginning object detection.");
 
             Deactivate();
             _visionTokenSource = new CancellationTokenSource();
@@ -43,7 +43,7 @@ namespace AtaraxiaAI.Business.Componants
                 _visionTokenSource.Dispose();
                 _visionTask.Dispose();
 
-                AI.Log.Logger.Information("Ended object detection.");
+                AI.Logger.Information("Ended object detection.");
             }
         }
 

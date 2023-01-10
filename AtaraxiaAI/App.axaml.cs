@@ -1,3 +1,4 @@
+using AtaraxiaAI.Base;
 using AtaraxiaAI.Views;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
@@ -11,6 +12,7 @@ namespace AtaraxiaAI
     public partial class App : Application
     {
         public new static App? Current => Application.Current as App;
+        public static InMemorySink InMemorySink { get; } = new InMemorySink();
 
         public IServiceProvider? Services { get; set; }
 

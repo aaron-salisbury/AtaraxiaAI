@@ -62,7 +62,7 @@ namespace AtaraxiaAI.Business.Services
                 }
                 catch (Exception e)
                 {
-                    AI.Log.Logger.Error($"Failed to synthesize speech: {e.Message}");
+                    AI.Logger.Error($"Failed to synthesize speech: {e.Message}");
                 }
 
                 AI.AppData.GoogleCloudSpeechToTextByteCount += input.ToByteArray().Length;

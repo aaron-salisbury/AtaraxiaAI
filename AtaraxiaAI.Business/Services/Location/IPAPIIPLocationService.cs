@@ -15,7 +15,7 @@ namespace AtaraxiaAI.Business.Services
             if (!string.IsNullOrEmpty(iPAddress))
             {
                 string url = string.Format(URL_FORMAT, iPAddress);
-                string json = await WebRequests.SendHTTPJsonRequestAsync(url, AI.HttpClientFactory, AI.Log.Logger);
+                string json = await WebRequests.SendHTTPJsonRequestAsync(url, AI.HttpClientFactory, AI.Logger);
 
                 if (!string.IsNullOrEmpty(json))
                 {
@@ -32,7 +32,7 @@ namespace AtaraxiaAI.Business.Services
                     }
                     else
                     {
-                        AI.Log.Logger.Error("Failed to determine location.");
+                        AI.Logger.Error("Failed to determine location.");
                     }
                 }
             }
