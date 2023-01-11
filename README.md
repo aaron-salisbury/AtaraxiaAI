@@ -15,3 +15,5 @@ Background image "[High Tech Magma Texture Background](https://freesvg.org/high-
 System log font "[ProFont](https://www.fontsquirrel.com/fonts/ProFontWindows)" by SQ Software.
 
 General font "[Heavy Data](https://www.fontsquirrel.com/fonts/Heavy-Data)" by Vic Fieger.
+
+Streaming data powered by "[Watchmode](https://www.watchmode.com/)".
