@@ -30,7 +30,7 @@ namespace AtaraxiaAI.Business.Services
                 }
             }
 
-            if (insult == null)
+            if (string.IsNullOrEmpty(insult))
             {
                 AI.Logger.Error("Failed to aquire insult.");
             }
