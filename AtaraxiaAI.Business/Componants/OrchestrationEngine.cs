@@ -12,14 +12,17 @@ namespace AtaraxiaAI.Business.Componants
         {
             TellMeAJoke,
             TellMeADadJoke,
-            RespondWithInsult
+            RespondWithInsult,
+            IsMovieStreaming
         }
 
         private SpeechEngine _speechEngine;
+        private KnowledgeSkill _knowledgeSkill;
 
         internal OrchestrationEngine(SpeechEngine speechEngine)
         {
             _speechEngine = speechEngine;
+            _knowledgeSkill = new KnowledgeSkill(_speechEngine);
         }
 
         internal void Heard(string message)
@@ -44,8 +47,11 @@ namespace AtaraxiaAI.Business.Componants
                         case SkillMessages.RespondWithInsult:
                             ResponseSkill.AcquireInsult(_speechEngine);
                             break;
+                        case SkillMessages.IsMovieStreaming:
+                            _knowledgeSkill.GetStreamOfferings("Black Adam", true); //TODO: Need a way to communicate the title.
+                            break;
                         default:
-                            AGISkill.AnswerMe(command, _speechEngine);
+                            _knowledgeSkill.AnswerMe(command);
                             break;
                     }
                 }

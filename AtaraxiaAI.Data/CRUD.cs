@@ -42,12 +42,9 @@ namespace AtaraxiaAI.Data
             {
                 try
                 {
-                    using (HttpClient client = httpClientFactory.CreateClient())
-                    {
-                        logger.Information("Beginning to download Vosk model.");
-                        await client.DownloadFileTaskAsync(new Uri(VOSK_DOWNLOAD_URL), voskZipPath);
-                        logger.Information("Vosk model download complete.");
-                    }
+                    logger.Information("Beginning to download Vosk model.");
+                    await WebRequests.DownloadFileAsync(httpClientFactory, VOSK_DOWNLOAD_URL, voskZipPath);
+                    logger.Information("Vosk model download complete.");
 
                     logger.Information("Beginning to extract Vosk model.");
                     ZipFile.ExtractToDirectory(voskZipPath, VOSK_CONTENT_DIRECTORY);
@@ -72,12 +69,9 @@ namespace AtaraxiaAI.Data
             {
                 try
                 {
-                    using (HttpClient client = httpClientFactory.CreateClient())
-                    {
-                        logger.Information("Beginning to download YOLO model.");
-                        await client.DownloadFileTaskAsync(new Uri(YOLO_WEIGHTS_DOWNLOAD_URL), YOLO_WEIGHTS_CONTENT_PATH);
-                        logger.Information("YOLO model download complete.");
-                    }
+                    logger.Information("Beginning to download YOLO model.");
+                    await WebRequests.DownloadFileAsync(httpClientFactory, YOLO_WEIGHTS_DOWNLOAD_URL, YOLO_WEIGHTS_CONTENT_PATH);
+                    logger.Information("YOLO model download complete.");
                 }
                 catch (Exception e)
                 {
@@ -200,16 +194,38 @@ namespace AtaraxiaAI.Data
                 logger.Error($"Failed to read internal storage: {e.Message}");
             }
 
-            int currentMonth = DateTime.Now.Month;
-            if (appData == null || appData.MonthOfLastCloudServicesRoll != currentMonth)
-            {
-                appData = new AppData
-                {
-                    MonthOfLastCloudServicesRoll = currentMonth,
-                    MicrosoftAzureSpeechToTextCharCount = 0,
-                    GoogleCloudSpeechToTextByteCount = 0
-                };
+            bool updatedAppData = false;
+            DateTime currentDate = DateTime.Now.Date;
+            int currentMonth = currentDate.Month;
 
+            if (appData == null)
+            {
+                appData = new AppData { MonthOfLastCloudServicesRoll = currentMonth };
+                updatedAppData = true;
+            }
+            else
+            {
+                if (appData.MonthOfLastCloudServicesRoll != currentMonth)
+                {
+                    appData.MonthOfLastCloudServicesRoll = currentMonth;
+                    appData.MicrosoftAzureSpeechToTextCharCount = 0;
+                    appData.GoogleCloudSpeechToTextByteCount = 0;
+                    updatedAppData = true;
+                }
+
+                if (appData.WatchmodeQuotaResetsOn != null && appData.WatchmodeQuotaResetsOn < currentDate)
+                {
+                    while (appData.WatchmodeQuotaResetsOn < currentDate)
+                    {
+                        appData.WatchmodeQuotaResetsOn.Value.AddMonths(1);
+                    }
+                    appData.WatchmodeCurrentAPIUsage = 0;
+                    updatedAppData = true;
+                }
+            }
+
+            if (updatedAppData)
+            {
                 await UpdateDataAsync<AppData>(appData, appDirectory, logger);
             }
 

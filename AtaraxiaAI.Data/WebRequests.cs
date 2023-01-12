@@ -1,4 +1,5 @@
-﻿using Serilog;
+﻿using AtaraxiaAI.Data.Base;
+using Serilog;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -70,6 +71,19 @@ namespace AtaraxiaAI.Data
             {
                 logger.Error($"Web request request failed: {e.Message}");
                 return null;
+            }
+        }
+
+        public static async Task DownloadFileAsync(IHttpClientFactory httpClientFactory, string url, string fullFilePath, bool deletePreexisting = false)
+        {
+            if (deletePreexisting && File.Exists(fullFilePath))
+            {
+                File.Delete(fullFilePath);
+            }
+
+            using (HttpClient client = httpClientFactory.CreateClient())
+            {
+                await client.DownloadFileTaskAsync(new Uri(url), fullFilePath);
             }
         }
     }

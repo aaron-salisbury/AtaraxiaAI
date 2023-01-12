@@ -1,5 +1,4 @@
-﻿using AtaraxiaAI.Business.Services.Base.Domains;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 
 namespace AtaraxiaAI.Business.Services
 {
