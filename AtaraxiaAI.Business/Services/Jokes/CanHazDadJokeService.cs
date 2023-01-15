@@ -1,7 +1,6 @@
-﻿using AtaraxiaAI.Business.Services.Base.Domains;
+﻿using AtaraxiaAI.Business.Services.Base.DTOs;
 using AtaraxiaAI.Business.Services.Base.Models;
 using AtaraxiaAI.Data;
-using AtaraxiaAI.Data.Base;
 using System.Text.Json;
 using System.Threading.Tasks;
 

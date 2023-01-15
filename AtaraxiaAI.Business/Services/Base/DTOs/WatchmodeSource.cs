@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace AtaraxiaAI.Business.Services.Base.Domains
+namespace AtaraxiaAI.Business.Services.Base.DTOs
 {
     [Serializable]
     internal class WatchmodeSource
