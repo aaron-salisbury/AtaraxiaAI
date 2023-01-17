@@ -4,7 +4,6 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
 		xmlns:progRing="clr-namespace:AvaloniaProgressRing;assembly=AvaloniaProgressRing"
 		xmlns:material="using:Material.Icons.Avalonia"
-		xmlns:gif="using:AvaloniaGif"
         mc:Ignorable="d" 
 		d:DesignWidth="1280" d:DesignHeight="720" Width="960" Height="540"
         x:Class="AtaraxiaAI.Views.MainWindow"
