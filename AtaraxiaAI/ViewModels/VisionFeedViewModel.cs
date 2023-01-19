@@ -1,8 +1,5 @@
-using Avalonia.Media.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Material.Icons;
-using System.IO;
 
 namespace AtaraxiaAI.ViewModels
 {
@@ -11,18 +8,18 @@ namespace AtaraxiaAI.ViewModels
         public RelayCommand OnCameraClickCommand { get; }
 
         [ObservableProperty]
-        private IBitmap? _visionFrame;
+        private byte[]? _frameBuffer;
 
         [ObservableProperty]
         private bool _showCameraFeed;
 
         [ObservableProperty]
-        private MaterialIconKind _cameraIcon;
+        private string _cameraIcon;
 
         public VisionFeedViewModel()
         {
             _showCameraFeed = true;
-            _cameraIcon = MaterialIconKind.Video;
+            _cameraIcon = "Video";
 
             OnCameraClickCommand = new RelayCommand(() => OnCameraClick());
         }
@@ -31,13 +28,13 @@ namespace AtaraxiaAI.ViewModels
         {
             if (ShowCameraFeed)
             {
-                CameraIcon = MaterialIconKind.VideoOff;
+                CameraIcon = "VideoOff";
                 ShowCameraFeed = false;
-                VisionFrame = null;
+                FrameBuffer = null;
             }
             else
             {
-                CameraIcon = MaterialIconKind.Video;
+                CameraIcon = "Video";
                 ShowCameraFeed = true;
             }
         }
@@ -46,8 +43,7 @@ namespace AtaraxiaAI.ViewModels
         {
             if (ShowCameraFeed)
             {
-                using MemoryStream ms = new MemoryStream(jpeg);
-                VisionFrame = new Avalonia.Media.Imaging.Bitmap(ms);
+                FrameBuffer = jpeg;
             }
         }
     }

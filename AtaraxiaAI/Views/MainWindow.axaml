@@ -3,6 +3,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
 		xmlns:progRing="clr-namespace:AvaloniaProgressRing;assembly=AvaloniaProgressRing"
+        xmlns:cons="clr-namespace:AtaraxiaAI.Base.Converters;assembly=AtaraxiaAI"
 		xmlns:material="using:Material.Icons.Avalonia"
         mc:Ignorable="d" 
 		d:DesignWidth="1280" d:DesignHeight="720" Width="960" Height="540"
@@ -11,6 +12,10 @@
         Title="AtaraxiaAI"
 		ExtendClientAreaToDecorationsHint="True">
 
+    <Window.Resources>
+        <cons:StringToMaterialIconConverter x:Key="stringToMaterialIconConverter"/>
+    </Window.Resources>
+    
 	<Window.Styles>
 		<Style Selector="#MainMenu Button">
 			<Setter Property="Background" Value="Transparent"/>
@@ -54,19 +59,19 @@
 					<!-- Icons: https://materialdesignicons.com/ -->
 					<StackPanel Margin="5">
 						<Button Command="{Binding OnVisionClickCommand}" IsEnabled="{Binding AI.IsInitialized}">
-							<material:MaterialIcon Kind="{Binding VisionIcon}" />
+							<material:MaterialIcon Kind="{Binding VisionIcon, Converter={StaticResource stringToMaterialIconConverter}}" />
 						</Button>
 
 						<Button Command="{Binding OnSoundClickCommand}" IsEnabled="{Binding AI.IsInitialized}">
-							<material:MaterialIcon Kind="{Binding SoundIcon}" />
+							<material:MaterialIcon Kind="{Binding SoundIcon, Converter={StaticResource stringToMaterialIconConverter}}" />
 						</Button>
 
 						<Button Command="{Binding OnLogsClickCommand}">
-							<material:MaterialIcon Kind="{Binding LogsIcon}" />
+							<material:MaterialIcon Kind="{Binding LogsIcon, Converter={StaticResource stringToMaterialIconConverter}}" />
 						</Button>
 
 						<Button Command="{Binding OnSettingsClickCommand}" IsEnabled="{Binding AI.IsInitialized}">
-							<material:MaterialIcon Kind="{Binding SettingsIcon}" />
+							<material:MaterialIcon Kind="{Binding SettingsIcon, Converter={StaticResource stringToMaterialIconConverter}}" />
 						</Button>
 					</StackPanel>
 				</Border>

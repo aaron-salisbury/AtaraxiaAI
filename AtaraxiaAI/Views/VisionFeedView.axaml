@@ -2,23 +2,29 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:cons="clr-namespace:AtaraxiaAI.Base.Converters;assembly=AtaraxiaAI"
              xmlns:material="using:Material.Icons.Avalonia"
 			 mc:Ignorable="d" d:DesignWidth="600" d:DesignHeight="400"
              x:Class="AtaraxiaAI.Views.VisionFeedView"
 			 Background="Transparent">
 
+    <UserControl.Resources>
+        <cons:BytesToBitmapConverter x:Key="bytesToBitmapConverter"/>
+        <cons:StringToMaterialIconConverter x:Key="stringToMaterialIconConverter"/>
+    </UserControl.Resources>
+    
 	<Grid RowDefinitions="*, Auto">
-		<Image Grid.RowSpan="2"
-			   Stretch="Uniform"
-			   Source="{Binding VisionFrame}"
-			   IsVisible="{Binding ShowCameraFeed}"/>
+        <Image Grid.RowSpan="2"
+               Stretch="Uniform"
+               Source="{Binding FrameBuffer, Converter={StaticResource bytesToBitmapConverter}}"
+               IsVisible="{Binding ShowCameraFeed}"/>
 
 		<Button Grid.Row="1"
 				Margin="10"
 				Command="{Binding OnCameraClickCommand}"
 				HorizontalAlignment="Right">
 
-			<material:MaterialIcon Kind="{Binding CameraIcon}" />
+			<material:MaterialIcon Kind="{Binding CameraIcon, Converter={StaticResource stringToMaterialIconConverter}}" />
 		</Button>
 	</Grid>
 

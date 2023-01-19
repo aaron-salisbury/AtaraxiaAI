@@ -1,8 +1,6 @@
 using AtaraxiaAI.Business;
-using Avalonia.Media.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Material.Icons;
 using Microsoft.Extensions.DependencyInjection;
 using Serilog;
 using System.Net.Http;
@@ -20,22 +18,19 @@ namespace AtaraxiaAI.ViewModels
         public static AI? AI { get; set; }
 
         [ObservableProperty]
-        private IBitmap? _visionFrame;
-
-        [ObservableProperty]
         private bool _activateVision;
 
         [ObservableProperty]
-        private MaterialIconKind _visionIcon;
+        private string _visionIcon;
 
         [ObservableProperty]
-        private MaterialIconKind _soundIcon;
+        private string _soundIcon;
 
         [ObservableProperty]
         private bool _showLogs;
 
         [ObservableProperty]
-        private MaterialIconKind _logsIcon;
+        private string _logsIcon;
 
         [ObservableProperty]
         private object? _logsView;
@@ -44,7 +39,7 @@ namespace AtaraxiaAI.ViewModels
         private bool _showSettings;
 
         [ObservableProperty]
-        private MaterialIconKind _settingsIcon;
+        private string _settingsIcon;
 
         [ObservableProperty]
         private object? _settingsView;
@@ -57,14 +52,14 @@ namespace AtaraxiaAI.ViewModels
             AI = new AI(Log.Logger, httpClientFactory);
 
             _activateVision = false;
-            _visionIcon = MaterialIconKind.EyeOff;
-            _soundIcon = MaterialIconKind.MicOff;
+            _visionIcon = "EyeOff";
+            _soundIcon = "MicOff";
             _logsView = App.Current?.Services?.GetService<LogsViewModel>();
             _showLogs = true;
-            _logsIcon = MaterialIconKind.ClipboardText;
+            _logsIcon = "ClipboardText";
             _settingsView = App.Current?.Services?.GetService<SettingsViewModel>();
             _showSettings = false;
-            _settingsIcon = MaterialIconKind.CogOff;
+            _settingsIcon = "CogOff";
 
             VisionFeedViewModel? visionVM = App.Current?.Services?.GetService<VisionFeedViewModel>();
             _visionFeedView = visionVM;
@@ -89,13 +84,13 @@ namespace AtaraxiaAI.ViewModels
         {
             if (AI != null && AI.VisionEngine.IsEngineRunning)
             {
-                VisionIcon = MaterialIconKind.EyeOff;
+                VisionIcon = "EyeOff";
                 AI.VisionEngine.Deactivate();
                 ActivateVision = false;
             }
             else
             {
-                VisionIcon = MaterialIconKind.Eye;
+                VisionIcon = "Eye";
                 AI?.VisionEngine.Activate();
                 ActivateVision = true;
             }
@@ -105,12 +100,12 @@ namespace AtaraxiaAI.ViewModels
         {
             if (AI != null && AI.SpeechEngine.IsSpeechRecognitionRunning)
             {
-                SoundIcon = MaterialIconKind.MicOff;
+                SoundIcon = "MicOff";
                 AI.SpeechEngine.DeactivateSpeechRecognition();
             }
             else
             {
-                SoundIcon = MaterialIconKind.Microphone;
+                SoundIcon = "Microphone";
                 AI?.SpeechEngine.ActivateSpeechRecognition();
             }
         }
@@ -119,12 +114,12 @@ namespace AtaraxiaAI.ViewModels
         {
             if (ShowLogs)
             {
-                LogsIcon = MaterialIconKind.ClipboardTextOff;
+                LogsIcon = "ClipboardTextOff";
                 ShowLogs = false;
             }
             else
             {
-                LogsIcon = MaterialIconKind.ClipboardText;
+                LogsIcon = "ClipboardText";
                 ShowLogs = true;
             }
         }
@@ -133,12 +128,12 @@ namespace AtaraxiaAI.ViewModels
         {
             if (ShowSettings)
             {
-                SettingsIcon = MaterialIconKind.CogOff;
+                SettingsIcon = "CogOff";
                 ShowSettings = false;
             }
             else
             {
-                SettingsIcon = MaterialIconKind.Cog;
+                SettingsIcon = "Cog";
                 ShowSettings = true;
             }
         }
