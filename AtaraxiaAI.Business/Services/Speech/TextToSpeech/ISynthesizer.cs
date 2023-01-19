@@ -7,5 +7,7 @@ namespace AtaraxiaAI.Business.Services
         bool IsAvailable();
 
         Task<bool> SpeakAsync(string message);
+
+        // https://github.com/voxell-tech/UnityTTS
     }
 }
