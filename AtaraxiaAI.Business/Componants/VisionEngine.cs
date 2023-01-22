@@ -13,7 +13,8 @@ namespace AtaraxiaAI.Business.Componants
             get { return _visionTask != null && _visionTask.Status == TaskStatus.Running; }
         }
 
-        private IObjectDetector _objectDetector { get; set; }
+        private IObjectDetector _objectDetector;
+        private IOpticalCharacterRecognizer _ocRecognizer;
         private Action<byte[]> _updateFrameAction;
         private CancellationTokenSource _visionTokenSource;
         private Task _visionTask;
@@ -22,6 +23,7 @@ namespace AtaraxiaAI.Business.Componants
         {
             _updateFrameAction = updateFrameAction;
             _objectDetector = new YoloObjectDetector();
+            _ocRecognizer = new TesseractOCR();
         }
 
         public void Activate()
@@ -65,6 +67,11 @@ namespace AtaraxiaAI.Business.Componants
             {
                 Activate();
             }
+        }
+
+        internal string ReadTextFromImage(byte[] imageBuffer)
+        {
+            return _ocRecognizer.ReadTextFromImage(imageBuffer);
         }
     }
 }
