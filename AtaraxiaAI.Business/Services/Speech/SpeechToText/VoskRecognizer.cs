@@ -1,4 +1,4 @@
-﻿using AtaraxiaAI.Business.Services.Base.Domains;
+﻿using AtaraxiaAI.Business.Services.Base.DTOs;
 using NAudio.CoreAudioApi;
 using NAudio.Wave;
 using System;

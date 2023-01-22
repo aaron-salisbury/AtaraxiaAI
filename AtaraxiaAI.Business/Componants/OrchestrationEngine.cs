@@ -6,19 +6,23 @@ namespace AtaraxiaAI.Business.Componants
 {
     internal class OrchestrationEngine
     {
-        public const string WAKE_COMMAND = "Hey Robot";
+        internal const string WAKE_COMMAND = "Hey Robot";
 
         internal enum SkillMessages
         {
             TellMeAJoke,
-            TellMeADadJoke
+            TellMeADadJoke,
+            RespondWithInsult,
+            IsMovieStreaming
         }
 
         private SpeechEngine _speechEngine;
+        private KnowledgeSkill _knowledgeSkill;
 
         internal OrchestrationEngine(SpeechEngine speechEngine)
         {
             _speechEngine = speechEngine;
+            _knowledgeSkill = new KnowledgeSkill(_speechEngine);
         }
 
         internal void Heard(string message)
@@ -29,8 +33,7 @@ namespace AtaraxiaAI.Business.Componants
 
                 if (message.StartsWith(WAKE_COMMAND, StringComparison.OrdinalIgnoreCase))
                 {
-                    int wakeIndex = message.IndexOf(WAKE_COMMAND, StringComparison.OrdinalIgnoreCase);
-                    string command = message.Remove(wakeIndex, WAKE_COMMAND.Length);
+                    string command = message.Remove(0, WAKE_COMMAND.Length);
                     string cleanCommand = string.Concat(command.Where(c => !char.IsWhiteSpace(c)));
 
                     switch ((SkillMessages)Enum.Parse(typeof(SkillMessages), cleanCommand, true))
@@ -41,8 +44,14 @@ namespace AtaraxiaAI.Business.Componants
                         case SkillMessages.TellMeADadJoke:
                             JokeSkill.TellMeADadJoke(_speechEngine);
                             break;
+                        case SkillMessages.RespondWithInsult:
+                            ResponseSkill.AcquireInsult(_speechEngine);
+                            break;
+                        case SkillMessages.IsMovieStreaming:
+                            _knowledgeSkill.GetStreamOfferings("Black Adam", true); //TODO: Need a way to communicate the title.
+                            break;
                         default:
-                            AGISkill.AnswerMe(command, _speechEngine);
+                            _knowledgeSkill.AnswerMe(command);
                             break;
                     }
                 }

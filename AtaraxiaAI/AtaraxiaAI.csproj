@@ -48,4 +48,9 @@
   <ItemGroup>
     <UpToDateCheckInput Remove="Views\LogsView.axaml" />
   </ItemGroup>
+  <ItemGroup>
+    <Compile Update="Views\VisionFeedView.axaml.cs">
+      <DependentUpon>VisionFeedView.axaml</DependentUpon>
+    </Compile>
+  </ItemGroup>
 </Project>

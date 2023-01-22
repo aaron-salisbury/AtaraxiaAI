@@ -13,10 +13,10 @@ namespace AtaraxiaAI.Business
 {
     public class AI : ObservableObject
     {
-        internal static ILogger Logger { get; set; }
-        internal static IHttpClientFactory HttpClientFactory { get; set; }
-        internal static InternalStorage InternalStorage { get; set; }
-        internal static AppData AppData { get; set; }
+        internal static ILogger Logger { get; private set; }
+        internal static IHttpClientFactory HttpClientFactory { get; private set; }
+        internal static InternalStorage InternalStorage { get; private set; }
+        internal static AppData AppData { get; private set; }
 
         private bool _isInitialized;
         public bool IsInitialized
@@ -35,6 +35,11 @@ namespace AtaraxiaAI.Business
         internal SystemInfo SystemInfo { get; set; }
         internal Robot Peripherals { get; set; }
 
+        /// <summary>
+        /// Create the AI representation.
+        /// </summary>
+        /// <param name="logger">The application's global logger.</param>
+        /// <param name="httpClientFactory">The application's global HTTP Client factory service.</param>
         public AI(ILogger logger, IHttpClientFactory httpClientFactory)
         {
             _isInitialized = false;
@@ -46,6 +51,10 @@ namespace AtaraxiaAI.Business
             AppData = Task.Run(async () => await Data.CRUD.ReadAppData(InternalStorage.UserStorageDirectory, Logger)).Result;
         }
 
+        /// <summary>
+        /// Initialize the AI componants and other long running tasks.
+        /// </summary>
+        /// <param name="updateFrameAction">The function that should be called and passed the frame after the vision model processes it.</param>
         public async Task Initiate(Action<byte[]> updateFrameAction)
         {
             Logger.Information("Initializing ...");
@@ -73,11 +82,19 @@ namespace AtaraxiaAI.Business
             Logger.Information("Initialization complete.");
         }
 
+        /// <summary>
+        /// Get the directory path where the application data gets saved.
+        /// </summary>
         public string GetUserStorageDirectory()
         {
             return InternalStorage?.UserStorageDirectory;
         }
 
+        /// <summary>
+        /// Change the directory path where the application data gets saved.
+        /// Will copy & paste existing application data to the new location, unless it already exists there.
+        /// In which case, the old application data just gets deleted.
+        /// </summary>
         public async Task UpdateUserStorageDirectory(string newUserStorageDirectory)
         {
             string oldUserStorageDirectory = InternalStorage.UserStorageDirectory;
@@ -93,6 +110,9 @@ namespace AtaraxiaAI.Business
             }
         }
 
+        /// <summary>
+        /// Release resources and update stored application data.
+        /// </summary>
         public void Shutdown()
         {
             Logger.Information("Shutting down.");

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace AtaraxiaAI.Business.Services.Base.Domains
+namespace AtaraxiaAI.Business.Services.Base.DTOs
 {
     [Serializable]
     internal class GPT3Root

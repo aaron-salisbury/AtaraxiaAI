@@ -1,11 +1,8 @@
 using AtaraxiaAI.Business;
-using Avalonia.Media.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Material.Icons;
 using Microsoft.Extensions.DependencyInjection;
 using Serilog;
-using System.IO;
 using System.Net.Http;
 using System.Threading.Tasks;
 
@@ -21,22 +18,19 @@ namespace AtaraxiaAI.ViewModels
         public static AI? AI { get; set; }
 
         [ObservableProperty]
-        private IBitmap? _visionFrame;
+        private bool _activateVision;
 
         [ObservableProperty]
-        private bool _showVisionFeed;
+        private string _visionIcon;
 
         [ObservableProperty]
-        private MaterialIconKind _visionIcon;
-
-        [ObservableProperty]
-        private MaterialIconKind _soundIcon;
+        private string _soundIcon;
 
         [ObservableProperty]
         private bool _showLogs;
 
         [ObservableProperty]
-        private MaterialIconKind _logsIcon;
+        private string _logsIcon;
 
         [ObservableProperty]
         private object? _logsView;
@@ -45,31 +39,40 @@ namespace AtaraxiaAI.ViewModels
         private bool _showSettings;
 
         [ObservableProperty]
-        private MaterialIconKind _settingsIcon;
+        private string _settingsIcon;
 
         [ObservableProperty]
         private object? _settingsView;
+
+        [ObservableProperty]
+        private object? _visionFeedView;
 
         public MainWindowViewModel(IHttpClientFactory httpClientFactory)
         {
             AI = new AI(Log.Logger, httpClientFactory);
 
-            _showVisionFeed = false;
-            _visionIcon = MaterialIconKind.EyeOff;
-            _soundIcon = MaterialIconKind.MicOff;
+            _activateVision = false;
+            _visionIcon = "EyeOff";
+            _soundIcon = "MicOff";
             _logsView = App.Current?.Services?.GetService<LogsViewModel>();
             _showLogs = true;
-            _logsIcon = MaterialIconKind.ClipboardText;
+            _logsIcon = "ClipboardText";
             _settingsView = App.Current?.Services?.GetService<SettingsViewModel>();
             _showSettings = false;
-            _settingsIcon = MaterialIconKind.CogOff;
+            _settingsIcon = "CogOff";
+
+            VisionFeedViewModel? visionVM = App.Current?.Services?.GetService<VisionFeedViewModel>();
+            _visionFeedView = visionVM;
 
             OnVisionClickCommand = new RelayCommand(() => OnVisionClick());
             OnSoundClickCommand = new RelayCommand(() => OnSoundClick());
             OnLogsClickCommand = new RelayCommand(() => OnLogsClick());
             OnSettingsClickCommand = new RelayCommand(() => OnSettingsClick());
 
-            Task.Run(() => { AI.Initiate(updateFrameAction: SetVisionFrame).Wait(); });
+            if (visionVM != null)
+            {
+                Task.Run(() => { AI.Initiate(updateFrameAction: visionVM.SetVisionFrame).Wait(); });
+            }
         }
 
         public void Shutdown()
@@ -81,15 +84,15 @@ namespace AtaraxiaAI.ViewModels
         {
             if (AI != null && AI.VisionEngine.IsEngineRunning)
             {
-                VisionIcon = MaterialIconKind.EyeOff;
+                VisionIcon = "EyeOff";
                 AI.VisionEngine.Deactivate();
-                ShowVisionFeed = false;
+                ActivateVision = false;
             }
             else
             {
-                VisionIcon = MaterialIconKind.Eye;
+                VisionIcon = "Eye";
                 AI?.VisionEngine.Activate();
-                ShowVisionFeed = true;
+                ActivateVision = true;
             }
         }
 
@@ -97,12 +100,12 @@ namespace AtaraxiaAI.ViewModels
         {
             if (AI != null && AI.SpeechEngine.IsSpeechRecognitionRunning)
             {
-                SoundIcon = MaterialIconKind.MicOff;
+                SoundIcon = "MicOff";
                 AI.SpeechEngine.DeactivateSpeechRecognition();
             }
             else
             {
-                SoundIcon = MaterialIconKind.Microphone;
+                SoundIcon = "Microphone";
                 AI?.SpeechEngine.ActivateSpeechRecognition();
             }
         }
@@ -111,12 +114,12 @@ namespace AtaraxiaAI.ViewModels
         {
             if (ShowLogs)
             {
-                LogsIcon = MaterialIconKind.ClipboardTextOff;
+                LogsIcon = "ClipboardTextOff";
                 ShowLogs = false;
             }
             else
             {
-                LogsIcon = MaterialIconKind.ClipboardText;
+                LogsIcon = "ClipboardText";
                 ShowLogs = true;
             }
         }
@@ -125,20 +128,14 @@ namespace AtaraxiaAI.ViewModels
         {
             if (ShowSettings)
             {
-                SettingsIcon = MaterialIconKind.CogOff;
+                SettingsIcon = "CogOff";
                 ShowSettings = false;
             }
             else
             {
-                SettingsIcon = MaterialIconKind.Cog;
+                SettingsIcon = "Cog";
                 ShowSettings = true;
             }
-        }
-
-        public void SetVisionFrame(byte[] jpeg)
-        {
-            using MemoryStream ms = new MemoryStream(jpeg);
-            VisionFrame = new Avalonia.Media.Imaging.Bitmap(ms);
         }
     }
 }

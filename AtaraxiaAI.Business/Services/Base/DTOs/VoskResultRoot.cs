@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace AtaraxiaAI.Business.Services.Base.Domains
+namespace AtaraxiaAI.Business.Services.Base.DTOs
 {
     [Serializable]
-    internal class VoskRoot
+    internal class VoskResultRoot
     {
         public List<VoskResult> Result { get; set; }
         public string Text { get; set; }
