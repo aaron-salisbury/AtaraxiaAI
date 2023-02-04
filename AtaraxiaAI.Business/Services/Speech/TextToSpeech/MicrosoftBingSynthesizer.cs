@@ -9,8 +9,10 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Net.Sockets;
 using System.Net.WebSockets;
+using System.Security;
 using System.Text;
 using System.Text.Json;
 using System.Threading;
@@ -24,13 +26,14 @@ namespace AtaraxiaAI.Business.Services
         // https://github.com/Loskh/EdgeTTS.Net
         // https://github.com/rany2/edge-tts/blob/master/src/edge_tts/constants.py
 
-        private const string API_KEY = null; //TODO: Apply your own key.
+        //private const string API_KEY = null; //TODO: Apply your own key.
         private const string URL_SPEECH_FORMAT = "wss://speech.platform.bing.com/consumer/speech/synthesize/readaloud/edge/v1?TrustedClientToken={0}&ConnectionId={1}";
         private const string URL_VOICES_FORMAT = "https://speech.platform.bing.com/consumer/speech/synthesize/readaloud/voices/list?trustedclienttoken={0}";
         private const string PITCH = "+1350Hz";
         private const string RATE = "+50%";
         private const string VOLUME = "+100%";
 
+        private SecureString _secureTrustedClientToken;
         private ClientWebSocket _webSocket;
         private SemaphoreSlim _slimlock;
         private bool _disposedValue;
@@ -39,30 +42,35 @@ namespace AtaraxiaAI.Business.Services
 
         internal MicrosoftBingSynthesizer(CultureInfo culture = null)
         {
-            _webSocket = new ClientWebSocket();
-            _slimlock = new SemaphoreSlim(1, 1);
-            _disposedValue = false;
-            _connectionKeeper = new Timer(ConnnectKeeper, null, 0, 1000);
+            SetSecureTrustedClientToken().Wait();
 
-            culture = culture ?? new CultureInfo("en-US");
-            if (string.Equals(culture.Name, "en-US", StringComparison.OrdinalIgnoreCase))
+            if (_secureTrustedClientToken != null)
             {
-                _voice = "en-US-JennyNeural"; // en-US-AriaNeural, en-US-JennyNeural, en-US-GuyNeural
-            }
-            else
-            {
-                string url = string.Format(URL_VOICES_FORMAT, API_KEY);
-                string json = WebRequests.SendHTTPJsonRequestAsync(url, AI.HttpClientFactory, AI.Logger).Result;
-                List<BingVoice> voices = JsonSerializer.Deserialize<List<BingVoice>>(json);
+                _webSocket = new ClientWebSocket();
+                _slimlock = new SemaphoreSlim(1, 1);
+                _disposedValue = false;
+                _connectionKeeper = new Timer(ConnnectKeeper, null, 0, 1000);
 
-                _voice = voices
-                    .Where(v => string.Equals(v.Gender, "Female") && string.Equals(v.Locale, culture.Name, StringComparison.OrdinalIgnoreCase))
-                    .First()
-                    .ShortName;
+                culture = culture ?? new CultureInfo("en-US");
+                if (string.Equals(culture.Name, "en-US", StringComparison.OrdinalIgnoreCase))
+                {
+                    _voice = "en-US-JennyNeural"; // en-US-AriaNeural, en-US-JennyNeural, en-US-GuyNeural
+                }
+                else
+                {
+                    string url = string.Format(URL_VOICES_FORMAT, new NetworkCredential(string.Empty, _secureTrustedClientToken).Password);
+                    string json = WebRequests.SendHTTPJsonRequestAsync(url, AI.HttpClientFactory, AI.Logger).Result;
+                    List<BingVoice> voices = JsonSerializer.Deserialize<List<BingVoice>>(json);
+
+                    _voice = voices
+                        .Where(v => string.Equals(v.Gender, "Female") && string.Equals(v.Locale, culture.Name, StringComparison.OrdinalIgnoreCase))
+                        .First()
+                        .ShortName;
+                }
             }
         }
 
-        bool ISynthesizer.IsAvailable() => !string.IsNullOrEmpty(API_KEY);
+        bool ISynthesizer.IsAvailable() => _secureTrustedClientToken != null;
 
         async Task<bool> ISynthesizer.SpeakAsync(string message)
         {
@@ -149,6 +157,40 @@ namespace AtaraxiaAI.Business.Services
             return false;
         }
 
+        private async Task SetSecureTrustedClientToken()
+        {
+            const string URL_CONSTANTS = "https://raw.githubusercontent.com/rany2/edge-tts/master/src/edge_tts/constants.py";
+            const string TOKEN_CONSTANT = "TRUSTED_CLIENT_TOKEN = \"";
+
+            bool parsedEdgeClientToken = false;
+
+            using (StreamReader stream = new StreamReader(await WebRequests.GetWebRequestStreamAsync(
+                URL_CONSTANTS, 
+                AI.HttpClientFactory, 
+                AI.Logger)))
+            {
+                string response = stream.ReadToEnd();
+
+                if (!string.IsNullOrEmpty(response) && response.Contains(TOKEN_CONSTANT))
+                {
+                    string responseSubset = response.Substring(response.LastIndexOf(TOKEN_CONSTANT) + TOKEN_CONSTANT.Length);
+
+                    int charLocation = responseSubset.IndexOf("\"");
+                    if (charLocation > 0)
+                    {
+                        _secureTrustedClientToken = new NetworkCredential(string.Empty, responseSubset[..charLocation]).SecurePassword;
+                        parsedEdgeClientToken = true;
+                    }
+                }
+            }
+
+            if (!parsedEdgeClientToken)
+            {
+                AI.Logger.Error("Failed to parse Edge TTS trusted client token.");
+                _secureTrustedClientToken = null;
+            }
+        }
+
         private void ConnnectKeeper(object state)
         {
             _slimlock.Wait();
@@ -187,7 +229,7 @@ namespace AtaraxiaAI.Business.Services
 
         private async Task EstablishConnectionAsync(CancellationToken token)
         {
-            string url = string.Format(URL_SPEECH_FORMAT, API_KEY, Utils.GetUUID());
+            string url = string.Format(URL_SPEECH_FORMAT, new NetworkCredential(string.Empty, _secureTrustedClientToken).Password, Utils.GetUUID());
 
             var options = _webSocket.Options;
             options.SetRequestHeader("Pragma", "no-cache");
