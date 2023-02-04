@@ -26,7 +26,6 @@ namespace AtaraxiaAI.Business.Services
         // https://github.com/Loskh/EdgeTTS.Net
         // https://github.com/rany2/edge-tts/blob/master/src/edge_tts/constants.py
 
-        //private const string API_KEY = null; //TODO: Apply your own key.
         private const string URL_SPEECH_FORMAT = "wss://speech.platform.bing.com/consumer/speech/synthesize/readaloud/edge/v1?TrustedClientToken={0}&ConnectionId={1}";
         private const string URL_VOICES_FORMAT = "https://speech.platform.bing.com/consumer/speech/synthesize/readaloud/voices/list?trustedclienttoken={0}";
         private const string PITCH = "+1350Hz";
