@@ -49,11 +49,14 @@ namespace AtaraxiaAI.Business.Componants
 
                 switch (synthesizerRequest.Value)
                 {
-                    case SpeechSynthesizers.Google:
+                    case SpeechSynthesizers.GoogleCloud:
                         requestedSynthesizer = new GoogleCloudSynthesizer(_culture);
                         break;
-                    case SpeechSynthesizers.Microsoft:
+                    case SpeechSynthesizers.MicrosoftAzure:
                         requestedSynthesizer = new MicrosoftAzureSynthesizer(_culture);
+                        break;
+                    case SpeechSynthesizers.MicrosoftBing:
+                        requestedSynthesizer = new MicrosoftBingSynthesizer(_culture);
                         break;
                     case SpeechSynthesizers.SystemDotSpeech:
                         requestedSynthesizer = new SystemDotSpeechSynthesizer(_culture);
@@ -75,6 +78,13 @@ namespace AtaraxiaAI.Business.Componants
             }
 
             synthesizer = new MicrosoftAzureSynthesizer(_culture);
+            if (synthesizer.IsAvailable())
+            {
+                _synthesizer = synthesizer;
+                return;
+            }
+
+            synthesizer = new MicrosoftBingSynthesizer(_culture);
             if (synthesizer.IsAvailable())
             {
                 _synthesizer = synthesizer;

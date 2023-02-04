@@ -18,8 +18,9 @@ namespace AtaraxiaAI.Business.Base
 
         public enum SpeechSynthesizers
         {
-            Google,
-            Microsoft,
+            GoogleCloud,
+            MicrosoftAzure,
+            MicrosoftBing,
             SystemDotSpeech
         }
     }

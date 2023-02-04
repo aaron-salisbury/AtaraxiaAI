@@ -25,10 +25,8 @@ namespace AtaraxiaAI.Business.Services
         {
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                if (_recognizer == null)
-                {
-                    BuildRecognizer();
-                }
+                Dispose();
+                BuildRecognizer();
 
                 _recognizer.SpeechRecognized += (s, e) => { speechRecognizedAction(RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? e.Result.Text : string.Empty); };
 

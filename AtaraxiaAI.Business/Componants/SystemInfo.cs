@@ -39,16 +39,16 @@ namespace AtaraxiaAI.Business.Componants
                 {
                     foreach (ManagementObject obj in searcher.Get().Cast<ManagementObject>())
                     {
-                        Name = obj["Name"].ToString();
-                        DeviceID = obj["DeviceID"].ToString();
-                        AdapterRAM = obj["AdapterRAM"].ToString();
-                        AdapterDACType = obj["AdapterDACType"].ToString();
-                        Monochrome = obj["Monochrome"].ToString();
-                        InstalledDisplayDrivers = obj["InstalledDisplayDrivers"].ToString();
-                        DriverVersion = obj["DriverVersion"].ToString();
-                        VideoProcessor = obj["VideoProcessor"].ToString();
-                        VideoArchitecture = obj["VideoArchitecture"].ToString();
-                        VideoMemoryType = obj["VideoMemoryType"].ToString();
+                        Name = obj.GetPropertyValue("Name")?.ToString();
+                        DeviceID = obj.GetPropertyValue("DeviceID")?.ToString();
+                        AdapterRAM = obj.GetPropertyValue("AdapterRAM")?.ToString();
+                        AdapterDACType = obj.GetPropertyValue("AdapterDACType")?.ToString();
+                        Monochrome = obj.GetPropertyValue("Monochrome")?.ToString();
+                        InstalledDisplayDrivers = obj.GetPropertyValue("InstalledDisplayDrivers")?.ToString();
+                        DriverVersion = obj.GetPropertyValue("DriverVersion")?.ToString();
+                        VideoProcessor = obj.GetPropertyValue("VideoProcessor")?.ToString();
+                        VideoArchitecture = obj.GetPropertyValue("VideoArchitecture")?.ToString();
+                        VideoMemoryType = obj.GetPropertyValue("VideoMemoryType")?.ToString();
                     }
                 }
 
