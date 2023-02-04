@@ -24,6 +24,7 @@ namespace AtaraxiaAI.Data
         private const string YOLO_WEIGHTS_CONTENT_PATH = "./Detection/Vision/YOLO/yolov3.weights";
         private const string COCO_NAMES_CONTENT_PATH = "./Detection/Vision/YOLO/coco.names";
         private const string HC_CLASSIFIER_CONTENT_PATH = "./Detection/Vision/HaarCascades/haarcascade_frontalface_default.xml";
+        private const string TESSDATA_CONTENT_DIRECTORY = "./Detection/Vision/OCR/tessdata";
 
         // Small versions in case downloading the large models becomes no longer viable.
         private const string VOSK_SMALL_MODEL = "vosk-model-small-en-us-0.15";
@@ -132,6 +133,11 @@ namespace AtaraxiaAI.Data
         public static string ReadVoskModelContentPath()
         {
             return Path.Combine(VOSK_CONTENT_DIRECTORY, VOSK_MODEL);
+        }
+
+        public static string ReadTessdataContentPath()
+        {
+            return TESSDATA_CONTENT_DIRECTORY;
         }
 
         public static byte[] ReadYoloCFGBuffer()
