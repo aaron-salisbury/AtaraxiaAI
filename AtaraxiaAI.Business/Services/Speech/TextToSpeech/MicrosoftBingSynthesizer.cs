@@ -27,49 +27,32 @@ namespace AtaraxiaAI.Business.Services
         // https://github.com/rany2/edge-tts/blob/master/src/edge_tts/constants.py
 
         private const string URL_SPEECH_FORMAT = "wss://speech.platform.bing.com/consumer/speech/synthesize/readaloud/edge/v1?TrustedClientToken={0}&ConnectionId={1}";
-        private const string URL_VOICES_FORMAT = "https://speech.platform.bing.com/consumer/speech/synthesize/readaloud/voices/list?trustedclienttoken={0}";
         private const string PITCH = "+1350Hz";
         private const string RATE = "+50%";
         private const string VOLUME = "+100%";
 
         private SecureString _secureTrustedClientToken;
+        private string _voice;
         private ClientWebSocket _webSocket;
         private SemaphoreSlim _slimlock;
         private bool _disposedValue;
         private Timer _connectionKeeper;
-        private string _voice;
 
         internal MicrosoftBingSynthesizer(CultureInfo culture = null)
         {
-            SetSecureTrustedClientToken().Wait();
+            _secureTrustedClientToken = ScrapeEdgeClientToken().Result;
 
             if (_secureTrustedClientToken != null)
             {
+                _voice = GetBingVoiceForCulture(culture ?? new CultureInfo("en-US"), _secureTrustedClientToken).Result;
                 _webSocket = new ClientWebSocket();
                 _slimlock = new SemaphoreSlim(1, 1);
                 _disposedValue = false;
                 _connectionKeeper = new Timer(ConnnectKeeper, null, 0, 1000);
-
-                culture = culture ?? new CultureInfo("en-US");
-                if (string.Equals(culture.Name, "en-US", StringComparison.OrdinalIgnoreCase))
-                {
-                    _voice = "en-US-JennyNeural"; // en-US-AriaNeural, en-US-JennyNeural, en-US-GuyNeural
-                }
-                else
-                {
-                    string url = string.Format(URL_VOICES_FORMAT, new NetworkCredential(string.Empty, _secureTrustedClientToken).Password);
-                    string json = WebRequests.SendHTTPJsonRequestAsync(url, AI.HttpClientFactory, AI.Logger).Result;
-                    List<BingVoice> voices = JsonSerializer.Deserialize<List<BingVoice>>(json);
-
-                    _voice = voices
-                        .Where(v => string.Equals(v.Gender, "Female") && string.Equals(v.Locale, culture.Name, StringComparison.OrdinalIgnoreCase))
-                        .First()
-                        .ShortName;
-                }
             }
         }
 
-        bool ISynthesizer.IsAvailable() => _secureTrustedClientToken != null;
+        bool ISynthesizer.IsAvailable() => _secureTrustedClientToken != null && !string.IsNullOrEmpty(_voice);
 
         async Task<bool> ISynthesizer.SpeakAsync(string message)
         {
@@ -156,38 +139,84 @@ namespace AtaraxiaAI.Business.Services
             return false;
         }
 
-        private async Task SetSecureTrustedClientToken()
+        private static async Task<SecureString> ScrapeEdgeClientToken()
         {
             const string URL_CONSTANTS = "https://raw.githubusercontent.com/rany2/edge-tts/master/src/edge_tts/constants.py";
             const string TOKEN_CONSTANT = "TRUSTED_CLIENT_TOKEN = \"";
 
-            bool parsedEdgeClientToken = false;
+            SecureString scrapedEdgeClientToken = null;
+            string error = null;
 
-            using (StreamReader stream = new StreamReader(await WebRequests.GetWebRequestStreamAsync(
-                URL_CONSTANTS, 
-                AI.HttpClientFactory, 
-                AI.Logger)))
+            try
             {
-                string response = stream.ReadToEnd();
-
-                if (!string.IsNullOrEmpty(response) && response.Contains(TOKEN_CONSTANT))
+                using (StreamReader stream = new StreamReader(await WebRequests.GetWebRequestStreamAsync(URL_CONSTANTS, AI.HttpClientFactory, AI.Logger)))
                 {
-                    string responseSubset = response.Substring(response.LastIndexOf(TOKEN_CONSTANT) + TOKEN_CONSTANT.Length);
+                    string response = stream.ReadToEnd();
 
-                    int charLocation = responseSubset.IndexOf("\"");
-                    if (charLocation > 0)
+                    if (!string.IsNullOrEmpty(response) && response.Contains(TOKEN_CONSTANT))
                     {
-                        _secureTrustedClientToken = new NetworkCredential(string.Empty, responseSubset[..charLocation]).SecurePassword;
-                        parsedEdgeClientToken = true;
+                        string responseSubset = response.Substring(response.LastIndexOf(TOKEN_CONSTANT) + TOKEN_CONSTANT.Length);
+
+                        int charLocation = responseSubset.IndexOf("\"");
+                        if (charLocation > 0)
+                        {
+                            scrapedEdgeClientToken = new NetworkCredential(string.Empty, responseSubset[..charLocation]).SecurePassword;
+                        }
                     }
                 }
             }
-
-            if (!parsedEdgeClientToken)
+            catch (Exception e)
             {
-                AI.Logger.Error("Failed to parse Edge TTS trusted client token.");
-                _secureTrustedClientToken = null;
+                error = e.Message;
+                scrapedEdgeClientToken = null;
             }
+
+            if (scrapedEdgeClientToken == null)
+            {
+                string errorMessage = "Failed to parse Edge TTS trusted client token";
+                if (string.IsNullOrEmpty(error))
+                {
+                    errorMessage += ".";
+                }
+                else
+                {
+                    errorMessage += $": {error}";
+                }
+
+                AI.Logger.Error(errorMessage);
+            }
+
+            return scrapedEdgeClientToken;
+        }
+
+        private static async Task<string> GetBingVoiceForCulture(CultureInfo culture, SecureString secureToken, bool isFemale = true)
+        {
+            const string URL_VOICES_FORMAT = "https://speech.platform.bing.com/consumer/speech/synthesize/readaloud/voices/list?trustedclienttoken={0}";
+
+            string voice = null;
+
+            if (string.Equals(culture.Name, "en-US", StringComparison.OrdinalIgnoreCase))
+            {
+                voice = isFemale ? "en-US-JennyNeural" : "en-US-GuyNeural"; // Alt. Female: en-US-AriaNeural
+            }
+            else
+            {
+                string url = string.Format(URL_VOICES_FORMAT, new NetworkCredential(string.Empty, secureToken).Password);
+                string json = await WebRequests.SendHTTPJsonRequestAsync(url, AI.HttpClientFactory, AI.Logger);
+                List<BingVoice> voices = JsonSerializer.Deserialize<List<BingVoice>>(json);
+
+                voice = voices
+                    .Where(v => string.Equals(v.Gender, isFemale ? "Female" : "Male") && string.Equals(v.Locale, culture.Name, StringComparison.OrdinalIgnoreCase))
+                    .FirstOrDefault()?
+                    .ShortName;
+            }
+
+            if (string.IsNullOrEmpty(voice))
+            {
+                AI.Logger.Error("Failed to set Bing synthesizer voice.");
+            }
+
+            return voice;
         }
 
         private void ConnnectKeeper(object state)
