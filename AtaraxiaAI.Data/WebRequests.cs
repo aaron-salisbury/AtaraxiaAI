@@ -69,7 +69,7 @@ namespace AtaraxiaAI.Data
             }
             catch (Exception e)
             {
-                logger.Error($"Web request request failed: {e.Message}");
+                logger.Error($"Web request failed: {e.Message}");
                 return null;
             }
         }
