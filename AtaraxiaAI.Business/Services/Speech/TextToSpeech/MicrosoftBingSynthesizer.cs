@@ -2,15 +2,12 @@
 using AtaraxiaAI.Business.Services.Base.DTOs;
 using AtaraxiaAI.Data;
 using NAudio.Wave;
-using Serilog;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
-using System.Net.Sockets;
 using System.Net.WebSockets;
 using System.Security;
 using System.Text;
@@ -20,7 +17,7 @@ using System.Threading.Tasks;
 
 namespace AtaraxiaAI.Business.Services
 {
-    internal class MicrosoftBingSynthesizer : ISynthesizer, IDisposable
+    internal class MicrosoftBingSynthesizer : ISynthesizer
     {
         // https://github.com/Noisyfox/ACT.FoxTTS/blob/master/ACT.FoxTTS/ACT.FoxTTS/engine/edge/EdgeTTSEngine.cs
         // https://github.com/Loskh/EdgeTTS.Net
@@ -33,10 +30,14 @@ namespace AtaraxiaAI.Business.Services
 
         private SecureString _secureTrustedClientToken;
         private string _voice;
-        private ClientWebSocket _webSocket;
         private SemaphoreSlim _slimlock;
-        private bool _disposedValue;
-        private Timer _connectionKeeper;
+
+        private enum SessionState
+        {
+            NotStarted,
+            TurnStarted,
+            Streaming
+        }
 
         internal MicrosoftBingSynthesizer(CultureInfo culture = null)
         {
@@ -45,10 +46,7 @@ namespace AtaraxiaAI.Business.Services
             if (_secureTrustedClientToken != null)
             {
                 _voice = GetBingVoiceForCulture(culture ?? new CultureInfo("en-US"), _secureTrustedClientToken).Result;
-                _webSocket = new ClientWebSocket();
                 _slimlock = new SemaphoreSlim(1, 1);
-                _disposedValue = false;
-                _connectionKeeper = new Timer(ConnnectKeeper, null, 0, 1000);
             }
         }
 
@@ -56,60 +54,38 @@ namespace AtaraxiaAI.Business.Services
 
         async Task<bool> ISynthesizer.SpeakAsync(string message)
         {
-            var sendMessage = "X-Timestamp:" + Utils.GetFormatedDate() + "\r\nContent-Type:application/json; charset=utf-8\r\nPath:speech.config\r\n\r\n";
-            sendMessage += "{\"context\":{\"synthesis\":{\"audio\":{\"metadataoptions\":{\"sentenceBoundaryEnabled\":" + "\"false\"" + ",\"wordBoundaryEnabled\":" + "\"false\"" + "}," + "\"outputFormat\":\"audio-24khz-48kbitrate-mono-mp3\"}}}}\r\n";
-
-            var SSMLPayload = new SSML(message, _voice, PITCH, RATE, VOLUME);
-            var retryTimes = 0;
-            await _slimlock.WaitAsync();
-            while (retryTimes < 3)
+            using (ClientWebSocket webSocket = new ClientWebSocket())
             {
+                string json = "X-Timestamp:" + GetFormatedTimestamp() + "\r\nContent-Type:application/json; charset=utf-8\r\nPath:speech.config\r\n\r\n";
+                json += "{\"context\":{\"synthesis\":{\"audio\":{\"metadataoptions\":{\"sentenceBoundaryEnabled\":\"false\",\"wordBoundaryEnabled\":\"false\"},";
+                json += "\"outputFormat\":\"audio-24khz-48kbitrate-mono-mp3\"}}}}\r\n";
+
+                await _slimlock.WaitAsync();
                 try
                 {
-                    var token = CancellationToken.None;
+                    CancellationToken cancelToken = CancellationToken.None;
+                    string requestID = GetConnectionID();
+                    string url = string.Format(URL_SPEECH_FORMAT, new NetworkCredential(string.Empty, _secureTrustedClientToken).Password, GetConnectionID());
 
-                    switch (_webSocket.State)
-                    {
-                        //Steal Fox's Code
-                        case WebSocketState.None:
-                            await EstablishConnectionAsync(token);
-                            break;
-                        case WebSocketState.Connecting:
-                        case WebSocketState.Open:
-                            // All good
-                            break;
-                        case WebSocketState.CloseSent:
-                        case WebSocketState.CloseReceived:
-                        case WebSocketState.Closed:
-                            _webSocket.Abort();
-                            _webSocket.Dispose();
-                            _webSocket = new ClientWebSocket();
-                            await EstablishConnectionAsync(token);
-                            break;
-                        case WebSocketState.Aborted:
-                            _webSocket.Dispose();
-                            _webSocket = new ClientWebSocket();
-                            await EstablishConnectionAsync(token);
-                            break;
-                        default:
-                            break;
-                    }
+                    ClientWebSocketOptions options = webSocket.Options;
+                    options.SetRequestHeader("Pragma", "no-cache");
+                    options.SetRequestHeader("Accept-Encoding", "gzip, deflate, br");
+                    options.SetRequestHeader("Accept-Language", "zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6");
+                    options.SetRequestHeader("Cache-Control", "no-cache");
 
-                    Task<MemoryStream> audioTask = ReceiveAudioAsync(_webSocket, SSMLPayload.RequestID, token);
-                    await _webSocket.SendAsync(new ArraySegment<byte>(Encoding.UTF8.GetBytes(sendMessage)), WebSocketMessageType.Text, true, token);
-                    await _webSocket.SendAsync(new ArraySegment<byte>(Encoding.UTF8.GetBytes(SSMLPayload.ToString())), WebSocketMessageType.Text, true, token);
+                    await webSocket.ConnectAsync(new Uri(url), cancelToken);
+
+                    Task<MemoryStream> audioTask = ReceiveAudioAsync(webSocket, requestID, cancelToken);
+                    await webSocket.SendAsync(new ArraySegment<byte>(Encoding.UTF8.GetBytes(json)), WebSocketMessageType.Text, true, cancelToken);
+                    await webSocket.SendAsync(new ArraySegment<byte>(Encoding.UTF8.GetBytes(GetSSML(requestID, _voice, message))), WebSocketMessageType.Text, true, cancelToken);
+
                     while (!audioTask.IsCompleted)
                     {
                         await Task.Delay(10);
                     }
 
-                    if (audioTask.Result.Length == 0)
-                        throw new IOException("Received Empty Audio!");
-
-                    _slimlock.Release();
-
                     using (MemoryStream retMs = new MemoryStream())
-                    using (MemoryStream ms = new MemoryStream(audioTask.Result.ToArray()))  //TODO: May be able to avoid the conversion by using an output format other than "audio-24khz-48kbitrate-mono-mp3".
+                    using (MemoryStream ms = new MemoryStream(audioTask.Result.ToArray()))
                     using (Mp3FileReader reader = new Mp3FileReader(ms))
                     using (RawSourceWaveStream rs = new RawSourceWaveStream(reader, new WaveFormat(16000, 1)))
                     using (WaveStream pcmStream = WaveFormatConversionStream.CreatePcmStream(rs))
@@ -120,21 +96,15 @@ namespace AtaraxiaAI.Business.Services
 
                     return true;
                 }
-                catch (Exception ex)
+                catch (Exception e)
                 {
-                    retryTimes++;
-
-                    if (ex.InnerException != null && ex.InnerException is SocketException && ((SocketException)ex.InnerException).SocketErrorCode == SocketError.ConnectionReset)
-                        Log.Error("[EdgeTTS]Azure服务器主动断开连接");
-                    else
-                        Log.Error("[EdgeTTS]Azure服务器连接异常");
-
-                    Log.Error(ex.ToString());
-                    Log.Information($"[EdegTTS]连接失败，开始第{retryTimes}次重试 :(");
+                    AI.Logger.Error($"Failed to synthesize speech: {e.Message}");
+                }
+                finally
+                {
+                    _slimlock.Release();
                 }
             }
-            Log.Information($"[EdegTTS]重试失败 :(");
-            _slimlock.Release();
 
             return false;
         }
@@ -219,53 +189,28 @@ namespace AtaraxiaAI.Business.Services
             return voice;
         }
 
-        private void ConnnectKeeper(object state)
+        private static string GetConnectionID()
         {
-            _slimlock.Wait();
-#if DEBUG
-            Debug.WriteLine($"[{DateTime.Now}] Keeper WS_STATE={_webSocket.State}");
-#endif
-            try
-            {
-                switch (_webSocket.State)
-                {
-                    case WebSocketState.Closed:
-                        _webSocket.Abort();
-                        _webSocket.Dispose();
-                        _webSocket = new ClientWebSocket();
-                        EstablishConnectionAsync(CancellationToken.None).Wait();
-                        break;
-                    case WebSocketState.Aborted:
-                        _webSocket = new ClientWebSocket();
-                        EstablishConnectionAsync(CancellationToken.None).Wait();
-                        break;
-                    default:
-                        break;
-                }
-            }
-            catch (Exception ex)
-            {
-#if DEBUG
-                Debug.WriteLine($"[{DateTime.Now}] Keeper {ex.Message}");
-#endif
-            }
-            finally
-            {
-                _slimlock.Release();
-            }
+            return Guid.NewGuid().ToString().Replace("-", string.Empty);
         }
 
-        private async Task EstablishConnectionAsync(CancellationToken token)
+        private static string GetFormatedTimestamp()
         {
-            string url = string.Format(URL_SPEECH_FORMAT, new NetworkCredential(string.Empty, _secureTrustedClientToken).Password, Utils.GetUUID());
+            return $"{System.DateTime.UtcNow.ToString("ddd MMM yyyy H:m:s", CultureInfo.CreateSpecificCulture("en-GB"))} GMT+0000 (Coordinated Universal Time)";
+        }
 
-            var options = _webSocket.Options;
-            options.SetRequestHeader("Pragma", "no-cache");
-            options.SetRequestHeader("Accept-Encoding", "gzip, deflate, br");
-            options.SetRequestHeader("Accept-Language", "zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6");
-            options.SetRequestHeader("Cache-Control", "no-cache");
+        private string GetSSML(string requestID, string voice, string sentence)
+        {
+            StringBuilder sSMLBuilder = new StringBuilder();
+            sSMLBuilder.Append($"X-RequestId:{requestID}\r\nContent-Type:application/ssml+xml\r\n");
+            sSMLBuilder.Append($"X-Timestamp:{GetFormatedTimestamp()}Z\r\nPath:ssml\r\n\r\n");
+            sSMLBuilder.Append("<speak version='1.0' xmlns='http://www.w3.org/2001/10/synthesis' xml:lang='en-US'>");
+            sSMLBuilder.Append($"<voice name='{voice}'>");
+            sSMLBuilder.Append($"<prosody pitch='{PITCH}' rate='{RATE}' volume='{VOLUME}'>");
+            sSMLBuilder.Append(sentence);
+            sSMLBuilder.Append("</prosody></voice></speak>");
 
-            await _webSocket.ConnectAsync(new Uri(url), token);
+            return sSMLBuilder.ToString();
         }
 
         private async Task<MemoryStream> ReceiveAudioAsync(WebSocket client, string requestId, CancellationToken token)
@@ -282,10 +227,13 @@ namespace AtaraxiaAI.Business.Services
                 {
                     return audioBuffer;
                 }
-                var array = new byte[5 * 1024];
-                var receive = await client.ReceiveAsync(new ArraySegment<byte>(array), token);
+
+                byte[] array = new byte[5 * 1024];
+                WebSocketReceiveResult receive = await client.ReceiveAsync(new ArraySegment<byte>(array), token);
                 if (receive.Count == 0)
+                {
                     continue;
+                }
 
                 buffer.Write(array, (int)buffer.Position, receive.Count);
                 if (receive.EndOfMessage == false)
@@ -299,8 +247,6 @@ namespace AtaraxiaAI.Business.Services
                 {
                     case WebSocketMessageType.Text:
                         var content = Encoding.UTF8.GetString(array, 0, array.Length);
-                        if (!content.StartsWith($"X-RequestId:{requestId}"))
-                            throw new IOException($"Unexpected request id during streaming:{content}");
                         switch (state)
                         {
                             case SessionState.NotStarted:
@@ -364,95 +310,9 @@ namespace AtaraxiaAI.Business.Services
                     case WebSocketMessageType.Close:
                         throw new IOException("Unexpected closing of connection");
                 }
+
                 buffer = new MemoryStream();
             }
-        }
-
-        protected virtual void Dispose(bool disposing)
-        {
-            if (!_disposedValue)
-            {
-                if (disposing)
-                {
-                    _webSocket.Abort();
-                    _webSocket.Dispose();
-                }
-
-                _connectionKeeper.Dispose();
-
-                _disposedValue = true;
-            }
-        }
-
-        public void Dispose()
-        {
-            Dispose(disposing: true);
-            GC.SuppressFinalize(this);
-        }
-    }
-
-    public enum SessionState
-    {
-        NotStarted,
-        TurnStarted, // turn.start received
-        Streaming, // audio binary started
-    }
-
-    public class Voice
-    {
-        public string Name { get; set; }
-        public string ShortName { get; set; }
-        public string Gender { get; set; }
-        public string Locale { get; set; }
-        public string SuggestedCodec { get; set; }
-        public string FriendlyName { get; set; }
-        public string Status { get; set; }
-    }
-
-    internal class SSML
-    {
-        public string Voice;
-        public string Pitch;
-        public string Rate;
-        public string Volume;
-        public string Sentence;
-        public string RequestID;
-
-        public SSML(string sentence, string voice, string pitch, string rate, string volume)
-        {
-            Voice = voice;
-            Pitch = pitch;
-            Rate = rate;
-            Volume = volume;
-            Sentence = sentence;
-            RequestID = Guid.NewGuid().ToString().Replace("-", "");
-        }
-
-        private static string GetFormatedDate()
-        {
-            return DateTime.UtcNow.ToString("ddd MMM yyyy H:m:s", CultureInfo.CreateSpecificCulture("en-GB")) + " GMT+0000 (Coordinated Universal Time)";
-        }
-
-        public override string ToString()
-        {
-            var message = "X-RequestId:" + RequestID + "\r\nContent-Type:application/ssml+xml\r\n";
-            message += "X-Timestamp:" + GetFormatedDate() + "Z\r\nPath:ssml\r\n\r\n";
-            message += "<speak version='1.0' xmlns='http://www.w3.org/2001/10/synthesis' xml:lang='en-US'>";
-            message += "<voice  name='" + Voice + "'>" + "<prosody pitch='" + Pitch + "' rate ='" + Rate + "' volume='" + Volume + "'>";
-            message += Sentence;
-            message += "</prosody></voice></speak>";
-
-            return message;
-        }
-    }
-
-    public static class Utils
-    {
-        public static string GetUUID() => Guid.NewGuid().ToString().Replace("-", "");
-
-        public static string GetFormatedDate()
-        {
-            return DateTime.UtcNow.ToString("ddd MMM yyyy H:m:s", CultureInfo.CreateSpecificCulture("en-GB")) + " GMT+0000 (Coordinated Universal Time)";
         }
     }
 }

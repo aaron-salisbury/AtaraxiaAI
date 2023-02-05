@@ -1,6 +1,4 @@
-﻿using AtaraxiaAI.Business.Base;
-using AtaraxiaAI.Business.Componants;
-using AtaraxiaAI.Data.Domains;
+﻿using AtaraxiaAI.Business.Componants;
 using Microsoft.CognitiveServices.Speech;
 using System;
 using System.Globalization;
