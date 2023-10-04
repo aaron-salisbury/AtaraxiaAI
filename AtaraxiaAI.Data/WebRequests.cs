@@ -11,7 +11,7 @@ namespace AtaraxiaAI.Data
 {
     public static class WebRequests
     {
-        public static async Task<string> SendHTTPJsonRequestAsync(string url, IHttpClientFactory httpClientFactory, ILogger logger, string content = null, Dictionary<string, string> requestHeaders = null, string httpMethod = "GET", string userAgent = null)
+        public static async Task<string?> SendHTTPJsonRequestAsync(string url, IHttpClientFactory httpClientFactory, ILogger logger, string? content = null, Dictionary<string, string>? requestHeaders = null, string httpMethod = "GET", string? userAgent = null)
         {
             try
             {
@@ -37,7 +37,7 @@ namespace AtaraxiaAI.Data
                         return await client.GetStringAsync(url);
                     }
 
-                    using (HttpRequestMessage request = new HttpRequestMessage(new HttpMethod(httpMethod), url))
+                    using (HttpRequestMessage request = new(new HttpMethod(httpMethod), url))
                     {
                         if (!string.IsNullOrEmpty(content))
                         {
@@ -57,23 +57,6 @@ namespace AtaraxiaAI.Data
             }
         }
 
-        public static async Task<Stream> GetWebRequestStreamAsync(string url, IHttpClientFactory httpClientFactory, ILogger logger)
-        {
-            try
-            {
-                using (HttpClient client = httpClientFactory.CreateClient())
-                {
-                    HttpResponseMessage response = await client.GetAsync(url);
-                    return await response.Content.ReadAsStreamAsync();
-                }
-            }
-            catch (Exception e)
-            {
-                logger.Error($"Web request failed: {e.Message}");
-                return null;
-            }
-        }
-
         public static async Task DownloadFileAsync(IHttpClientFactory httpClientFactory, string url, string fullFilePath, bool deletePreexisting = false)
         {
             if (deletePreexisting && File.Exists(fullFilePath))
@@ -84,6 +67,48 @@ namespace AtaraxiaAI.Data
             using (HttpClient client = httpClientFactory.CreateClient())
             {
                 await client.DownloadFileTaskAsync(new Uri(url), fullFilePath);
+            }
+        }
+
+        public static async Task<Stream> GetWebRequestStreamAsync(string url, IHttpClientFactory httpClientFactory, ILogger logger)
+        {
+            HttpResponseMessage? response = await GetWebRequestResponseAsync(url, httpClientFactory, logger);
+
+            if (response != null)
+            {
+                return await response.Content.ReadAsStreamAsync();
+
+            }
+
+            return new MemoryStream();
+        }
+
+        public static async Task<byte[]> GetWebRequestSerializedAsync(string url, IHttpClientFactory httpClientFactory, ILogger logger)
+        {
+            HttpResponseMessage? response = await GetWebRequestResponseAsync(url, httpClientFactory, logger);
+
+            if (response != null)
+            {
+                return await response.Content.ReadAsByteArrayAsync();
+            }
+
+            return Array.Empty<byte>();
+
+        }
+
+        private static async Task<HttpResponseMessage?> GetWebRequestResponseAsync(string url, IHttpClientFactory httpClientFactory, ILogger logger)
+        {
+            try
+            {
+                using (HttpClient client = httpClientFactory.CreateClient())
+                {
+                    return await client.GetAsync(url);
+                }
+            }
+            catch (Exception e)
+            {
+                logger.Error($"Web request failed: {e.Message}");
+                return null;
             }
         }
     }
