@@ -12,9 +12,8 @@ namespace AtaraxiaAI.Integrations
 
         public IntegrationFactory(IntegrationDependencies dependencies) => _dependencies = dependencies;
         public Task CreateModelsAsync() => ModelDownloader.CreateModels(_dependencies.HttpRequester, _dependencies.Logger);
-        public IGeneralIntelligence CreateGeneralIntelligence() => new GPT3GeneralIntelligence(_dependencies);
-        public IIPAddressService CreateIPAddressService() => new IPIFYIPAddressService(_dependencies);
-        public IIPLocationService CreateLocationService() => new IPAPIIPLocationService(_dependencies);
+        // No configured answer provider is shipped with the app yet.
+        public IAnswerProvider? CreateAnswerProvider() => null;
         public IInsultService CreateInsultService() => new EvilInsultService(_dependencies);
         public IJokeService CreateJokeService(bool dadJoke = false) => dadJoke ? new CanHazDadJokeService(_dependencies) : new Sv443JokeService(_dependencies);
         public IObjectDetector CreateObjectDetector() => new YoloObjectDetector(_dependencies);

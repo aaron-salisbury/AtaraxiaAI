@@ -9,21 +9,21 @@ namespace AtaraxiaAI.Business.Skills
     internal class KnowledgeSkill
     {
         private SpeechEngine _speechEngine;
-        private IGeneralIntelligence _aGIService;
+        private IAnswerProvider? _answerProvider;
         private IStreamingAvailabilityService _streamingAvailabilityService;
 
         internal KnowledgeSkill(SpeechEngine speechEngine, IIntegrationFactory integrations)
         {
             _speechEngine = speechEngine;
-            _aGIService = integrations.CreateGeneralIntelligence();
+            _answerProvider = integrations.CreateAnswerProvider();
             _streamingAvailabilityService = integrations.CreateStreamingAvailabilityService();
         }
 
         internal void AnswerMe(string message)
         {
-            if (_aGIService.IsAvailable())
+            if (_answerProvider?.IsAvailable() == true)
             {
-                string response = _aGIService.AnswerMe(message).Result;
+                string response = _answerProvider.AnswerAsync(message).Result;
 
                 if (!string.IsNullOrEmpty(response))
                 {
