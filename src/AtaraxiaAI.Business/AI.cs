@@ -112,13 +112,11 @@ namespace AtaraxiaAI.Business
 
         /// <summary>
         /// Change the directory path where the application data gets saved.
-        /// Will copy & paste existing application data to the new location, unless it already exists there.
-        /// In which case, the old application data just gets deleted.
+        /// Moves existing application data when the destination is empty.
+        /// If the destination already has data, both files are preserved and the destination becomes active.
         /// </summary>
         public async Task UpdateUserStorageDirectory(string newUserStorageDirectory)
         {
-            string oldUserStorageDirectory = InternalStorage.UserStorageDirectory;
-
             InternalStorage = await _store.UpdateInternalStorageAsync(InternalStorage, newUserStorageDirectory);
 
             // Update AppData in case the user is selecting a network location where they already had it saved.
@@ -126,7 +124,6 @@ namespace AtaraxiaAI.Business
             if (preExistingAppData != null)
             {
                 AppData = preExistingAppData;
-                _store.DeleteAppData(oldUserStorageDirectory);
             }
         }
 
