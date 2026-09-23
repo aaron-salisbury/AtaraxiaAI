@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 
 namespace AtaraxiaAI.Integrations;
@@ -13,6 +14,19 @@ public static class KokoroWorker
 {
     public static void VerifyNativeRuntime()
     {
+        // Bind ONNX to the DLL shipped with this worker, even if another copy
+        // is installed system-wide or native probing skips the application directory.
+        if (OperatingSystem.IsWindows())
+        {
+            string nativePath = Path.Combine(AppContext.BaseDirectory, "onnxruntime.dll");
+            if (!File.Exists(nativePath))
+                throw new FileNotFoundException("The Kokoro ONNX runtime is missing from the application directory.", nativePath);
+
+            NativeLibrary.SetDllImportResolver(typeof(SessionOptions).Assembly,
+                (name, _, _) => name.Equals("onnxruntime", StringComparison.OrdinalIgnoreCase)
+                    ? NativeLibrary.Load(nativePath)
+                    : IntPtr.Zero);
+        }
         using var options = new SessionOptions();
     }
 
