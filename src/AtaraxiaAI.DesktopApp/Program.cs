@@ -1,5 +1,4 @@
 using AtaraxiaAI.Presentation.Desktop;
-using AtaraxiaAI.Integrations;
 using Avalonia;
 using CommunityToolkit.Mvvm.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection;
@@ -16,41 +15,6 @@ internal class Program
     [STAThread]
     public static void Main(string[] args)
     {
-        if (args.Length == 2 && args[0] == "--kokoro-probe")
-        {
-            System.IO.File.WriteAllText(args[1], "entered probe");
-            try
-            {
-                KokoroWorker.VerifyNativeRuntime();
-                System.IO.File.WriteAllText(args[1], "ready");
-            }
-            catch (Exception error)
-            {
-                System.IO.File.WriteAllText(args[1], error.ToString());
-                Environment.ExitCode = 1;
-            }
-            return;
-        }
-
-        if (args.Length == 3 && args[0] == "--kokoro-worker")
-        {
-            try { KokoroWorker.SynthesizeToFileAsync(args[1], args[2]).GetAwaiter().GetResult(); }
-            catch (Exception error)
-            {
-                try
-                {
-                    string nativeDetails;
-                    try { nativeDetails = KokoroWorker.DescribeNativeLibraries(); }
-                    catch (Exception diagnosticError) { nativeDetails = "Native library inspection failed: " + diagnosticError; }
-                    System.IO.File.WriteAllText(args[2] + ".error",
-                        error + Environment.NewLine + nativeDetails);
-                }
-                catch (System.IO.IOException) { }
-                Environment.ExitCode = 1;
-            }
-            return;
-        }
-
         ServiceProvider? serviceProvider = null;
 
         try

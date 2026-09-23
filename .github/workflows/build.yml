@@ -17,14 +17,11 @@ jobs:
         shell: pwsh
         run: |
           $probe = Join-Path $env:RUNNER_TEMP 'kokoro-probe.txt'
-          $nativeDll = 'src/AtaraxiaAI.DesktopApp/bin/Release/net10.0/onnxruntime.dll'
-          if (-not (Test-Path $nativeDll)) { throw 'ONNX Runtime must be copied beside the desktop executable.' }
-          $nativeVersion = (Get-Item $nativeDll).VersionInfo.FileVersion
-          Write-Host "App-local ONNX Runtime version: $nativeVersion"
-          if (-not $nativeVersion.StartsWith('1.22')) { throw "Unexpected ONNX Runtime version: $nativeVersion" }
-          $process = Start-Process -FilePath 'src/AtaraxiaAI.DesktopApp/bin/Release/net10.0/AtaraxiaAI.DesktopApp.exe' -ArgumentList '--kokoro-probe', $probe -Wait -PassThru
-          Write-Host "Desktop probe exit code: $($process.ExitCode)"
-          if (-not (Test-Path $probe)) { throw 'Desktop probe did not enter Main.' }
+          $worker = 'src/AtaraxiaAI.DesktopApp/bin/Release/net10.0/KokoroWorker/AtaraxiaAI.KokoroWorker.exe'
+          if (-not (Test-Path $worker)) { throw 'Kokoro worker must be copied beside the desktop executable.' }
+          $process = Start-Process -FilePath $worker -ArgumentList '--probe', $probe -Wait -PassThru
+          Write-Host "Isolated Kokoro probe exit code: $($process.ExitCode)"
+          if (-not (Test-Path $probe)) { throw 'Kokoro probe did not enter Main.' }
           Get-Content $probe
           if ((Get-Content $probe -Raw).Trim() -ne 'ready') { exit 1 }
       - run: dotnet test src/AtaraxiaAI.slnx --configuration Release --no-build

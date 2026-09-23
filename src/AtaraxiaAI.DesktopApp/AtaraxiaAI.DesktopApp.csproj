@@ -10,22 +10,34 @@
 
   <ItemGroup>
     <PackageReference Include="NAudio" Version="2.2.1" />
-    <PackageReference Include="KokoroSharp.CPU" Version="0.8.4" />
-    <PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.22.0" GeneratePathProperty="true" />
     <PackageReference Include="Avalonia.Desktop" Version="$(AvaloniaVersion)" />
     <PackageReference Include="Serilog.Extensions.Logging" Version="10.0.0" />
     <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
-  </ItemGroup>
-
-  <ItemGroup Condition="'$(OS)' == 'Windows_NT'">
-    <Content Include="$(PkgMicrosoft_ML_OnnxRuntime)\runtimes\win-x64\native\onnxruntime.dll"
-             Link="onnxruntime.dll" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\AtaraxiaAI.Business\AtaraxiaAI.Business.csproj" />
     <ProjectReference Include="..\AtaraxiaAI.Data\AtaraxiaAI.Data.csproj" />
     <ProjectReference Include="..\AtaraxiaAI.Integrations\AtaraxiaAI.Integrations.csproj" />
+    <ProjectReference Include="..\AtaraxiaAI.KokoroWorker\AtaraxiaAI.KokoroWorker.csproj" ReferenceOutputAssembly="false" />
     <ProjectReference Include="..\AtaraxiaAI.Presentation.Desktop\AtaraxiaAI.Presentation.Desktop.csproj" />
   </ItemGroup>
+
+  <Target Name="CopyKokoroWorkerBuild" AfterTargets="Build">
+    <ItemGroup>
+      <KokoroWorkerFile Include="$(MSBuildProjectDirectory)/../AtaraxiaAI.KokoroWorker/bin/$(Configuration)/$(TargetFramework)/**/*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(KokoroWorkerFile)"
+          DestinationFiles="@(KokoroWorkerFile->'$(TargetDir)KokoroWorker/%(RecursiveDir)%(Filename)%(Extension)')"
+          SkipUnchangedFiles="true" />
+  </Target>
+
+  <Target Name="CopyKokoroWorkerPublish" AfterTargets="Publish">
+    <ItemGroup>
+      <KokoroWorkerPublishFile Include="$(MSBuildProjectDirectory)/../AtaraxiaAI.KokoroWorker/bin/$(Configuration)/$(TargetFramework)/**/*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(KokoroWorkerPublishFile)"
+          DestinationFiles="@(KokoroWorkerPublishFile->'$(PublishDir)KokoroWorker/%(RecursiveDir)%(Filename)%(Extension)')"
+          SkipUnchangedFiles="true" />
+  </Target>
 </Project>
