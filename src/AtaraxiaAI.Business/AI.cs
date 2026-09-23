@@ -91,6 +91,13 @@ namespace AtaraxiaAI.Business
             Logger.Information("... Initializing speech engine.");
             SpeechEngine = new SpeechEngine();
 
+            if (Volatile.Read(ref _shutdownRequested) != 0)
+            {
+                VisionEngine?.Deactivate();
+                SpeechEngine?.DeactivateSpeechRecognition();
+                return;
+            }
+
             IsInitialized = true;
             Logger.Information("Initialization complete.");
         }
