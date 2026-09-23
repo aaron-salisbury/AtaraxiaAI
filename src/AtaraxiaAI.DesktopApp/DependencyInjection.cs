@@ -7,13 +7,9 @@ using AtaraxiaAI.Presentation.Desktop;
 using AtaraxiaAI.Presentation.Desktop.Base.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
-using RunnethOverStudio.AppToolkit.Core;
 using RunnethOverStudio.AppToolkit.Modules.Access;
 using RunnethOverStudio.AppToolkit.Modules.Messaging;
 using Serilog;
-using System;
-using System.IO;
 using System.Net;
 using System.Net.Http;
 
@@ -23,8 +19,6 @@ internal static class DependencyInjection
 {
     internal static IServiceCollection BuildServiceCollection()
     {
-        string applicationDataDirectory = GetApplicationDataDirectory();
-
         Serilog.Log.Logger = new LoggerConfiguration()
             .MinimumLevel.Verbose()
             .WriteTo.Sink(App.InMemorySink)
@@ -92,18 +86,4 @@ internal static class DependencyInjection
         return services;
     }
 
-    private static string GetApplicationDataDirectory()
-    {
-        using ILoggerFactory bootstrapLoggerFactory = LoggerFactory.Create(builder => builder.AddProvider(NullLoggerProvider.Instance));
-
-        FileSystemAccess fileSystemAccess = new(bootstrapLoggerFactory.CreateLogger<IFileSystemAccess>());
-        ProcessResult<string> appDirectoryPathResult = fileSystemAccess.GetOrCreateAppDirectoryPath();
-
-        if (appDirectoryPathResult.IsSuccessful)
-        {
-            return appDirectoryPathResult.Value;
-        }
-
-        throw new InvalidOperationException("Failed to get or create application data directory.", appDirectoryPathResult.Error);
-    }
 }
