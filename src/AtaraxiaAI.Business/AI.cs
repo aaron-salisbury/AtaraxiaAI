@@ -69,8 +69,7 @@ namespace AtaraxiaAI.Business
             _logger.Information("... Mocking peripherals.");
             Peripherals = new Robot { AutoDelay = 250 };
 
-            _logger.Information("... Using bundled YOLO model; preparing Kokoro in the background.");
-            _ = _integrations.PrepareSpeechAsync();
+            _logger.Information("... Using bundled YOLO model. Kokoro will load when speech is requested.");
 
             if (Volatile.Read(ref _shutdownRequested) != 0) return;
 

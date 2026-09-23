@@ -41,6 +41,7 @@ namespace AtaraxiaAI.Business.Componants
             if (_synthesizer == null) return;
             try
             {
+                _providerContext.Logger.Information("Generating speech with {Provider}.", _selectedSynthesizer);
                 byte[] wav = await _synthesizer.SynthesizeAsync(message, cancellationToken);
                 if (wav == null || wav.Length == 0) return;
                 _providerContext.Logger.Information($"*Speaking* \"{message}\"");
