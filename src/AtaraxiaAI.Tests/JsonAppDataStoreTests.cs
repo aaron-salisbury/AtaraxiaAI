@@ -61,7 +61,6 @@ public sealed class JsonAppDataStoreTests
 
         Assert.AreEqual(newDirectory, moved.UserStorageDirectory);
         Assert.AreEqual(17, (await store.ReadAppDataAsync(newDirectory)).WatchmodeCurrentAPIUsage);
-        Assert.AreEqual(17, dependencies.AppData.WatchmodeCurrentAPIUsage);
         Assert.AreEqual(1, (await store.ReadAppDataAsync(oldDirectory)).WatchmodeCurrentAPIUsage);
         Assert.AreEqual(newDirectory, (await store.ReadInternalStorageAsync()).UserStorageDirectory);
     }
@@ -88,6 +87,7 @@ public sealed class JsonAppDataStoreTests
 
         Assert.AreEqual(1, (await store.ReadAppDataAsync(oldDirectory)).WatchmodeCurrentAPIUsage);
         Assert.AreEqual(17, (await store.ReadAppDataAsync(newDirectory)).WatchmodeCurrentAPIUsage);
+        Assert.AreEqual(17, dependencies.AppData.WatchmodeCurrentAPIUsage);
     }
 
     public class UnusedDependency : DispatchProxy
