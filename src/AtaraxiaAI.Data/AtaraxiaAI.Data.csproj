@@ -1,0 +1,11 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <Description>Data tier of application.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\AtaraxiaAI.Business\AtaraxiaAI.Business.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,119 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="AtaraxiaAI.Presentation.Desktop.Views.MainView"
+             x:DataType="vm:MainViewModel"
+			 xmlns:m="clr-namespace:AtaraxiaAI.Presentation.Desktop.Models"
+			 xmlns:v="clr-namespace:AtaraxiaAI.Presentation.Desktop.Views"
+			 xmlns:vm="clr-namespace:AtaraxiaAI.Presentation.Desktop.ViewModels"
+			 xmlns:c="clr-namespace:AtaraxiaAI.Presentation.Desktop.Base.Controls"
+			 xmlns:i="using:Material.Icons.Avalonia"
+			 xmlns:progRing="clr-namespace:AvaloniaProgressRing;assembly=AvaloniaProgressRing"
+			 xmlns:cons="clr-namespace:AtaraxiaAI.Presentation.Desktop.Base.Converters;assembly=AtaraxiaAI.Presentation.Desktop"
+			 xmlns:svg="clr-namespace:Avalonia.Svg.Skia;assembly=Svg.Controls.Skia.Avalonia">
+
+	<UserControl.Resources>
+		<cons:StringToMaterialIconConverter x:Key="stringToMaterialIconConverter"/>
+	</UserControl.Resources>
+
+	<UserControl.Styles>
+		<Style Selector="#MainMenu Button">
+			<Setter Property="Background" Value="Transparent"/>
+			<Setter Property="Height" Value="30"/>
+			<Setter Property="CornerRadius" Value="5"/>
+			<Setter Property="VerticalContentAlignment" Value="Center"/>
+		</Style>
+		<Style Selector="#MainMenu i|MaterialIcon">
+			<Setter Property="Height" Value="18"/>
+			<Setter Property="Width" Value="18"/>
+			<Setter Property="Foreground">
+				<Setter.Value>
+					<SolidColorBrush Opacity="0.7" Color="White" />
+				</Setter.Value>
+			</Setter>
+		</Style>
+	</UserControl.Styles>
+	
+	<Grid RowDefinitions="30, *">
+
+		<!-- Background -->
+		<Grid Grid.RowSpan="2" IsHitTestVisible="False">
+			<Image ZIndex="-3" Stretch="UniformToFill" Source="/Base/Assets/background.png" />
+			<svg:Svg x:Name="VectorBackground" ZIndex="-2" Path="/Base/Assets/background.svg"
+			         Stretch="UniformToFill" EnableCache="True" />
+			<Border ZIndex="-1">
+				<Border.Background>
+					<SolidColorBrush Color="Black" Opacity="0.6" />
+				</Border.Background>
+			</Border>
+		</Grid>
+
+		<!-- Window Drag Area -->
+		<Border Grid.Row="0" IsHitTestVisible="False" />
+
+		<Grid Grid.Row="1" IsHitTestVisible="True" ColumnDefinitions="Auto, *">
+			<!-- Main Menu -->
+			<Grid  Grid.Column="0" RowDefinitions="Auto, *">
+				<Border Name="MainMenu" Margin="9,9,0,0" CornerRadius="7">
+					<Border.Background>
+						<SolidColorBrush Color="#2B2B2B" Opacity="0.6" />
+					</Border.Background>
+					<!-- Icons: https://materialdesignicons.com/ -->
+					<StackPanel Margin="5">
+						<Button Command="{Binding OnVisionClickCommand}" IsEnabled="{Binding IsInitialized}">
+							<i:MaterialIcon Kind="{Binding VisionIcon, Converter={StaticResource stringToMaterialIconConverter}}" />
+						</Button>
+
+						<Button Command="{Binding OnSoundClickCommand}" IsEnabled="{Binding IsInitialized}">
+							<i:MaterialIcon Kind="{Binding SoundIcon, Converter={StaticResource stringToMaterialIconConverter}}" />
+						</Button>
+
+						<Button Command="{Binding OnLogsClickCommand}">
+							<i:MaterialIcon Kind="{Binding LogsIcon, Converter={StaticResource stringToMaterialIconConverter}}" />
+						</Button>
+
+						<Button Command="{Binding OnSettingsClickCommand}" IsEnabled="{Binding IsInitialized}">
+							<i:MaterialIcon Kind="{Binding SettingsIcon, Converter={StaticResource stringToMaterialIconConverter}}" />
+						</Button>
+					</StackPanel>
+				</Border>
+			</Grid>
+
+			<!-- Content Area -->
+			<Border Grid.Column="1" Padding="20">
+				<Grid RowDefinitions="1.5*, 1*">
+
+					<progRing:ProgressRing Grid.Row="0"
+										   Width="80"
+										   Height="80"
+										   IsActive="{Binding !AI.IsInitialized}"
+										   HorizontalAlignment="Left"
+										   VerticalAlignment="Top"
+										   Foreground="#cc5200" />
+
+					<!-- Vision Feed -->
+					<ContentControl Grid.Row="0"
+									Content="{Binding VisionFeedView}"
+									IsVisible="{Binding ActivateVision}"
+									HorizontalAlignment="Right" />
+
+					<Grid Grid.Row="1" ColumnDefinitions="*, Auto" Margin="0,25,0,0">
+						<!-- Logs -->
+						<ContentControl Grid.Column="0"
+										Content="{Binding LogsView}"
+										IsVisible="{Binding ShowLogs}" />
+
+						<!-- Settings -->
+						<ContentControl Grid.Column="1"
+										Margin="15,0,0,0"
+										Content="{Binding SettingsView}"
+										IsVisible="{Binding ShowSettings}" />
+					</Grid>
+					
+				</Grid>
+			</Border>
+		</Grid>
+	</Grid>
+</UserControl>
