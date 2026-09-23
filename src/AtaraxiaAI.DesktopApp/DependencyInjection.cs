@@ -10,8 +10,6 @@ using Microsoft.Extensions.Logging;
 using RunnethOverStudio.AppToolkit.Modules.Access;
 using RunnethOverStudio.AppToolkit.Modules.Messaging;
 using Serilog;
-using System;
-using System.IO;
 using System.Net;
 using System.Net.Http;
 
@@ -22,7 +20,8 @@ internal static class DependencyInjection
     internal static IServiceCollection BuildServiceCollection()
     {
         var fileLog = new RelocatableLogSink();
-        fileLog.UseDirectory(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "AtaraxiaAI"));
+        fileLog.UseDirectory(new JsonAppDataStore().ReadInternalStorageAsync()
+            .GetAwaiter().GetResult().UserStorageDirectory);
         Serilog.Log.Logger = new LoggerConfiguration()
             .MinimumLevel.Verbose()
             .WriteTo.Sink(App.InMemorySink)
