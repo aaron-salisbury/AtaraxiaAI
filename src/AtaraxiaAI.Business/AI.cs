@@ -17,6 +17,9 @@ namespace AtaraxiaAI.Business
         internal static ILogger Logger { get; private set; }
         private readonly IAppDataStore _store;
         private readonly IAudioPlayer _audioPlayer;
+        private readonly IHttpRequester _httpRequester;
+        private readonly ILogger _logger;
+        private AppData _appData;
         private int _shutdownRequested;
         internal static IIntegrationFactory Integrations { get; private set; }
         internal static IHttpRequester HttpRequester { get; private set; }
@@ -50,16 +53,16 @@ namespace AtaraxiaAI.Business
         {
             _isInitialized = false;
 
-            Logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _logger = Logger = logger ?? throw new ArgumentNullException(nameof(logger));
             Integrations = integrations ?? throw new ArgumentNullException(nameof(integrations));
-            HttpRequester = httpRequester ?? throw new ArgumentNullException(nameof(httpRequester));
+            _httpRequester = HttpRequester = httpRequester ?? throw new ArgumentNullException(nameof(httpRequester));
             _store = store ?? throw new ArgumentNullException(nameof(store));
             _audioPlayer = audioPlayer ?? throw new ArgumentNullException(nameof(audioPlayer));
             // Settings reads the storage directory during window construction.
             Task.Run(async () =>
             {
                 InternalStorage = await _store.ReadInternalStorageAsync();
-                AppData = await _store.ReadAppDataAsync(InternalStorage.UserStorageDirectory) ?? new AppData();
+                _appData = AppData = await _store.ReadAppDataAsync(InternalStorage.UserStorageDirectory) ?? new AppData();
                 await RefreshQuotasAsync();
             }).GetAwaiter().GetResult();
         }
@@ -83,7 +86,7 @@ namespace AtaraxiaAI.Business
             VisionEngine = new VisionEngine(updateFrameAction);
 
             Logger.Information("... Initializing speech engine.");
-            SpeechEngine = new SpeechEngine(Integrations, _audioPlayer);
+            SpeechEngine = new SpeechEngine(Integrations, _audioPlayer, new SpeechProviderDependencies(() => _appData, _httpRequester, _logger));
 
             if (Volatile.Read(ref _shutdownRequested) != 0)
             {
@@ -118,7 +121,7 @@ namespace AtaraxiaAI.Business
             AppData preExistingAppData = await _store.ReadAppDataAsync(newUserStorageDirectory);
             if (preExistingAppData != null)
             {
-                AppData = preExistingAppData;
+                _appData = AppData = preExistingAppData;
             }
         }
 

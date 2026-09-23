@@ -41,8 +41,11 @@ namespace AtaraxiaAI.Integrations.Services
             Streaming
         }
 
-        internal MicrosoftBingSynthesizer(CultureInfo culture = null)
+        private readonly SpeechProviderDependencies _context;
+
+        internal MicrosoftBingSynthesizer(CultureInfo culture, SpeechProviderDependencies context)
         {
+            _context = context ?? throw new ArgumentNullException(nameof(context));
             _secureTrustedClientToken = ScrapeEdgeClientToken().Result;
 
             if (_secureTrustedClientToken != null)
@@ -96,7 +99,7 @@ namespace AtaraxiaAI.Integrations.Services
                 }
                 catch (Exception e)
                 {
-                    AI.Logger.Error($"Failed to synthesize speech: {e.Message}");
+                    _context.Logger.Error($"Failed to synthesize speech: {e.Message}");
                 }
                 finally
                 {
@@ -107,7 +110,7 @@ namespace AtaraxiaAI.Integrations.Services
             return null;
         }
 
-        private static async Task<SecureString> ScrapeEdgeClientToken()
+        private async Task<SecureString> ScrapeEdgeClientToken()
         {
             const string URL_CONSTANTS = "https://raw.githubusercontent.com/rany2/edge-tts/master/src/edge_tts/constants.py";
             const string TOKEN_CONSTANT = "TRUSTED_CLIENT_TOKEN = \"";
@@ -117,7 +120,7 @@ namespace AtaraxiaAI.Integrations.Services
 
             try
             {
-                using (StreamReader stream = new StreamReader(new MemoryStream(await AI.HttpRequester.GetWebRequestSerializedAsync(URL_CONSTANTS))))
+                using (StreamReader stream = new StreamReader(new MemoryStream(await _context.HttpRequester.GetWebRequestSerializedAsync(URL_CONSTANTS))))
                 {
                     string response = stream.ReadToEnd();
 
@@ -151,13 +154,13 @@ namespace AtaraxiaAI.Integrations.Services
                     errorMessage += $": {error}";
                 }
 
-                AI.Logger.Error(errorMessage);
+                _context.Logger.Error(errorMessage);
             }
 
             return scrapedEdgeClientToken;
         }
 
-        private static async Task<string> GetBingVoiceForCulture(CultureInfo culture, SecureString secureToken, bool isFemale = true)
+        private async Task<string> GetBingVoiceForCulture(CultureInfo culture, SecureString secureToken, bool isFemale = true)
         {
             const string URL_VOICES_FORMAT = "https://speech.platform.bing.com/consumer/speech/synthesize/readaloud/voices/list?trustedclienttoken={0}";
 
@@ -170,7 +173,7 @@ namespace AtaraxiaAI.Integrations.Services
             else
             {
                 string url = string.Format(URL_VOICES_FORMAT, new NetworkCredential(string.Empty, secureToken).Password);
-                string json = await AI.HttpRequester.SendHTTPJsonRequestAsync(url);
+                string json = await _context.HttpRequester.SendHTTPJsonRequestAsync(url);
                 List<BingVoice> voices = JsonSerializer.Deserialize<List<BingVoice>>(json);
 
                 voice = voices
@@ -181,7 +184,7 @@ namespace AtaraxiaAI.Integrations.Services
 
             if (string.IsNullOrEmpty(voice))
             {
-                AI.Logger.Error("Failed to set Bing synthesizer voice.");
+                _context.Logger.Error("Failed to set Bing synthesizer voice.");
             }
 
             return voice;

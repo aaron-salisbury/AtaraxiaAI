@@ -13,7 +13,7 @@ namespace AtaraxiaAI.Integrations.Services
     {
         private CultureInfo _culture;
 
-        internal SystemDotSpeechSynthesizer(CultureInfo culture = null)
+        internal SystemDotSpeechSynthesizer(CultureInfo culture, SpeechProviderDependencies context)
         {
             _culture = culture ?? new CultureInfo("en-US");
         }

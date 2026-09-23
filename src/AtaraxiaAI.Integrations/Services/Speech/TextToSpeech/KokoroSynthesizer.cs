@@ -15,7 +15,7 @@ namespace AtaraxiaAI.Integrations.Services
             () => KokoroWavSynthesizer.LoadModelAsync());
         private readonly CultureInfo _culture;
 
-        internal KokoroSynthesizer(CultureInfo culture) => _culture = culture ?? new CultureInfo("en-US");
+        internal KokoroSynthesizer(CultureInfo culture, SpeechProviderDependencies context) => _culture = culture ?? new CultureInfo("en-US");
 
         public bool IsAvailable() => _culture.Name.Equals("en-US", StringComparison.OrdinalIgnoreCase);
 

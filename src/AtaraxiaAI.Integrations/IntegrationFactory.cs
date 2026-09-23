@@ -19,13 +19,13 @@ namespace AtaraxiaAI.Integrations
         public IOpticalCharacterRecognizer CreateOpticalCharacterRecognizer() => new TesseractOCR();
         public IRecognizer CreateRecognizer(CultureInfo culture) => new SystemDotSpeechRecognizer(culture);
         public IStreamingAvailabilityService CreateStreamingAvailabilityService() => new WatchModeStreamingAvailabilityService();
-        public ISynthesizer CreateSynthesizer(SpeechSynthesizers synthesizer, CultureInfo culture) => synthesizer switch
+        public ISynthesizer CreateSynthesizer(SpeechSynthesizers synthesizer, CultureInfo culture, SpeechProviderDependencies context) => synthesizer switch
         {
-            SpeechSynthesizers.Kokoro => new KokoroSynthesizer(culture),
-            SpeechSynthesizers.GoogleCloud => new GoogleCloudSynthesizer(culture),
-            SpeechSynthesizers.MicrosoftAzure => new MicrosoftAzureSynthesizer(culture),
-            SpeechSynthesizers.MicrosoftBing => new MicrosoftBingSynthesizer(culture),
-            SpeechSynthesizers.SystemDotSpeech => new SystemDotSpeechSynthesizer(culture),
+            SpeechSynthesizers.Kokoro => new KokoroSynthesizer(culture, context),
+            SpeechSynthesizers.GoogleCloud => new GoogleCloudSynthesizer(culture, context),
+            SpeechSynthesizers.MicrosoftAzure => new MicrosoftAzureSynthesizer(culture, context),
+            SpeechSynthesizers.MicrosoftBing => new MicrosoftBingSynthesizer(culture, context),
+            SpeechSynthesizers.SystemDotSpeech => new SystemDotSpeechSynthesizer(culture, context),
             _ => throw new System.ArgumentOutOfRangeException(nameof(synthesizer))
         };
     }

@@ -26,9 +26,12 @@ namespace AtaraxiaAI.Integrations.Services
         private AudioConfig _audioConfig;
         private VoiceSelectionParams _voice;
 
-        internal GoogleCloudSynthesizer(CultureInfo culture = null)
+        private readonly SpeechProviderDependencies _context;
+
+        internal GoogleCloudSynthesizer(CultureInfo culture, SpeechProviderDependencies context)
         {
-            if (AI.AppData.GoogleCloudSpeechToTextByteCount < FREE_LIMIT && CREDENTIALS_SET)
+            _context = context ?? throw new ArgumentNullException(nameof(context));
+            if (_context.AppData.GoogleCloudSpeechToTextByteCount < FREE_LIMIT && CREDENTIALS_SET)
             {
                 culture = culture ?? new CultureInfo("en-US");
                 _audioConfig = new AudioConfig { AudioEncoding = AudioEncoding.Linear16 };
@@ -45,16 +48,16 @@ namespace AtaraxiaAI.Integrations.Services
             }
         }
 
-        bool ISynthesizer.IsAvailable() => AI.AppData.GoogleCloudSpeechToTextByteCount < FREE_LIMIT && CREDENTIALS_SET;
+        bool ISynthesizer.IsAvailable() => _context.AppData.GoogleCloudSpeechToTextByteCount < FREE_LIMIT && CREDENTIALS_SET;
 
         async Task<byte[]> ISynthesizer.SynthesizeAsync(string message, System.Threading.CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            if (AI.AppData.GoogleCloudSpeechToTextByteCount + message.Length > FREE_LIMIT) return null;
+            if (_context.AppData.GoogleCloudSpeechToTextByteCount + message.Length > FREE_LIMIT) return null;
             var input = new SynthesisInput { Text = message };
             var response = await _synthesizer.SynthesizeSpeechAsync(input, _voice, _audioConfig);
             cancellationToken.ThrowIfCancellationRequested();
-            AI.AppData.GoogleCloudSpeechToTextByteCount += message.Length;
+            _context.AppData.GoogleCloudSpeechToTextByteCount += message.Length;
             return response.AudioContent.ToByteArray();
         }
     }
