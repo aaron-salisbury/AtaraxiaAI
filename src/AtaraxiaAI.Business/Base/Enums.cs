@@ -18,6 +18,7 @@ namespace AtaraxiaAI.Business.Base
 
         public enum SpeechSynthesizers
         {
+            Kokoro,
             GoogleCloud,
             MicrosoftAzure,
             MicrosoftBing,

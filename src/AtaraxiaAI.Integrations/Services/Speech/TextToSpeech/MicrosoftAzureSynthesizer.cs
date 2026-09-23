@@ -53,49 +53,15 @@ namespace AtaraxiaAI.Integrations.Services
 
         bool ISynthesizer.IsAvailable() => AI.AppData.MicrosoftAzureSpeechToTextCharCount < FREE_LIMIT && AreCredentialsSet();
 
-        async Task<bool> ISynthesizer.SpeakAsync(string message)
+        async Task<byte[]> ISynthesizer.SynthesizeAsync(string message, System.Threading.CancellationToken cancellationToken)
         {
-            bool isSuccessful = false;
-
-            if (AI.AppData.MicrosoftAzureSpeechToTextCharCount + message.Length <= FREE_LIMIT)
-            {
-                try
-                {
-                    using (var synthesizer = new SpeechSynthesizer(_speechConfig, null))
-                    using (var result = await synthesizer.SpeakTextAsync(message))
-                    {
-                        if (result.Reason == ResultReason.Canceled)
-                        {
-                            const string NEW_LINE_PREFIX = "               ";
-                            SpeechSynthesisCancellationDetails cancellation = SpeechSynthesisCancellationDetails.FromResult(result);
-
-                            StringBuilder builder = new StringBuilder($"Failed to synthesize speech: {cancellation.Reason}");
-                            builder.AppendLine($"{NEW_LINE_PREFIX}ErrorCode={cancellation.ErrorCode}");
-                            builder.Append($"{NEW_LINE_PREFIX}ErrorDetails=[{cancellation.ErrorDetails}]");
-
-                            AI.Logger.Error(builder.ToString());
-                        }
-                        else
-                        {
-                            SpeechEngine.StreamSpeechToSpeaker(result.AudioData, message);
-                            isSuccessful = true;
-                        }
-                    }
-                }
-                catch (Exception e)
-                {
-                    AI.Logger.Error($"Failed to synthesize speech: {e.Message}");
-                }
-
-                AI.AppData.MicrosoftAzureSpeechToTextCharCount += message.Length;
-            }
-            else
-            {
-                // If we're this close to the limit, just max it out and don't bother to try again until next month.
-                AI.AppData.MicrosoftAzureSpeechToTextCharCount = FREE_LIMIT;
-            }
-
-            return isSuccessful;
+            cancellationToken.ThrowIfCancellationRequested();
+            if (AI.AppData.MicrosoftAzureSpeechToTextCharCount + message.Length > FREE_LIMIT) return null;
+            using var synthesizer = new SpeechSynthesizer(_speechConfig, null);
+            using var result = await synthesizer.SpeakTextAsync(message).WaitAsync(cancellationToken);
+            if (result.Reason == ResultReason.Canceled) return null;
+            AI.AppData.MicrosoftAzureSpeechToTextCharCount += message.Length;
+            return result.AudioData;
         }
     }
 }

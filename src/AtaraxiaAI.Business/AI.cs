@@ -16,6 +16,7 @@ namespace AtaraxiaAI.Business
     {
         internal static ILogger Logger { get; private set; }
         private readonly IAppDataStore _store;
+        private readonly IAudioPlayer _audioPlayer;
         private int _shutdownRequested;
         internal static IIntegrationFactory Integrations { get; private set; }
         internal static IHttpRequester HttpRequester { get; private set; }
@@ -46,7 +47,7 @@ namespace AtaraxiaAI.Business
         /// <param name="integrations">Provider selection for external services.</param>
         /// <param name="httpRequester">HTTP requests used by integration adapters.</param>
         /// <param name="store">Local application data store.</param>
-        public AI(ILogger logger, IIntegrationFactory integrations, IHttpRequester httpRequester, IAppDataStore store)
+        public AI(ILogger logger, IIntegrationFactory integrations, IHttpRequester httpRequester, IAppDataStore store, IAudioPlayer audioPlayer)
         {
             _isInitialized = false;
 
@@ -54,6 +55,7 @@ namespace AtaraxiaAI.Business
             Integrations = integrations ?? throw new ArgumentNullException(nameof(integrations));
             HttpRequester = httpRequester ?? throw new ArgumentNullException(nameof(httpRequester));
             _store = store ?? throw new ArgumentNullException(nameof(store));
+            _audioPlayer = audioPlayer ?? throw new ArgumentNullException(nameof(audioPlayer));
             // Settings reads the storage directory during window construction.
             Task.Run(async () =>
             {
@@ -89,11 +91,12 @@ namespace AtaraxiaAI.Business
             VisionEngine = new VisionEngine(updateFrameAction);
 
             Logger.Information("... Initializing speech engine.");
-            SpeechEngine = new SpeechEngine();
+            SpeechEngine = new SpeechEngine(Integrations, _audioPlayer);
 
             if (Volatile.Read(ref _shutdownRequested) != 0)
             {
                 VisionEngine?.Deactivate();
+                SpeechEngine?.CancelPlayback();
                 SpeechEngine?.DeactivateSpeechRecognition();
                 return;
             }
@@ -146,6 +149,7 @@ namespace AtaraxiaAI.Business
 
             try
             {
+                SpeechEngine?.CancelPlayback();
                 SpeechEngine?.DeactivateSpeechRecognition();
             }
             catch (Exception ex)

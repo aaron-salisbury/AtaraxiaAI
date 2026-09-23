@@ -77,7 +77,8 @@ public sealed class JsonAppDataStoreTests
 
         var ai = new AI(new LoggerConfiguration().CreateLogger(),
             DispatchProxy.Create<IIntegrationFactory, UnusedDependency>(),
-            DispatchProxy.Create<IHttpRequester, UnusedDependency>(), store);
+            DispatchProxy.Create<IHttpRequester, UnusedDependency>(), store,
+            DispatchProxy.Create<IAudioPlayer, UnusedDependency>());
 
         await ai.UpdateUserStorageDirectory(newDirectory);
 

@@ -21,6 +21,7 @@ namespace AtaraxiaAI.Integrations
         public IStreamingAvailabilityService CreateStreamingAvailabilityService() => new WatchModeStreamingAvailabilityService();
         public ISynthesizer CreateSynthesizer(SpeechSynthesizers synthesizer, CultureInfo culture) => synthesizer switch
         {
+            SpeechSynthesizers.Kokoro => new KokoroSynthesizer(culture),
             SpeechSynthesizers.GoogleCloud => new GoogleCloudSynthesizer(culture),
             SpeechSynthesizers.MicrosoftAzure => new MicrosoftAzureSynthesizer(culture),
             SpeechSynthesizers.MicrosoftBing => new MicrosoftBingSynthesizer(culture),

@@ -54,7 +54,7 @@ namespace AtaraxiaAI.Integrations.Services
 
         bool ISynthesizer.IsAvailable() => _secureTrustedClientToken != null && !string.IsNullOrEmpty(_voice);
 
-        async Task<bool> ISynthesizer.SpeakAsync(string message)
+        async Task<byte[]> ISynthesizer.SynthesizeAsync(string message, CancellationToken cancellationToken)
         {
             using (ClientWebSocket webSocket = new ClientWebSocket())
             {
@@ -65,7 +65,7 @@ namespace AtaraxiaAI.Integrations.Services
                 await _slimlock.WaitAsync();
                 try
                 {
-                    CancellationToken cancelToken = CancellationToken.None;
+                    CancellationToken cancelToken = cancellationToken;
                     string requestID = GetConnectionID();
                     string url = string.Format(URL_SPEECH_FORMAT, new NetworkCredential(string.Empty, _secureTrustedClientToken).Password, GetConnectionID());
 
@@ -81,22 +81,18 @@ namespace AtaraxiaAI.Integrations.Services
                     await webSocket.SendAsync(new ArraySegment<byte>(Encoding.UTF8.GetBytes(json)), WebSocketMessageType.Text, true, cancelToken);
                     await webSocket.SendAsync(new ArraySegment<byte>(Encoding.UTF8.GetBytes(GetSSML(requestID, _voice, message))), WebSocketMessageType.Text, true, cancelToken);
 
-                    while (!audioTask.IsCompleted)
-                    {
-                        await Task.Delay(10);
-                    }
+                    await audioTask;
 
                     using (MemoryStream retMs = new MemoryStream())
                     using (MemoryStream ms = new MemoryStream(audioTask.Result.ToArray()))
                     using (Mp3FileReader reader = new Mp3FileReader(ms))
-                    using (RawSourceWaveStream rs = new RawSourceWaveStream(reader, new WaveFormat(16000, 1)))
-                    using (WaveStream pcmStream = WaveFormatConversionStream.CreatePcmStream(rs))
+                    using (WaveStream pcmStream = WaveFormatConversionStream.CreatePcmStream(reader))
                     {
                         WaveFileWriter.WriteWavFileToStream(retMs, pcmStream);
-                        SpeechEngine.StreamSpeechToSpeaker(retMs.ToArray(), message);
+                        return retMs.ToArray();
                     }
 
-                    return true;
+
                 }
                 catch (Exception e)
                 {
@@ -108,7 +104,7 @@ namespace AtaraxiaAI.Integrations.Services
                 }
             }
 
-            return false;
+            return null;
         }
 
         private static async Task<SecureString> ScrapeEdgeClientToken()

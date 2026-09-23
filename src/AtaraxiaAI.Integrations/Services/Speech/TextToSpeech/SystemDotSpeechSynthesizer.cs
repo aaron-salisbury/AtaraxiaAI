@@ -20,9 +20,9 @@ namespace AtaraxiaAI.Integrations.Services
 
         bool ISynthesizer.IsAvailable() => RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
 
-        Task<bool> ISynthesizer.SpeakAsync(string message)
+        Task<byte[]> ISynthesizer.SynthesizeAsync(string message, System.Threading.CancellationToken cancellationToken)
         {
-            bool isSuccessful = false;
+            cancellationToken.ThrowIfCancellationRequested();
 
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
@@ -37,12 +37,11 @@ namespace AtaraxiaAI.Integrations.Services
                     promptBuilder.EndVoice();
 
                     synthesizer.Speak(promptBuilder);
-                    SpeechEngine.StreamSpeechToSpeaker(audioStream.GetBuffer(), message);
-                    isSuccessful = true;
+                    return Task.FromResult(audioStream.ToArray());
                 }
             }
 
-            return Task.FromResult(isSuccessful);
+            return Task.FromResult<byte[]>(null);
         }
     }
 }
