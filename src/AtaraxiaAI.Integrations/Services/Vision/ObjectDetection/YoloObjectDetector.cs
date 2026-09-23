@@ -1,4 +1,3 @@
-using AtaraxiaAI.Business;
 using AtaraxiaAI.Business.Services;
 using Emgu.CV;
 using Emgu.CV.Dnn;
@@ -58,7 +57,7 @@ namespace AtaraxiaAI.Integrations.Services
                 Display captureDisplay = displays.First();
 
                 using IScreenCapture screenCapture = screenCaptureService.GetScreenCapture(captureDisplay);
-                CaptureZone captureZone = screenCapture.RegisterCaptureZone(0, 0, screenCapture.Display.Width, screenCapture.Display.Height);
+                ICaptureZone captureZone = screenCapture.RegisterCaptureZone(0, 0, screenCapture.Display.Width, screenCapture.Display.Height);
                 while (!cancelToken.IsCancellationRequested)
                 {
                     Image<Bgra, byte> frame = GetScreenshotImage(screenCapture, captureZone).Result;
@@ -180,15 +179,18 @@ namespace AtaraxiaAI.Integrations.Services
             return frameOut.ToJpegData();
         }
 
-        private static Task<Image<Bgra, byte>> GetScreenshotImage(IScreenCapture screenCapture, CaptureZone captureZone)
+        private static Task<Image<Bgra, byte>> GetScreenshotImage(IScreenCapture screenCapture, ICaptureZone captureZone)
         {
             return Task.Run(() =>
             {
                 screenCapture.CaptureScreen();
 
-                lock (captureZone.Buffer)
+                using IDisposable captureLock = captureZone.Lock();
+                byte[] buffer = captureZone.RawBuffer.ToArray();
+
+                lock (buffer)
                 {
-                    GCHandle pinnedArray = GCHandle.Alloc(captureZone.Buffer, GCHandleType.Pinned);
+                    GCHandle pinnedArray = GCHandle.Alloc(buffer, GCHandleType.Pinned);
                     IntPtr pointer = pinnedArray.AddrOfPinnedObject();
 
                     Image<Bgra, byte> cvImage = new Image<Bgra, byte>(captureZone.Width, captureZone.Height, captureZone.Stride, pointer);
