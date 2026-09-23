@@ -39,7 +39,7 @@
 
 		<!-- Background -->
 		<Grid Grid.RowSpan="2" IsHitTestVisible="False">
-			<!--<Image ZIndex="-3" Stretch="Fill" Source="{SvgImage /Base/Assets/background.svg}" />-->
+			<Image ZIndex="-3" Stretch="UniformToFill" Source="/Base/Assets/background.png" />
 			<Border ZIndex="-2">
 				<Border.Background>
 					<SolidColorBrush Color="Black" Opacity="0.6" />

@@ -22,10 +22,9 @@ public partial class App : Application
     {
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
-            desktop.MainWindow = new MainWindow
-            {
-                DataContext = Ioc.Default.GetRequiredService<MainViewModel>()
-            };
+            MainViewModel mainViewModel = Ioc.Default.GetRequiredService<MainViewModel>();
+            desktop.MainWindow = new MainWindow { DataContext = mainViewModel };
+            desktop.Exit += (_, _) => mainViewModel.Shutdown();
         }
         else
         {

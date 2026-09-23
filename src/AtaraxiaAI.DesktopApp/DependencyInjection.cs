@@ -76,6 +76,11 @@ internal static class DependencyInjection
     private static IServiceCollection ComposeBusinessIntegrations(this IServiceCollection services)
     {
         services.AddSingleton<IIntegrationFactory, IntegrationFactory>();
+        services.AddSingleton(sp => new AI(
+            Log.Logger,
+            sp.GetRequiredService<IIntegrationFactory>(),
+            sp.GetRequiredService<IHttpRequester>(),
+            sp.GetRequiredService<IAppDataStore>()));
 
         return services;
     }

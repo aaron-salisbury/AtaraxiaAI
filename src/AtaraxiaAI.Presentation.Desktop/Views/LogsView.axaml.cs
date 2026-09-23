@@ -1,8 +1,7 @@
 using AtaraxiaAI.Presentation.Desktop.ViewModels;
 using Avalonia.Controls;
-using CommunityToolkit.Mvvm.DependencyInjection;
 
-namespace AtaraxiaAI.Presentation.Desktop;
+namespace AtaraxiaAI.Presentation.Desktop.Views;
 
 public partial class LogsView : UserControl
 {
@@ -10,6 +9,5 @@ public partial class LogsView : UserControl
     {
         InitializeComponent();
 
-        DataContext = Ioc.Default.GetService<LogsViewModel>();
     }
 }

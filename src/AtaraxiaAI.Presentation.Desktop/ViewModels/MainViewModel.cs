@@ -1,13 +1,10 @@
 using AtaraxiaAI.Business;
-using AtaraxiaAI.Business.Persistence;
-using AtaraxiaAI.Business.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.DependencyInjection;
 using CommunityToolkit.Mvvm.Input;
-using RunnethOverStudio.AppToolkit.Modules.Access;
 using RunnethOverStudio.AppToolkit.Modules.ComponentModel;
-using Serilog;
 using System.Threading.Tasks;
+using System;
+using Serilog;
 
 namespace AtaraxiaAI.Presentation.Desktop.ViewModels;
 
@@ -18,7 +15,10 @@ public partial class MainViewModel : BaseViewModel
     public RelayCommand OnLogsClickCommand { get; }
     public RelayCommand OnSettingsClickCommand { get; }
 
-    public static AI? AI { get; set; }
+    public AI AI { get; }
+
+    [ObservableProperty]
+    private string? _initializationError;
 
     [ObservableProperty]
     private bool _activateVision;
@@ -50,38 +50,44 @@ public partial class MainViewModel : BaseViewModel
     [ObservableProperty]
     private object? _visionFeedView;
 
-    public MainViewModel()
+    public MainViewModel(AI ai, LogsViewModel logs, SettingsViewModel settings, VisionFeedViewModel vision)
     {
-        AI = new AI(Log.Logger, Ioc.Default.GetRequiredService<IIntegrationFactory>(), Ioc.Default.GetRequiredService<IHttpRequester>(), Ioc.Default.GetRequiredService<IAppDataStore>());
+        AI = ai;
 
         _activateVision = false;
         _visionIcon = "EyeOff";
         _soundIcon = "MicOff";
-        _logsView = Ioc.Default.GetService<LogsViewModel>();
+        _logsView = logs;
         _showLogs = true;
         _logsIcon = "ClipboardText";
-        _settingsView = Ioc.Default.GetService<SettingsViewModel>();
+        _settingsView = settings;
         _showSettings = false;
         _settingsIcon = "CogOff";
 
-        VisionFeedViewModel? visionVM = Ioc.Default.GetService<VisionFeedViewModel>();
-        _visionFeedView = visionVM;
+        _visionFeedView = vision;
 
         OnVisionClickCommand = new RelayCommand(() => OnVisionClick());
         OnSoundClickCommand = new RelayCommand(() => OnSoundClick());
         OnLogsClickCommand = new RelayCommand(() => OnLogsClick());
         OnSettingsClickCommand = new RelayCommand(() => OnSettingsClick());
 
-        if (visionVM != null)
+        _ = InitializeAsync(vision);
+    }
+
+    private async Task InitializeAsync(VisionFeedViewModel vision)
+    {
+        try
         {
-            Task.Run(() => { AI.Initiate(updateFrameAction: visionVM.SetVisionFrame).Wait(); });
+            await Task.Run(() => AI.Initiate(updateFrameAction: vision.SetVisionFrame));
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Failed to initialize AtaraxiaAI.");
+            InitializationError = ex.Message;
         }
     }
 
-    public void Shutdown()
-    {
-        AI?.Shutdown();
-    }
+    public void Shutdown() => AI.Shutdown();
 
     private void OnVisionClick()
     {

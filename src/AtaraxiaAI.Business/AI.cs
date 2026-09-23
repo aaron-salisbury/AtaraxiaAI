@@ -7,6 +7,7 @@ using Desktop.Robot;
 using Serilog;
 using System;
 using System.Threading.Tasks;
+using System.Threading;
 using RunnethOverStudio.AppToolkit.Modules.Access;
 
 namespace AtaraxiaAI.Business
@@ -15,6 +16,7 @@ namespace AtaraxiaAI.Business
     {
         internal static ILogger Logger { get; private set; }
         private readonly IAppDataStore _store;
+        private int _shutdownRequested;
         internal static IIntegrationFactory Integrations { get; private set; }
         internal static IHttpRequester HttpRequester { get; private set; }
         internal static InternalStorage InternalStorage { get; private set; }
@@ -81,6 +83,8 @@ namespace AtaraxiaAI.Business
             Logger.Information("... Verifying ML models.");
             await Integrations.CreateModelsAsync();
 
+            if (Volatile.Read(ref _shutdownRequested) != 0) return;
+
             Logger.Information("... Initializing vision engine.");
             VisionEngine = new VisionEngine(updateFrameAction);
 
@@ -124,10 +128,26 @@ namespace AtaraxiaAI.Business
         /// </summary>
         public void Shutdown()
         {
+            if (Interlocked.Exchange(ref _shutdownRequested, 1) != 0) return;
             Logger.Information("Shutting down.");
 
-            VisionEngine.Deactivate();
-            SpeechEngine.DeactivateSpeechRecognition();
+            try
+            {
+                VisionEngine?.Deactivate();
+            }
+            catch (Exception ex)
+            {
+                Logger.Error(ex, "Failed to stop vision capture.");
+            }
+
+            try
+            {
+                SpeechEngine?.DeactivateSpeechRecognition();
+            }
+            catch (Exception ex)
+            {
+                Logger.Error(ex, "Failed to stop speech recognition.");
+            }
 
             _store.SaveAppDataAsync(AppData, InternalStorage.UserStorageDirectory).GetAwaiter().GetResult();
         }

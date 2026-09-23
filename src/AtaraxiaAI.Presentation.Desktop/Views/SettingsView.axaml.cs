@@ -3,8 +3,8 @@ using AtaraxiaAI.Presentation.Desktop.ViewModels;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
-using CommunityToolkit.Mvvm.DependencyInjection;
 using System;
+using Serilog;
 
 namespace AtaraxiaAI.Presentation.Desktop.Views;
 
@@ -14,7 +14,6 @@ public partial class SettingsView : UserControl
     {
         InitializeComponent();
 
-        DataContext = Ioc.Default.GetService<SettingsViewModel>();
 
         Button storageSelectionBtn = this.FindControl<Button>("StorageLocationBtn") ?? throw new InvalidOperationException("StorageLocationBtn not found");
         storageSelectionBtn.Click += OnSelectFolderClick;
@@ -28,7 +27,14 @@ public partial class SettingsView : UserControl
 
             if (selectedFolder?.Path is { IsFile: true } folderPath)
             {
-                viewModel.UserStorageDirectory = folderPath.LocalPath;
+                try
+                {
+                    await viewModel.ChangeUserStorageDirectoryAsync(folderPath.LocalPath);
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex, "Failed to update the user storage directory.");
+                }
             }
         }
     }

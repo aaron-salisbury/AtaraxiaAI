@@ -1,3 +1,4 @@
+using Avalonia.Threading;
 using Serilog.Core;
 using Serilog.Events;
 using Serilog.Formatting;
@@ -37,6 +38,9 @@ public class InMemorySink : ILogEventSink
         string formattedLogEvent = renderSpace.ToString();
         Events.Enqueue(formattedLogEvent);
 
-        Messages.Add(formattedLogEvent);
+        if (Dispatcher.UIThread.CheckAccess())
+            Messages.Add(formattedLogEvent);
+        else
+            Dispatcher.UIThread.Post(() => Messages.Add(formattedLogEvent));
     }
 }

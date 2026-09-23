@@ -3,13 +3,14 @@
              xmlns:i="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
              xmlns:v="clr-namespace:AtaraxiaAI.Presentation.Desktop.Views"
              xmlns:vm="clr-namespace:AtaraxiaAI.Presentation.Desktop.ViewModels"
-			 xmlns:base="using:AtaraxiaAI.Presentation.Desktop.Base"
              x:Class="AtaraxiaAI.Presentation.Desktop.App"
              RequestedThemeVariant="Default">
              <!-- "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options. -->
 
 	<Application.DataTemplates>
-		<base:ViewLocator />
+        <DataTemplate DataType="vm:LogsViewModel"><v:LogsView /></DataTemplate>
+        <DataTemplate DataType="vm:SettingsViewModel"><v:SettingsView /></DataTemplate>
+        <DataTemplate DataType="vm:VisionFeedViewModel"><v:VisionFeedView /></DataTemplate>
 	</Application.DataTemplates>
 	
     <Application.Styles>

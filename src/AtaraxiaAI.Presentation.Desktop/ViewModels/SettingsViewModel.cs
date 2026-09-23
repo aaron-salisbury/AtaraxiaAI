@@ -4,6 +4,8 @@ using RunnethOverStudio.AppToolkit.Modules.ComponentModel;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
+using AtaraxiaAI.Business;
 using static AtaraxiaAI.Business.Base.Enums;
 
 namespace AtaraxiaAI.Presentation.Desktop.ViewModels;
@@ -16,6 +18,8 @@ public partial class SettingsViewModel : BaseViewModel
     [ObservableProperty]
     private List<ComboBoxEnumItem> _soundCaptureSourceTypes;
 
+    private readonly AI _ai;
+
     private ComboBoxEnumItem _selectedVisionCaptureSource;
     public ComboBoxEnumItem SelectedVisionCaptureSource
     {
@@ -23,7 +27,8 @@ public partial class SettingsViewModel : BaseViewModel
         set
         {
             SetProperty(ref _selectedVisionCaptureSource, value);
-            MainViewModel.AI?.VisionEngine.UpdateCaptureSource((VisionCaptureSources)value.Value);
+            if (value is not null)
+                _ai.VisionEngine?.UpdateCaptureSource((VisionCaptureSources)value.Value);
         }
     }
 
@@ -34,7 +39,8 @@ public partial class SettingsViewModel : BaseViewModel
         set
         {
             SetProperty(ref _selectedSoundCaptureSource, value);
-            MainViewModel.AI?.SpeechEngine.UpdateCaptureSource((SoundCaptureSources)value.Value);
+            if (value is not null)
+                _ai.SpeechEngine?.UpdateCaptureSource((SoundCaptureSources)value.Value);
         }
     }
 
@@ -45,13 +51,14 @@ public partial class SettingsViewModel : BaseViewModel
         set
         {
             SetProperty(ref _userStorageDirectory, value);
-            MainViewModel.AI?.UpdateUserStorageDirectory(_userStorageDirectory);
+
         }
     }
 
-    public SettingsViewModel()
+    public SettingsViewModel(AI ai)
     {
-        _userStorageDirectory = MainViewModel.AI?.GetUserStorageDirectory() ?? string.Empty;
+        _ai = ai;
+        _userStorageDirectory = _ai.GetUserStorageDirectory() ?? string.Empty;
 
         _visionCaptureSourceTypes = Enum.GetValues(typeof(VisionCaptureSources))
             .Cast<VisionCaptureSources>()
@@ -71,5 +78,10 @@ public partial class SettingsViewModel : BaseViewModel
         _selectedSoundCaptureSource = SoundCaptureSourceTypes
             .Where(cbi => cbi.Value == (int)SoundCaptureSources.SoundCard)
             .First();
+    }
+    public async Task ChangeUserStorageDirectoryAsync(string newDirectory)
+    {
+        await _ai.UpdateUserStorageDirectory(newDirectory);
+        UserStorageDirectory = newDirectory;
     }
 }

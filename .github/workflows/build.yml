@@ -12,5 +12,5 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 10.0.x
-      - run: dotnet build AtaraxiaAI.sln --configuration Release
-      - run: dotnet test AtaraxiaAI.sln --configuration Release --no-build
+      - run: dotnet build src/AtaraxiaAI.slnx --configuration Release
+      - run: dotnet test src/AtaraxiaAI.slnx --configuration Release --no-build
