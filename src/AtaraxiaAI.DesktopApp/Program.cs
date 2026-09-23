@@ -19,7 +19,12 @@ internal class Program
         if (args.Length == 3 && args[0] == "--kokoro-worker")
         {
             try { KokoroWorker.SynthesizeToFileAsync(args[1], args[2]).GetAwaiter().GetResult(); }
-            catch (Exception) { Environment.ExitCode = 1; }
+            catch (Exception error)
+            {
+                try { System.IO.File.WriteAllText(args[2] + ".error", error.ToString()); }
+                catch (System.IO.IOException) { }
+                Environment.ExitCode = 1;
+            }
             return;
         }
 

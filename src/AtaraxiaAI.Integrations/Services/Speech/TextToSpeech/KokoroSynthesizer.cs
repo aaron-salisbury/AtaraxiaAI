@@ -90,7 +90,14 @@ namespace AtaraxiaAI.Integrations.Services
                     throw;
                 }
                 if (process.ExitCode != 0)
-                    throw new InvalidOperationException($"Kokoro worker exited with code 0x{process.ExitCode:X8}.");
+                {
+                    string stage = File.Exists(response + ".stage")
+                        ? await File.ReadAllTextAsync(response + ".stage", cancellationToken) : "before model loading";
+                    string detail = File.Exists(response + ".error")
+                        ? await File.ReadAllTextAsync(response + ".error", cancellationToken) : "No managed exception was recorded.";
+                    throw new InvalidOperationException(
+                        $"Kokoro worker exited with code 0x{process.ExitCode:X8} at '{stage}'. {detail}");
+                }
                 return await File.ReadAllBytesAsync(response, cancellationToken);
             }
             finally
@@ -104,10 +111,13 @@ namespace AtaraxiaAI.Integrations.Services
         internal static async Task RunWorkerAsync(string request, string response)
         {
             string message = await File.ReadAllTextAsync(request);
+            await File.WriteAllTextAsync(response + ".stage", "loading model");
             var model = await GetModelAsync(Log.Logger);
+            await File.WriteAllTextAsync(response + ".stage", "synthesizing audio");
             // KokoroSharp produces 24 kHz, mono PCM; wrap it in WAV for the shared player.
             byte[] pcm = await model.SynthesizeAsync(message, KokoroVoiceManager.GetVoice("af_heart"))
                 .ConfigureAwait(false);
+            await File.WriteAllTextAsync(response + ".stage", "writing WAV");
             using var output = new MemoryStream();
             using (var writer = new WaveFileWriter(output, new WaveFormat(24000, 16, 1)))
             {
