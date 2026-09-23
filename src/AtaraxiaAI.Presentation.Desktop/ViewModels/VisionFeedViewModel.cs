@@ -1,8 +1,8 @@
-using CommunityToolkit.Mvvm.ComponentModel;
 using Avalonia.Threading;
-using System.Threading;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using RunnethOverStudio.AppToolkit.Modules.ComponentModel;
+using System.Threading;
 
 namespace AtaraxiaAI.Presentation.Desktop.ViewModels;
 

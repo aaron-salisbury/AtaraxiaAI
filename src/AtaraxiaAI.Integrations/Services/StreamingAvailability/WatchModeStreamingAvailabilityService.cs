@@ -1,10 +1,10 @@
 using AtaraxiaAI.Business;
 using AtaraxiaAI.Business.Services;
-using RunnethOverStudio.AppToolkit.Modules.Access;
 using AtaraxiaAI.Integrations.DTOs;
 using CsvHelper;
 using CsvHelper.Configuration;
 using CsvHelper.Configuration.Attributes;
+using RunnethOverStudio.AppToolkit.Modules.Access;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -85,7 +85,7 @@ namespace AtaraxiaAI.Integrations.Services
             // This query itself will probably increment the usage. Should check if what it returns accounts this.
             // Set, then save.
 
-            return !string.IsNullOrEmpty(API_KEY) && 
+            return !string.IsNullOrEmpty(API_KEY) &&
                 API_USAGE_MAX > AI.AppData.WatchmodeCurrentAPIUsage;
         }
 
@@ -125,8 +125,8 @@ namespace AtaraxiaAI.Integrations.Services
             using (var csv = new CsvReader(reader, conf))
             {
                 watchModeID = csv.GetRecords<TitleIDMap>()
-                    .Where(tim => 
-                        string.Equals(tim.TMDBType, isMovie ? "movie" : "tv") && 
+                    .Where(tim =>
+                        string.Equals(tim.TMDBType, isMovie ? "movie" : "tv") &&
                         string.Equals(tim.Title, title, StringComparison.OrdinalIgnoreCase) && //TODO: Like instead of equal.
                         short.TryParse(tim.Year, out short year))
                     .OrderByDescending(tim => Convert.ToInt32(tim.Year))
@@ -151,7 +151,7 @@ namespace AtaraxiaAI.Integrations.Services
         public string IMDBID { get; set; }
 
         [Name("TMDB ID")]
-        public string  TMDBID { get; set; }
+        public string TMDBID { get; set; }
 
         [Name("TMDB Type")]
         public string TMDBType { get; set; }

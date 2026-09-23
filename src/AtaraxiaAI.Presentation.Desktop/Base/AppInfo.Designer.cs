@@ -97,7 +97,7 @@ namespace AtaraxiaAI.Presentation.Desktop.Base {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to https://github.com/aaron-salisbury/AtaraxiaAI/blob/master/PrivacyPolicy.md.
+        ///   Looks up a localized string similar to https://github.com/aaron-salisbury/AtaraxiaAI/blob/master/privacy-policy.md.
         /// </summary>
         internal static string PrivacyURL {
             get {

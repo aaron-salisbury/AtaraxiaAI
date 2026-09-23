@@ -1,5 +1,5 @@
-using Avalonia.Controls;
 using AtaraxiaAI.Presentation.Desktop.Base;
+using Avalonia.Controls;
 using System.Runtime.InteropServices;
 
 namespace AtaraxiaAI.Presentation.Desktop.Views;

@@ -10,7 +10,7 @@ namespace AtaraxiaAI.Integrations.Services
         public string ReadTextFromImage(byte[] imageBuffer)
         {
             string text = null;
-            
+
             try
             {
                 using (TesseractEngine engine = new TesseractEngine(ModelAssets.TessdataPath, "eng", EngineMode.Default))

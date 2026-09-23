@@ -3,8 +3,8 @@ using AtaraxiaAI.Presentation.Desktop.ViewModels;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
-using System;
 using Serilog;
+using System;
 
 namespace AtaraxiaAI.Presentation.Desktop.Views;
 

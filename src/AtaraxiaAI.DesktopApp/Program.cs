@@ -1,6 +1,6 @@
+using AtaraxiaAI.Presentation.Desktop;
 using Avalonia;
 using CommunityToolkit.Mvvm.DependencyInjection;
-using AtaraxiaAI.Presentation.Desktop;
 using Microsoft.Extensions.DependencyInjection;
 using Serilog;
 using System;

@@ -1,6 +1,6 @@
 using AtaraxiaAI.Business;
-using AtaraxiaAI.Integrations.Services;
 using AtaraxiaAI.Business.Services;
+using AtaraxiaAI.Integrations.Services;
 using System.Globalization;
 using System.Threading.Tasks;
 using static AtaraxiaAI.Business.Base.Enums;

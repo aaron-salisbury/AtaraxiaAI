@@ -1,7 +1,7 @@
 using AtaraxiaAI.Business;
 using AtaraxiaAI.Business.Services;
-using RunnethOverStudio.AppToolkit.Modules.Access;
 using AtaraxiaAI.Integrations.DTOs;
+using RunnethOverStudio.AppToolkit.Modules.Access;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
@@ -33,13 +33,13 @@ namespace AtaraxiaAI.Integrations.Services
         {
             string response = null;
 
-            string content = 
-                $"{{\n  \"prompt\": \"{message}\",\n  \"temperature\": {TEMPERATURE}," + 
-                $"\n  \"max_tokens\": {_tokens},\n  \"top_p\": {TOP_P}," + 
+            string content =
+                $"{{\n  \"prompt\": \"{message}\",\n  \"temperature\": {TEMPERATURE}," +
+                $"\n  \"max_tokens\": {_tokens},\n  \"top_p\": {TOP_P}," +
                 $"\n  \"frequency_penalty\": {FREQ_PENALTY},\n  \"presence_penalty\": {PRESENCE_PENALTY}\n}}";
 
             string json = await AI.HttpRequester.SendHTTPJsonRequestAsync(
-                string.Format(URL_FORMAT, ENGINE), 
+                string.Format(URL_FORMAT, ENGINE),
                 new HTTPJsonRequest
                 {
                     JsonContent = content,

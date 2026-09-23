@@ -2,9 +2,9 @@ using AtaraxiaAI.Business;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using RunnethOverStudio.AppToolkit.Modules.ComponentModel;
-using System.Threading.Tasks;
-using System;
 using Serilog;
+using System;
+using System.Threading.Tasks;
 
 namespace AtaraxiaAI.Presentation.Desktop.ViewModels;
 

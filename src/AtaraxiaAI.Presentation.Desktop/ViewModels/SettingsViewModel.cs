@@ -1,3 +1,4 @@
+using AtaraxiaAI.Business;
 using AtaraxiaAI.Presentation.Desktop.Base;
 using CommunityToolkit.Mvvm.ComponentModel;
 using RunnethOverStudio.AppToolkit.Modules.ComponentModel;
@@ -5,7 +6,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using AtaraxiaAI.Business;
 using static AtaraxiaAI.Business.Base.Enums;
 
 namespace AtaraxiaAI.Presentation.Desktop.ViewModels;

@@ -218,7 +218,7 @@ namespace AtaraxiaAI.Integrations.Services
             }
 
             string phrase = resultsBuilder.ToString();
-            if (heard && 
+            if (heard &&
                 phrase.Split(' ').Length > 1) // Sometimes silence or other little noices get interpreted as single words, like "huh" and "the".
             {
                 _speechRecognizedAction(phrase);
