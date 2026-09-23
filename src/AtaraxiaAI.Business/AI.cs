@@ -37,7 +37,6 @@ namespace AtaraxiaAI.Business
         public SpeechEngine SpeechEngine { get; set; }
         public VisionEngine VisionEngine { get; set; }
 
-        internal SystemInfo SystemInfo { get; set; }
         internal Robot Peripherals { get; set; }
 
         /// <summary>
@@ -72,15 +71,8 @@ namespace AtaraxiaAI.Business
         public async Task Initiate(Action<byte[]> updateFrameAction)
         {
             Logger.Information("Initializing ...");
-            Logger.Information("... Gathering system data.");
-            SystemInfo = new SystemInfo();
-
             Logger.Information("... Mocking peripherals.");
             Peripherals = new Robot { AutoDelay = 250 };
-
-            Logger.Information("... Acquiring region data.");
-            IIPLocationService locationService = AI.Integrations.CreateLocationService();
-            Location location = await locationService.GetLocationByIPAsync(SystemInfo.IPAddress);
 
             Logger.Information("... Verifying ML models.");
             await Integrations.CreateModelsAsync();

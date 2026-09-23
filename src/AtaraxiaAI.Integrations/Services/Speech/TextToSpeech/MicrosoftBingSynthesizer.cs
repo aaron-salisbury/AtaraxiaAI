@@ -205,7 +205,7 @@ namespace AtaraxiaAI.Integrations.Services
             sSMLBuilder.Append("<speak version='1.0' xmlns='http://www.w3.org/2001/10/synthesis' xml:lang='en-US'>");
             sSMLBuilder.Append($"<voice name='{voice}'>");
             sSMLBuilder.Append($"<prosody pitch='{PITCH}' rate='{RATE}' volume='{VOLUME}'>");
-            sSMLBuilder.Append(sentence);
+            sSMLBuilder.Append(SecurityElement.Escape(sentence));
             sSMLBuilder.Append("</prosody></voice></speak>");
 
             return sSMLBuilder.ToString();
@@ -233,7 +233,7 @@ namespace AtaraxiaAI.Integrations.Services
                     continue;
                 }
 
-                buffer.Write(array, (int)buffer.Position, receive.Count);
+                buffer.Write(array, 0, receive.Count);
                 if (receive.EndOfMessage == false)
                 {
                     continue;
