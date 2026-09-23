@@ -60,7 +60,7 @@ namespace AtaraxiaAI.Integrations.Services
                 ICaptureZone captureZone = screenCapture.RegisterCaptureZone(0, 0, screenCapture.Display.Width, screenCapture.Display.Height);
                 while (!cancelToken.IsCancellationRequested)
                 {
-                    Image<Bgra, byte> frame = GetScreenshotImage(screenCapture, captureZone).Result;
+                    using Image<Bgra, byte> frame = GetScreenshotImage(screenCapture, captureZone).Result;
 
                     if (widthFactor == null || heightFactor == null)
                     {
@@ -188,16 +188,17 @@ namespace AtaraxiaAI.Integrations.Services
                 using IDisposable captureLock = captureZone.Lock();
                 byte[] buffer = captureZone.RawBuffer.ToArray();
 
-                lock (buffer)
+                GCHandle pinnedArray = GCHandle.Alloc(buffer, GCHandleType.Pinned);
+                try
                 {
-                    GCHandle pinnedArray = GCHandle.Alloc(buffer, GCHandleType.Pinned);
-                    IntPtr pointer = pinnedArray.AddrOfPinnedObject();
-
-                    Image<Bgra, byte> cvImage = new Image<Bgra, byte>(captureZone.Width, captureZone.Height, captureZone.Stride, pointer);
-
+                    using var cvImage = new Image<Bgra, byte>(captureZone.Width, captureZone.Height,
+                        captureZone.Stride, pinnedArray.AddrOfPinnedObject());
+                    // The image constructor retains the pointer. Copy while it is still pinned.
+                    return cvImage.Copy();
+                }
+                finally
+                {
                     pinnedArray.Free();
-
-                    return cvImage;
                 }
             });
         }
