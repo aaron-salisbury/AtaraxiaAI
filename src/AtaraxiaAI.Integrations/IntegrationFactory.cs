@@ -11,7 +11,7 @@ namespace AtaraxiaAI.Integrations
         private readonly IntegrationDependencies _dependencies;
 
         public IntegrationFactory(IntegrationDependencies dependencies) => _dependencies = dependencies;
-        public Task CreateModelsAsync() => ModelDownloader.CreateModels(_dependencies.HttpRequester, _dependencies.Logger);
+        public Task PrepareSpeechAsync() => KokoroSynthesizer.PrepareAsync(_dependencies);
         // No configured answer provider is shipped with the app yet.
         public IAnswerProvider? CreateAnswerProvider() => null;
         public IInsultService CreateInsultService() => new EvilInsultService(_dependencies);

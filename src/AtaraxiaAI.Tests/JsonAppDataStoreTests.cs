@@ -83,6 +83,7 @@ public sealed class JsonAppDataStoreTests
             store,
             DispatchProxy.Create<IAudioPlayer, UnusedDependency>(), dependencies);
 
+        await ai.InitializeStorageAsync();
         await ai.UpdateUserStorageDirectory(newDirectory);
 
         Assert.AreEqual(1, (await store.ReadAppDataAsync(oldDirectory)).WatchmodeCurrentAPIUsage);

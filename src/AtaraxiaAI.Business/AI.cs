@@ -54,14 +54,7 @@ namespace AtaraxiaAI.Business
             _store = store ?? throw new ArgumentNullException(nameof(store));
             _audioPlayer = audioPlayer ?? throw new ArgumentNullException(nameof(audioPlayer));
             _dependencies = dependencies ?? throw new ArgumentNullException(nameof(dependencies));
-            // Settings reads the storage directory during window construction.
-            Task.Run(async () =>
-            {
-                InternalStorage = await _store.ReadInternalStorageAsync();
-                AppData = await _store.ReadAppDataAsync(InternalStorage.UserStorageDirectory) ?? new AppData();
-                _dependencies.AppData = AppData;
-                await RefreshQuotasAsync();
-            }).GetAwaiter().GetResult();
+
         }
 
         /// <summary>
@@ -71,11 +64,13 @@ namespace AtaraxiaAI.Business
         public async Task Initiate(Action<byte[]> updateFrameAction)
         {
             _logger.Information("Initializing ...");
+            await InitializeStorageAsync();
+            if (Volatile.Read(ref _shutdownRequested) != 0) return;
             _logger.Information("... Mocking peripherals.");
             Peripherals = new Robot { AutoDelay = 250 };
 
-            _logger.Information("... Verifying ML models.");
-            await _integrations.CreateModelsAsync();
+            _logger.Information("... Using bundled YOLO model; preparing Kokoro in the background.");
+            _ = _integrations.PrepareSpeechAsync();
 
             if (Volatile.Read(ref _shutdownRequested) != 0) return;
 
@@ -95,6 +90,16 @@ namespace AtaraxiaAI.Business
 
             IsInitialized = true;
             _logger.Information("Initialization complete.");
+        }
+
+        internal async Task InitializeStorageAsync()
+        {
+            _logger.Information("... Loading application data.");
+            InternalStorage = await _store.ReadInternalStorageAsync();
+            AppData = await _store.ReadAppDataAsync(InternalStorage.UserStorageDirectory) ?? new AppData();
+            _dependencies.AppData = AppData;
+            await RefreshQuotasAsync();
+            _logger.Information("... Application data loaded.");
         }
 
         /// <summary>
@@ -150,7 +155,8 @@ namespace AtaraxiaAI.Business
                 _logger.Error(ex, "Failed to stop speech recognition.");
             }
 
-            _store.SaveAppDataAsync(AppData, InternalStorage.UserStorageDirectory).GetAwaiter().GetResult();
+            if (AppData != null && InternalStorage != null)
+                _store.SaveAppDataAsync(AppData, InternalStorage.UserStorageDirectory).GetAwaiter().GetResult();
         }
         private async Task RefreshQuotasAsync()
         {

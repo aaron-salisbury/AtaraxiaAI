@@ -16,12 +16,16 @@ public partial class MainViewModel : BaseViewModel
     public RelayCommand OnSettingsClickCommand { get; }
 
     public AI AI { get; }
+    private readonly SettingsViewModel _settings;
 
     [ObservableProperty]
     private string? _initializationError;
 
     [ObservableProperty]
     private bool _isInitialized;
+
+    [ObservableProperty]
+    private bool _isInitializing = true;
 
     [ObservableProperty]
     private bool _activateVision;
@@ -56,6 +60,7 @@ public partial class MainViewModel : BaseViewModel
     public MainViewModel(AI ai, LogsViewModel logs, SettingsViewModel settings, VisionFeedViewModel vision)
     {
         AI = ai;
+        _settings = settings;
 
         _activateVision = false;
         _visionIcon = "EyeOff";
@@ -83,11 +88,16 @@ public partial class MainViewModel : BaseViewModel
         {
             await Task.Run(() => AI.Initiate(updateFrameAction: vision.SetVisionFrame));
             IsInitialized = AI.IsInitialized;
+            _settings.UserStorageDirectory = AI.GetUserStorageDirectory() ?? string.Empty;
         }
         catch (Exception ex)
         {
             Log.Error(ex, "Failed to initialize AtaraxiaAI.");
             InitializationError = ex.Message;
+        }
+        finally
+        {
+            IsInitializing = false;
         }
     }
 

@@ -6,7 +6,7 @@ namespace AtaraxiaAI.Business.Services
 {
     public interface IIntegrationFactory
     {
-        Task CreateModelsAsync();
+        Task PrepareSpeechAsync();
         IAnswerProvider? CreateAnswerProvider();
         IInsultService CreateInsultService();
         IJokeService CreateJokeService(bool dadJoke = false);
