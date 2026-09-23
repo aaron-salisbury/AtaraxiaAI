@@ -11,22 +11,24 @@ namespace AtaraxiaAI.Integrations.Services
     // https://icanhazdadjoke.com/api
     internal class CanHazDadJokeService : IJokeService
     {
+        private readonly IntegrationDependencies _dependencies;
         private const string URL = "https://icanhazdadjoke.com/";
 
         private string _userAgent;
 
-        internal CanHazDadJokeService(string userAgent = null)
+        internal CanHazDadJokeService(IntegrationDependencies dependencies, string userAgent = null)
         {
+            _dependencies = dependencies;
             _userAgent = userAgent ?? "AtaraxiaAI (compatible; https://github.com/aaron-salisbury/AtaraxiaAI)";
         }
 
         async Task<Joke> IJokeService.GetJokeAsync()
         {
-            AI.Logger.Information("Acquiring dad joke.");
+            _dependencies.Logger.Information("Acquiring dad joke.");
 
             Joke joke = null;
 
-            string json = await AI.HttpRequester.SendHTTPJsonRequestAsync(URL, new HTTPJsonRequest { UserAgent = _userAgent });
+            string json = await _dependencies.HttpRequester.SendHTTPJsonRequestAsync(URL, new HTTPJsonRequest { UserAgent = _userAgent });
 
             if (!string.IsNullOrEmpty(json))
             {
@@ -40,7 +42,7 @@ namespace AtaraxiaAI.Integrations.Services
 
             if (joke == null)
             {
-                AI.Logger.Error("Failed to aquire joke.");
+                _dependencies.Logger.Error("Failed to aquire joke.");
             }
 
             return joke;

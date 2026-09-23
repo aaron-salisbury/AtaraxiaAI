@@ -26,9 +26,9 @@ namespace AtaraxiaAI.Integrations.Services
         private AudioConfig _audioConfig;
         private VoiceSelectionParams _voice;
 
-        private readonly SpeechProviderDependencies _context;
+        private readonly IntegrationDependencies _context;
 
-        internal GoogleCloudSynthesizer(CultureInfo culture, SpeechProviderDependencies context)
+        internal GoogleCloudSynthesizer(CultureInfo culture, IntegrationDependencies context)
         {
             _context = context ?? throw new ArgumentNullException(nameof(context));
             if (_context.AppData.GoogleCloudSpeechToTextByteCount < FREE_LIMIT && CREDENTIALS_SET)

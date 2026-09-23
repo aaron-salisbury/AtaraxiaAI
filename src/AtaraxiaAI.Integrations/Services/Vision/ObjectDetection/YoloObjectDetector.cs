@@ -17,13 +17,15 @@ namespace AtaraxiaAI.Integrations.Services
 {
     internal class YoloObjectDetector : IObjectDetector
     {
+        private readonly IntegrationDependencies _dependencies;
         public VisionCaptureSources CaptureSource { get; set; }
 
         private Net _net;
         private string[] _classLabels;
 
-        internal YoloObjectDetector(VisionCaptureSources captureSource = VisionCaptureSources.Screen)
+        internal YoloObjectDetector(IntegrationDependencies dependencies, VisionCaptureSources captureSource = VisionCaptureSources.Screen)
         {
+            _dependencies = dependencies;
             CaptureSource = captureSource;
             _classLabels = ModelAssets.CocoLabels;
 
@@ -37,13 +39,13 @@ namespace AtaraxiaAI.Integrations.Services
             }
             catch (Exception e)
             {
-                AI.Logger.Error($"Failed to build neural net: {e.Message}");
+                _dependencies.Logger.Error($"Failed to build neural net: {e.Message}");
             }
         }
 
         void IObjectDetector.Initiate(Action<byte[]> updateFrameAction, CancellationToken cancelToken)
         {
-            AI.Logger.Information("Initializing vision engine.");
+            _dependencies.Logger.Information("Initializing vision engine.");
 
             double? widthFactor = null;
             double? heightFactor = null;

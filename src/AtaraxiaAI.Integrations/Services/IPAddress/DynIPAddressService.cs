@@ -7,16 +7,19 @@ namespace AtaraxiaAI.Integrations.Services
 {
     internal class DynIPAddressService : IIPAddressService
     {
+        private readonly IntegrationDependencies _dependencies;
+
+        internal DynIPAddressService(IntegrationDependencies dependencies) => _dependencies = dependencies;
         private const string REQUEST_URL = "http://checkip.dyndns.org/";
 
         async Task<string> IIPAddressService.GetPublicIPAddressAsync()
         {
-            AI.Logger.Information("Determining IP Address.");
+            _dependencies.Logger.Information("Determining IP Address.");
 
             string ip = null;
 
             using (StreamReader stream = new StreamReader(new MemoryStream(
-                await AI.HttpRequester.GetWebRequestSerializedAsync(REQUEST_URL))))
+                await _dependencies.HttpRequester.GetWebRequestSerializedAsync(REQUEST_URL))))
             {
                 string response = stream.ReadToEnd();
 
@@ -26,11 +29,11 @@ namespace AtaraxiaAI.Integrations.Services
                     int last = response.LastIndexOf("</body>");
                     ip = response.Substring(first, last - first);
 
-                    AI.Logger.Information($"IP Address: {ip}");
+                    _dependencies.Logger.Information($"IP Address: {ip}");
                 }
                 else
                 {
-                    AI.Logger.Error("Failed to determine IP Address.");
+                    _dependencies.Logger.Error("Failed to determine IP Address.");
                 }
             }
 

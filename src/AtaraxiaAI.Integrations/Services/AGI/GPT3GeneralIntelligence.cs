@@ -12,6 +12,7 @@ namespace AtaraxiaAI.Integrations.Services
     // Inspired by https://learnwithhasan.com/ai-writer-with-open-ai/
     internal class GPT3GeneralIntelligence : IGeneralIntelligence
     {
+        private readonly IntegrationDependencies _dependencies;
         private const string API_KEY = null; //TODO: Apply your own key.
         private const string URL_FORMAT = "https://api.openai.com/v1/engines/{0}/completions"; // {0}Engine
         private const string ENGINE = "text-davinci-003";
@@ -22,8 +23,9 @@ namespace AtaraxiaAI.Integrations.Services
 
         private int _tokens;
 
-        internal GPT3GeneralIntelligence(int tokens = 256)
+        internal GPT3GeneralIntelligence(IntegrationDependencies dependencies, int tokens = 256)
         {
+            _dependencies = dependencies;
             _tokens = tokens;
         }
 
@@ -38,7 +40,7 @@ namespace AtaraxiaAI.Integrations.Services
                 $"\n  \"max_tokens\": {_tokens},\n  \"top_p\": {TOP_P}," +
                 $"\n  \"frequency_penalty\": {FREQ_PENALTY},\n  \"presence_penalty\": {PRESENCE_PENALTY}\n}}";
 
-            string json = await AI.HttpRequester.SendHTTPJsonRequestAsync(
+            string json = await _dependencies.HttpRequester.SendHTTPJsonRequestAsync(
                 string.Format(URL_FORMAT, ENGINE),
                 new HTTPJsonRequest
                 {

@@ -69,14 +69,16 @@ internal static class DependencyInjection
 
     private static IServiceCollection ComposeBusinessIntegrations(this IServiceCollection services)
     {
+        services.AddSingleton(sp => new IntegrationDependencies(
+            sp.GetRequiredService<IHttpRequester>(), Log.Logger));
         services.AddSingleton<IIntegrationFactory, IntegrationFactory>();
         services.AddSingleton<IAudioPlayer, WavAudioPlayer>();
         services.AddSingleton(sp => new AI(
             Log.Logger,
             sp.GetRequiredService<IIntegrationFactory>(),
-            sp.GetRequiredService<IHttpRequester>(),
             sp.GetRequiredService<IAppDataStore>(),
-            sp.GetRequiredService<IAudioPlayer>()));
+            sp.GetRequiredService<IAudioPlayer>(),
+            sp.GetRequiredService<IntegrationDependencies>()));
 
         return services;
     }

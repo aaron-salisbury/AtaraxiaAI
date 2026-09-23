@@ -23,9 +23,9 @@ namespace AtaraxiaAI.Integrations.Services
 
         private SpeechConfig _speechConfig;
 
-        private readonly SpeechProviderDependencies _context;
+        private readonly IntegrationDependencies _context;
 
-        internal MicrosoftAzureSynthesizer(CultureInfo culture, SpeechProviderDependencies context)
+        internal MicrosoftAzureSynthesizer(CultureInfo culture, IntegrationDependencies context)
         {
             _context = context ?? throw new ArgumentNullException(nameof(context));
             if (_context.AppData.MicrosoftAzureSpeechToTextCharCount < FREE_LIMIT && AreCredentialsSet())

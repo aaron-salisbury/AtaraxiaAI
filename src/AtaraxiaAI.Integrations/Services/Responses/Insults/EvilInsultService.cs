@@ -10,17 +10,20 @@ namespace AtaraxiaAI.Integrations.Services
     // https://evilinsult.com/api/
     internal class EvilInsultService : IInsultService
     {
+        private readonly IntegrationDependencies _dependencies;
+
+        internal EvilInsultService(IntegrationDependencies dependencies) => _dependencies = dependencies;
         private const string URL_FORMAT = "https://evilinsult.com/generate_insult.php?lang={0}&type=json"; // {0}Language
 
         async Task<string> IInsultService.GetInsultAsync()
         {
-            AI.Logger.Information("Acquiring insult.");
+            _dependencies.Logger.Information("Acquiring insult.");
 
             string insult = null;
 
             string url = string.Format(URL_FORMAT, "en");
 
-            string json = await AI.HttpRequester.SendHTTPJsonRequestAsync(url);
+            string json = await _dependencies.HttpRequester.SendHTTPJsonRequestAsync(url);
 
             if (!string.IsNullOrEmpty(json))
             {
@@ -34,7 +37,7 @@ namespace AtaraxiaAI.Integrations.Services
 
             if (string.IsNullOrEmpty(insult))
             {
-                AI.Logger.Error("Failed to aquire insult.");
+                _dependencies.Logger.Error("Failed to aquire insult.");
             }
 
             return insult;

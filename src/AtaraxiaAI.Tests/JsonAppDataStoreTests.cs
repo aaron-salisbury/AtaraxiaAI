@@ -61,6 +61,7 @@ public sealed class JsonAppDataStoreTests
 
         Assert.AreEqual(newDirectory, moved.UserStorageDirectory);
         Assert.AreEqual(17, (await store.ReadAppDataAsync(newDirectory)).WatchmodeCurrentAPIUsage);
+        Assert.AreEqual(17, dependencies.AppData.WatchmodeCurrentAPIUsage);
         Assert.AreEqual(1, (await store.ReadAppDataAsync(oldDirectory)).WatchmodeCurrentAPIUsage);
         Assert.AreEqual(newDirectory, (await store.ReadInternalStorageAsync()).UserStorageDirectory);
     }
@@ -75,10 +76,13 @@ public sealed class JsonAppDataStoreTests
         await store.SaveAppDataAsync(new AppData { WatchmodeCurrentAPIUsage = 17 }, newDirectory);
         await store.UpdateInternalStorageAsync(new InternalStorage { UserStorageDirectory = oldDirectory }, oldDirectory);
 
+        var dependencies = new IntegrationDependencies(
+            DispatchProxy.Create<IHttpRequester, UnusedDependency>(),
+            new LoggerConfiguration().CreateLogger());
         var ai = new AI(new LoggerConfiguration().CreateLogger(),
             DispatchProxy.Create<IIntegrationFactory, UnusedDependency>(),
-            DispatchProxy.Create<IHttpRequester, UnusedDependency>(), store,
-            DispatchProxy.Create<IAudioPlayer, UnusedDependency>());
+            store,
+            DispatchProxy.Create<IAudioPlayer, UnusedDependency>(), dependencies);
 
         await ai.UpdateUserStorageDirectory(newDirectory);
 

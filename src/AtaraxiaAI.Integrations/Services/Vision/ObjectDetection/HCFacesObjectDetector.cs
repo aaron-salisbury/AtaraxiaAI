@@ -11,18 +11,20 @@ namespace AtaraxiaAI.Integrations.Services
     // Inspired by https://youtu.be/v7_g1Zoapkg?t=50
     internal class HCFacesObjectDetector : IObjectDetector
     {
+        private readonly IntegrationDependencies _dependencies;
         public AtaraxiaAI.Business.Base.Enums.VisionCaptureSources CaptureSource { get; set; }
 
         private CascadeClassifier _faceCascade;
 
-        internal HCFacesObjectDetector()
+        internal HCFacesObjectDetector(IntegrationDependencies dependencies)
         {
+            _dependencies = dependencies;
             _faceCascade = new CascadeClassifier(ModelAssets.HaarCascadePath);
         }
 
         void IObjectDetector.Initiate(Action<byte[]> updateFrameAction, CancellationToken cancelToken)
         {
-            AI.Logger.Information("Initializing vision engine.");
+            _dependencies.Logger.Information("Initializing vision engine.");
 
             Mat frame = new Mat();
             Mat frameGray = new Mat();

@@ -12,6 +12,7 @@ namespace AtaraxiaAI.Integrations.Services
     // https://sv443.net/jokeapi/v2/
     internal class Sv443JokeService : IJokeService
     {
+        private readonly IntegrationDependencies _dependencies;
         private const string URL_FORMAT = "https://v2.jokeapi.dev/joke/{0}"; // {0}Categories
 
         internal enum CategoryTypes
@@ -36,8 +37,9 @@ namespace AtaraxiaAI.Integrations.Services
         internal Sv443JokeFlags Flags { get; set; }
         internal JokeTypes JokeType { get; set; }
 
-        internal Sv443JokeService(IEnumerable<CategoryTypes> categories = null, Sv443JokeFlags flags = null, JokeTypes jokeType = JokeTypes.Any)
+        internal Sv443JokeService(IntegrationDependencies dependencies, IEnumerable<CategoryTypes> categories = null, Sv443JokeFlags flags = null, JokeTypes jokeType = JokeTypes.Any)
         {
+            _dependencies = dependencies;
             Categories = categories;
             Flags = flags;
             JokeType = jokeType;
@@ -45,7 +47,7 @@ namespace AtaraxiaAI.Integrations.Services
 
         async Task<Joke> IJokeService.GetJokeAsync()
         {
-            AI.Logger.Information("Acquiring joke.");
+            _dependencies.Logger.Information("Acquiring joke.");
 
             Joke joke = null;
 
@@ -67,7 +69,7 @@ namespace AtaraxiaAI.Integrations.Services
                 url += $"?type={JokeType.ToString().ToLower()}";
             }
 
-            string json = await AI.HttpRequester.SendHTTPJsonRequestAsync(url);
+            string json = await _dependencies.HttpRequester.SendHTTPJsonRequestAsync(url);
 
             if (!string.IsNullOrEmpty(json))
             {
@@ -87,7 +89,7 @@ namespace AtaraxiaAI.Integrations.Services
 
             if (joke == null)
             {
-                AI.Logger.Error("Failed to aquire joke.");
+                _dependencies.Logger.Error("Failed to aquire joke.");
             }
 
             return joke;

@@ -1,4 +1,6 @@
 using AtaraxiaAI.Business.Skills;
+using AtaraxiaAI.Business.Services;
+using Serilog;
 using System;
 using System.Linq;
 
@@ -16,20 +18,24 @@ namespace AtaraxiaAI.Business.Componants
             IsMovieStreaming
         }
 
+        private readonly IIntegrationFactory _integrations;
+        private readonly ILogger _logger;
         private SpeechEngine _speechEngine;
         private KnowledgeSkill _knowledgeSkill;
 
-        internal OrchestrationEngine(SpeechEngine speechEngine)
+        internal OrchestrationEngine(SpeechEngine speechEngine, IIntegrationFactory integrations, ILogger logger)
         {
             _speechEngine = speechEngine;
-            _knowledgeSkill = new KnowledgeSkill(_speechEngine);
+            _integrations = integrations;
+            _logger = logger;
+            _knowledgeSkill = new KnowledgeSkill(_speechEngine, integrations);
         }
 
         internal void Heard(string message)
         {
             if (!string.IsNullOrEmpty(message))
             {
-                AI.Logger.Information($"*Heard* \"{message}\".");
+                _logger.Information($"*Heard* \"{message}\".");
 
                 if (message.StartsWith(WAKE_COMMAND, StringComparison.OrdinalIgnoreCase))
                 {
@@ -39,13 +45,13 @@ namespace AtaraxiaAI.Business.Componants
                     switch ((SkillMessages)Enum.Parse(typeof(SkillMessages), cleanCommand, true))
                     {
                         case SkillMessages.TellMeAJoke:
-                            JokeSkill.TellMeAJoke(_speechEngine);
+                            JokeSkill.TellMeAJoke(_speechEngine, _integrations);
                             break;
                         case SkillMessages.TellMeADadJoke:
-                            JokeSkill.TellMeADadJoke(_speechEngine);
+                            JokeSkill.TellMeADadJoke(_speechEngine, _integrations);
                             break;
                         case SkillMessages.RespondWithInsult:
-                            ResponseSkill.AcquireInsult(_speechEngine);
+                            ResponseSkill.AcquireInsult(_speechEngine, _integrations);
                             break;
                         case SkillMessages.IsMovieStreaming:
                             _knowledgeSkill.GetStreamOfferings("Black Adam", true); //TODO: Need a way to communicate the title.

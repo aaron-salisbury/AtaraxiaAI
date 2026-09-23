@@ -16,6 +16,6 @@ namespace AtaraxiaAI.Business.Services
         IOpticalCharacterRecognizer CreateOpticalCharacterRecognizer();
         IRecognizer CreateRecognizer(CultureInfo culture);
         IStreamingAvailabilityService CreateStreamingAvailabilityService();
-        ISynthesizer CreateSynthesizer(SpeechSynthesizers synthesizer, CultureInfo culture, SpeechProviderDependencies context);
+        ISynthesizer CreateSynthesizer(SpeechSynthesizers synthesizer, CultureInfo culture);
     }
 }

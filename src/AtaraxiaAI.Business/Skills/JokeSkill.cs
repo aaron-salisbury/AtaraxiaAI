@@ -7,18 +7,18 @@ namespace AtaraxiaAI.Business.Skills
 {
     internal static class JokeSkill
     {
-        internal static void TellMeAJoke(SpeechEngine speechEngine)
+        internal static void TellMeAJoke(SpeechEngine speechEngine, IIntegrationFactory integrations)
         {
-            IJokeService jokeService = AI.Integrations.CreateJokeService();
+            IJokeService jokeService = integrations.CreateJokeService();
 
             Joke joke = jokeService.GetJokeAsync().Result;
 
             SayJoke(joke, speechEngine);
         }
 
-        internal static void TellMeADadJoke(SpeechEngine speechEngine)
+        internal static void TellMeADadJoke(SpeechEngine speechEngine, IIntegrationFactory integrations)
         {
-            IJokeService dadJokeService = AI.Integrations.CreateJokeService(dadJoke: true);
+            IJokeService dadJokeService = integrations.CreateJokeService(dadJoke: true);
 
             Joke joke = dadJokeService.GetJokeAsync().Result;
 

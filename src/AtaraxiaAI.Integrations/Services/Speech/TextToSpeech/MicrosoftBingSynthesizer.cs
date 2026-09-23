@@ -41,9 +41,9 @@ namespace AtaraxiaAI.Integrations.Services
             Streaming
         }
 
-        private readonly SpeechProviderDependencies _context;
+        private readonly IntegrationDependencies _context;
 
-        internal MicrosoftBingSynthesizer(CultureInfo culture, SpeechProviderDependencies context)
+        internal MicrosoftBingSynthesizer(CultureInfo culture, IntegrationDependencies context)
         {
             _context = context ?? throw new ArgumentNullException(nameof(context));
             _secureTrustedClientToken = ScrapeEdgeClientToken().Result;

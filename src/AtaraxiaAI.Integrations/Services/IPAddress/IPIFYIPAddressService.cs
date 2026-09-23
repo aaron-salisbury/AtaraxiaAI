@@ -7,6 +7,9 @@ namespace AtaraxiaAI.Integrations.Services
 {
     internal class IPIFYIPAddressService : IIPAddressService
     {
+        private readonly IntegrationDependencies _dependencies;
+
+        internal IPIFYIPAddressService(IntegrationDependencies dependencies) => _dependencies = dependencies;
         private const string REQUEST_URL = "https://api.ipify.org";
 
         async Task<string> IIPAddressService.GetPublicIPAddressAsync()
@@ -14,7 +17,7 @@ namespace AtaraxiaAI.Integrations.Services
             string ip = null;
 
             using (StreamReader stream = new StreamReader(new MemoryStream(
-                await AI.HttpRequester.GetWebRequestSerializedAsync(REQUEST_URL))))
+                await _dependencies.HttpRequester.GetWebRequestSerializedAsync(REQUEST_URL))))
             {
                 string response = stream.ReadToEnd();
 
@@ -24,7 +27,7 @@ namespace AtaraxiaAI.Integrations.Services
                 }
                 else
                 {
-                    AI.Logger.Error("Failed to determine IP Address.");
+                    _dependencies.Logger.Error("Failed to determine IP Address.");
                 }
             }
 

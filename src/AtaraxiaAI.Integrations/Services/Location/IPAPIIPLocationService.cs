@@ -10,6 +10,9 @@ namespace AtaraxiaAI.Integrations.Services
 {
     internal class IPAPIIPLocationService : IIPLocationService
     {
+        private readonly IntegrationDependencies _dependencies;
+
+        internal IPAPIIPLocationService(IntegrationDependencies dependencies) => _dependencies = dependencies;
         private const string URL_FORMAT = "http://ip-api.com/json/{0}"; // {0}IP Address
 
         async Task<Location> IIPLocationService.GetLocationByIPAsync(string iPAddress)
@@ -17,7 +20,7 @@ namespace AtaraxiaAI.Integrations.Services
             if (!string.IsNullOrEmpty(iPAddress))
             {
                 string url = string.Format(URL_FORMAT, iPAddress);
-                string json = await AI.HttpRequester.SendHTTPJsonRequestAsync(url);
+                string json = await _dependencies.HttpRequester.SendHTTPJsonRequestAsync(url);
 
                 if (!string.IsNullOrEmpty(json))
                 {
@@ -34,7 +37,7 @@ namespace AtaraxiaAI.Integrations.Services
                     }
                     else
                     {
-                        AI.Logger.Error("Failed to determine location.");
+                        _dependencies.Logger.Error("Failed to determine location.");
                     }
                 }
             }

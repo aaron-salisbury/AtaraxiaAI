@@ -1,9 +1,8 @@
 using AtaraxiaAI.Business.Services;
 using System;
-using System.Threading.Tasks;
 using System.Globalization;
-
 using System.Threading;
+using System.Threading.Tasks;
 using static AtaraxiaAI.Business.Base.Enums;
 
 namespace AtaraxiaAI.Business.Componants
@@ -15,19 +14,19 @@ namespace AtaraxiaAI.Business.Componants
         private readonly CultureInfo _culture;
         private readonly IIntegrationFactory _integrations;
         private readonly IAudioPlayer _player;
-        private readonly SpeechProviderDependencies _providerContext;
+        private readonly IntegrationDependencies _providerContext;
         private readonly CancellationTokenSource _playbackCancellation = new();
         private OrchestrationEngine _commandLoop { get; set; }
         private IRecognizer _recognizer;
         private ISynthesizer _synthesizer;
 
-        internal SpeechEngine(IIntegrationFactory integrations, IAudioPlayer player, SpeechProviderDependencies providerContext, CultureInfo culture = null)
+        internal SpeechEngine(IIntegrationFactory integrations, IAudioPlayer player, IntegrationDependencies providerContext, CultureInfo culture = null)
         {
             _integrations = integrations;
             _player = player;
             _providerContext = providerContext;
             _culture = culture ?? new CultureInfo("en-US");
-            _commandLoop = new OrchestrationEngine(this);
+            _commandLoop = new OrchestrationEngine(this, integrations, providerContext.Logger);
             _recognizer = _integrations.CreateRecognizer(_culture);
 
             SetSynthesizer();
@@ -38,7 +37,8 @@ namespace AtaraxiaAI.Business.Componants
         internal async Task SpeakAsync(string message, CancellationToken cancellationToken)
         {
             if (_synthesizer == null) return;
-            _recognizer.Pause();
+            bool wasListening = IsSpeechRecognitionRunning;
+            if (wasListening) _recognizer.Pause();
             try
             {
                 byte[] wav = await _synthesizer.SynthesizeAsync(message, cancellationToken);
@@ -52,7 +52,11 @@ namespace AtaraxiaAI.Business.Componants
                 _providerContext.Logger.Error(error, "Speech synthesis or playback failed.");
                 SetSynthesizer();
             }
-            finally { _recognizer.Unpause(); }
+            finally
+            {
+                if (wasListening && IsSpeechRecognitionRunning && !cancellationToken.IsCancellationRequested)
+                    _recognizer.Unpause();
+            }
         }
 
         internal void SetSynthesizer(SpeechSynthesizers? requested = null)
@@ -65,7 +69,7 @@ namespace AtaraxiaAI.Business.Componants
             {
                 try
                 {
-                    var candidate = _integrations.CreateSynthesizer(choice, _culture, _providerContext);
+                    var candidate = _integrations.CreateSynthesizer(choice, _culture);
                     if (candidate.IsAvailable()) { _synthesizer = candidate; return; }
                 }
                 catch (Exception error) { _providerContext.Logger.Warning(error, "Speech provider {Provider} unavailable.", choice); }

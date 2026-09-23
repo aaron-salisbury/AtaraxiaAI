@@ -5,9 +5,9 @@ namespace AtaraxiaAI.Business.Skills
 {
     internal static class ResponseSkill
     {
-        internal static void AcquireInsult(SpeechEngine speechEngine)
+        internal static void AcquireInsult(SpeechEngine speechEngine, IIntegrationFactory integrations)
         {
-            IInsultService insultService = AI.Integrations.CreateInsultService();
+            IInsultService insultService = integrations.CreateInsultService();
 
             string insult = insultService.GetInsultAsync().Result;
 

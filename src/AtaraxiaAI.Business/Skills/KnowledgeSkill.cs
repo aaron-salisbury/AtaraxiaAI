@@ -12,11 +12,11 @@ namespace AtaraxiaAI.Business.Skills
         private IGeneralIntelligence _aGIService;
         private IStreamingAvailabilityService _streamingAvailabilityService;
 
-        internal KnowledgeSkill(SpeechEngine speechEngine)
+        internal KnowledgeSkill(SpeechEngine speechEngine, IIntegrationFactory integrations)
         {
             _speechEngine = speechEngine;
-            _aGIService = AI.Integrations.CreateGeneralIntelligence();
-            _streamingAvailabilityService = AI.Integrations.CreateStreamingAvailabilityService();
+            _aGIService = integrations.CreateGeneralIntelligence();
+            _streamingAvailabilityService = integrations.CreateStreamingAvailabilityService();
         }
 
         internal void AnswerMe(string message)
