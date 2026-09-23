@@ -37,7 +37,14 @@ internal class Program
             try { KokoroWorker.SynthesizeToFileAsync(args[1], args[2]).GetAwaiter().GetResult(); }
             catch (Exception error)
             {
-                try { System.IO.File.WriteAllText(args[2] + ".error", error.ToString()); }
+                try
+                {
+                    string nativeDetails;
+                    try { nativeDetails = KokoroWorker.DescribeNativeLibraries(); }
+                    catch (Exception diagnosticError) { nativeDetails = "Native library inspection failed: " + diagnosticError; }
+                    System.IO.File.WriteAllText(args[2] + ".error",
+                        error + Environment.NewLine + nativeDetails);
+                }
                 catch (System.IO.IOException) { }
                 Environment.ExitCode = 1;
             }
