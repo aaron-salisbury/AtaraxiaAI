@@ -9,7 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="NAudio" Version="2.2.1" />
+    <PackageReference Include="NAudio" Version="2.3.0" />
     <PackageReference Include="Avalonia.Desktop" Version="$(AvaloniaVersion)" />
     <PackageReference Include="Serilog.Extensions.Logging" Version="10.0.0" />
     <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
@@ -27,17 +27,13 @@
     <ItemGroup>
       <KokoroWorkerFile Include="$(MSBuildProjectDirectory)/../AtaraxiaAI.KokoroWorker/bin/$(Configuration)/$(TargetFramework)/**/*" />
     </ItemGroup>
-    <Copy SourceFiles="@(KokoroWorkerFile)"
-          DestinationFiles="@(KokoroWorkerFile->'$(TargetDir)KokoroWorker/%(RecursiveDir)%(Filename)%(Extension)')"
-          SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(KokoroWorkerFile)" DestinationFiles="@(KokoroWorkerFile->'$(TargetDir)KokoroWorker/%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
   </Target>
 
   <Target Name="CopyKokoroWorkerPublish" AfterTargets="Publish">
     <ItemGroup>
       <KokoroWorkerPublishFile Include="$(MSBuildProjectDirectory)/../AtaraxiaAI.KokoroWorker/bin/$(Configuration)/$(TargetFramework)/**/*" />
     </ItemGroup>
-    <Copy SourceFiles="@(KokoroWorkerPublishFile)"
-          DestinationFiles="@(KokoroWorkerPublishFile->'$(PublishDir)KokoroWorker/%(RecursiveDir)%(Filename)%(Extension)')"
-          SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(KokoroWorkerPublishFile)" DestinationFiles="@(KokoroWorkerPublishFile->'$(PublishDir)KokoroWorker/%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
   </Target>
 </Project>
