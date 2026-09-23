@@ -11,7 +11,8 @@
 			 xmlns:c="clr-namespace:AtaraxiaAI.Presentation.Desktop.Base.Controls"
 			 xmlns:i="using:Material.Icons.Avalonia"
 			 xmlns:progRing="clr-namespace:AvaloniaProgressRing;assembly=AvaloniaProgressRing"
-			 xmlns:cons="clr-namespace:AtaraxiaAI.Presentation.Desktop.Base.Converters;assembly=AtaraxiaAI.Presentation.Desktop">
+			 xmlns:cons="clr-namespace:AtaraxiaAI.Presentation.Desktop.Base.Converters;assembly=AtaraxiaAI.Presentation.Desktop"
+			 xmlns:svg="clr-namespace:Avalonia.Svg.Skia;assembly=Svg.Controls.Skia.Avalonia">
 
 	<UserControl.Resources>
 		<cons:StringToMaterialIconConverter x:Key="stringToMaterialIconConverter"/>
@@ -40,7 +41,9 @@
 		<!-- Background -->
 		<Grid Grid.RowSpan="2" IsHitTestVisible="False">
 			<Image ZIndex="-3" Stretch="UniformToFill" Source="/Base/Assets/background.png" />
-			<Border ZIndex="-2">
+			<svg:Svg x:Name="VectorBackground" ZIndex="-2" Path="/Base/Assets/background.svg"
+			         Stretch="UniformToFill" EnableCache="True" />
+			<Border ZIndex="-1">
 				<Border.Background>
 					<SolidColorBrush Color="Black" Opacity="0.6" />
 				</Border.Background>
