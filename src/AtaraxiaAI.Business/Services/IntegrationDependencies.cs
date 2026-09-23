@@ -14,7 +14,13 @@ public sealed class IntegrationDependencies
         Logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
-    public AppData AppData { get; set; }
+    private AppData? _appData;
+
+    public AppData AppData
+    {
+        get => _appData ?? throw new InvalidOperationException("Application data has not been loaded.");
+        internal set => _appData = value ?? throw new ArgumentNullException(nameof(value));
+    }
     public IHttpRequester HttpRequester { get; }
     public ILogger Logger { get; }
 }
