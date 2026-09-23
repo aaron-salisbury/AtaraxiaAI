@@ -53,6 +53,19 @@ namespace AtaraxiaAI.Business.Componants
                 _providerContext.Logger.Error(error, "Speech synthesis or playback failed.");
                 if (_selectedSynthesizer is { } failed) _failedSynthesizers.Add(failed);
                 SetSynthesizer();
+                if (_synthesizer != null && !cancellationToken.IsCancellationRequested)
+                {
+                    try
+                    {
+                        byte[] fallbackWav = await _synthesizer.SynthesizeAsync(message, cancellationToken);
+                        if (fallbackWav is { Length: > 0 }) await _player.PlayAsync(fallbackWav, cancellationToken);
+                    }
+                    catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { }
+                    catch (Exception fallbackError)
+                    {
+                        _providerContext.Logger.Error(fallbackError, "Fallback speech synthesis or playback failed.");
+                    }
+                }
             }
         }
 

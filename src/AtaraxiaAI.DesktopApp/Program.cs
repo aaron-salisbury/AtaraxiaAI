@@ -1,4 +1,5 @@
 using AtaraxiaAI.Presentation.Desktop;
+using AtaraxiaAI.Integrations;
 using Avalonia;
 using CommunityToolkit.Mvvm.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection;
@@ -15,6 +16,13 @@ internal class Program
     [STAThread]
     public static void Main(string[] args)
     {
+        if (args.Length == 3 && args[0] == "--kokoro-worker")
+        {
+            try { KokoroWorker.SynthesizeToFileAsync(args[1], args[2]).GetAwaiter().GetResult(); }
+            catch (Exception) { Environment.ExitCode = 1; }
+            return;
+        }
+
         ServiceProvider? serviceProvider = null;
 
         try
