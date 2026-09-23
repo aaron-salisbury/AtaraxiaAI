@@ -16,6 +16,21 @@ internal class Program
     [STAThread]
     public static void Main(string[] args)
     {
+        if (args.Length == 2 && args[0] == "--kokoro-probe")
+        {
+            try
+            {
+                KokoroWorker.VerifyNativeRuntime();
+                System.IO.File.WriteAllText(args[1], "ready");
+            }
+            catch (Exception error)
+            {
+                System.IO.File.WriteAllText(args[1], error.ToString());
+                Environment.ExitCode = 1;
+            }
+            return;
+        }
+
         if (args.Length == 3 && args[0] == "--kokoro-worker")
         {
             try { KokoroWorker.SynthesizeToFileAsync(args[1], args[2]).GetAwaiter().GetResult(); }

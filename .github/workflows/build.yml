@@ -13,4 +13,11 @@ jobs:
         with:
           dotnet-version: 10.0.x
       - run: dotnet build src/AtaraxiaAI.slnx --configuration Release
+      - name: Verify Kokoro native runtime in desktop host
+        shell: pwsh
+        run: |
+          $probe = Join-Path $env:RUNNER_TEMP 'kokoro-probe.txt'
+          & 'src/AtaraxiaAI.DesktopApp/bin/Release/net10.0/AtaraxiaAI.DesktopApp.exe' --kokoro-probe $probe
+          Get-Content $probe
+          if ((Get-Content $probe -Raw).Trim() -ne 'ready') { exit 1 }
       - run: dotnet test src/AtaraxiaAI.slnx --configuration Release --no-build
