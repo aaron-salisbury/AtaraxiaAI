@@ -17,6 +17,7 @@ namespace AtaraxiaAI.Business.Componants
         private readonly IAudioPlayer _player;
         private readonly IntegrationDependencies _providerContext;
         private readonly CancellationTokenSource _playbackCancellation = new();
+        private int _commandQueued;
         private readonly HashSet<SpeechSynthesizers> _failedSynthesizers = new();
         private SpeechSynthesizers? _selectedSynthesizer;
         private OrchestrationEngine _commandLoop { get; set; }
@@ -35,13 +36,9 @@ namespace AtaraxiaAI.Business.Componants
             SetSynthesizer();
         }
 
-        internal void Speak(string message) => SpeakAsync(message, _playbackCancellation.Token).GetAwaiter().GetResult();
-
         internal async Task SpeakAsync(string message, CancellationToken cancellationToken)
         {
             if (_synthesizer == null) return;
-            bool wasListening = IsSpeechRecognitionRunning;
-            if (wasListening) _recognizer.Pause();
             try
             {
                 byte[] wav = await _synthesizer.SynthesizeAsync(message, cancellationToken);
@@ -55,11 +52,6 @@ namespace AtaraxiaAI.Business.Componants
                 _providerContext.Logger.Error(error, "Speech synthesis or playback failed.");
                 if (_selectedSynthesizer is { } failed) _failedSynthesizers.Add(failed);
                 SetSynthesizer();
-            }
-            finally
-            {
-                if (wasListening && IsSpeechRecognitionRunning && !cancellationToken.IsCancellationRequested)
-                    _recognizer.Unpause();
             }
         }
 
@@ -89,6 +81,30 @@ namespace AtaraxiaAI.Business.Componants
             _providerContext.Logger.Warning("No speech synthesizer is currently available.");
         }
 
+        private void OnSpeechRecognized(string message)
+        {
+            // System.Speech invokes this on its recognition callback. Return before stopping
+            // recognition, performing HTTP requests, or loading the synthesis model.
+            if (Interlocked.CompareExchange(ref _commandQueued, 1, 0) != 0) return;
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    if (IsSpeechRecognitionRunning)
+                        await _commandLoop.HeardAsync(message, _playbackCancellation.Token);
+                }
+                catch (OperationCanceledException) when (_playbackCancellation.IsCancellationRequested) { }
+                catch (Exception error)
+                {
+                    _providerContext.Logger.Error(error, "Failed to process spoken command.");
+                }
+                finally
+                {
+                    Interlocked.Exchange(ref _commandQueued, 0);
+                }
+            });
+        }
+
         public void CancelPlayback() => _playbackCancellation.Cancel();
 
         public void ActivateSpeechRecognition()
@@ -96,7 +112,7 @@ namespace AtaraxiaAI.Business.Componants
             _providerContext.Logger.Information("Beginning speech recognition.");
 
             DeactivateSpeechRecognition();
-            _recognizer.Listen(_commandLoop.Heard);
+            _recognizer.Listen(OnSpeechRecognized);
             IsSpeechRecognitionRunning = true;
         }
 

@@ -11,11 +11,52 @@ namespace AtaraxiaAI.Integrations.Services
 {
     internal sealed class KokoroSynthesizer : ISynthesizer
     {
-        private static readonly Lazy<Task<KokoroWavSynthesizer>> Model = new(
-            () => KokoroWavSynthesizer.LoadModelAsync());
-        private readonly CultureInfo _culture;
+        private static readonly object ModelGate = new();
+        private static Task<KokoroWavSynthesizer>? _modelTask;
 
-        internal KokoroSynthesizer(CultureInfo culture, IntegrationDependencies context) => _culture = culture ?? new CultureInfo("en-US");
+        private static Task<KokoroWavSynthesizer> GetModelAsync(IntegrationDependencies dependencies)
+        {
+            lock (ModelGate)
+                return _modelTask ??= Task.Run(async () =>
+                {
+                    dependencies.Logger.Information("Loading Kokoro speech model (downloading if needed).");
+                    int lastReportedTenPercent = 0;
+                    try
+                    {
+                        var model = await KokoroWavSynthesizer.LoadModelAsync(
+                            OnDownloadProgress: progress =>
+                            {
+                                int tenPercent = (int)(progress * 10);
+                                if (tenPercent > lastReportedTenPercent)
+                                {
+                                    lastReportedTenPercent = tenPercent;
+                                    dependencies.Logger.Information("Kokoro model download: {Percent}%.", tenPercent * 10);
+                                }
+                            });
+                        dependencies.Logger.Information("Kokoro speech model ready.");
+                        return model;
+                    }
+                    catch (Exception ex)
+                    {
+                        dependencies.Logger.Error(ex, "Kokoro model preparation failed; speech will use an available fallback.");
+                        throw;
+                    }
+                });
+        }
+
+        internal static async Task PrepareAsync(IntegrationDependencies dependencies)
+        {
+            try { await GetModelAsync(dependencies); }
+            catch { /* The speech engine observes the same failure and chooses a fallback. */ }
+        }
+        private readonly CultureInfo _culture;
+        private readonly IntegrationDependencies _dependencies;
+
+        internal KokoroSynthesizer(CultureInfo culture, IntegrationDependencies context)
+        {
+            _culture = culture ?? new CultureInfo("en-US");
+            _dependencies = context;
+        }
 
         public bool IsAvailable() => _culture.Name.Equals("en-US", StringComparison.OrdinalIgnoreCase);
 
@@ -23,7 +64,7 @@ namespace AtaraxiaAI.Integrations.Services
         {
             cancellationToken.ThrowIfCancellationRequested();
             if (string.IsNullOrWhiteSpace(message)) return Array.Empty<byte>();
-            var model = await Model.Value.WaitAsync(cancellationToken);
+            var model = await GetModelAsync(_dependencies).WaitAsync(cancellationToken);
             // KokoroSharp produces 24 kHz, mono PCM; wrap it in WAV for the shared player.
             byte[] pcm = await model.SynthesizeAsync(message, KokoroVoiceManager.GetVoice("af_heart"))
                 .WaitAsync(cancellationToken);

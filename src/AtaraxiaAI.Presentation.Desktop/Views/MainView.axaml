@@ -88,10 +88,12 @@
 					<progRing:ProgressRing Grid.Row="0"
 										   Width="80"
 										   Height="80"
-										   IsActive="{Binding !AI.IsInitialized}"
+										   IsActive="{Binding IsInitializing}"
 										   HorizontalAlignment="Left"
 										   VerticalAlignment="Top"
 										   Foreground="#cc5200" />
+
+                    <TextBlock Grid.Row="0" Margin="0,90,0,0" Text="{Binding InitializationError}" Foreground="OrangeRed" TextWrapping="Wrap" />
 
 					<!-- Vision Feed -->
 					<ContentControl Grid.Row="0"
