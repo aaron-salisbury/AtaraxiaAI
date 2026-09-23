@@ -18,6 +18,8 @@ jobs:
         run: |
           $probe = Join-Path $env:RUNNER_TEMP 'kokoro-probe.txt'
           & 'src/AtaraxiaAI.DesktopApp/bin/Release/net10.0/AtaraxiaAI.DesktopApp.exe' --kokoro-probe $probe
+          Write-Host "Desktop probe exit code: $LASTEXITCODE"
+          if (-not (Test-Path $probe)) { throw 'Desktop probe did not enter Main.' }
           Get-Content $probe
           if ((Get-Content $probe -Raw).Trim() -ne 'ready') { exit 1 }
       - run: dotnet test src/AtaraxiaAI.slnx --configuration Release --no-build

@@ -1,5 +1,6 @@
 using AtaraxiaAI.Business.Services;
 using KokoroSharp;
+using Microsoft.ML.OnnxRuntime;
 using NAudio.Wave;
 using System;
 using System.Diagnostics;
@@ -111,6 +112,8 @@ namespace AtaraxiaAI.Integrations.Services
         internal static async Task RunWorkerAsync(string request, string response)
         {
             string message = await File.ReadAllTextAsync(request);
+            await File.WriteAllTextAsync(response + ".stage", "loading ONNX runtime");
+            using (var options = new SessionOptions()) { }
             await File.WriteAllTextAsync(response + ".stage", "loading model");
             var model = await GetModelAsync(Log.Logger);
             await File.WriteAllTextAsync(response + ".stage", "synthesizing audio");

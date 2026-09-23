@@ -18,6 +18,7 @@ internal class Program
     {
         if (args.Length == 2 && args[0] == "--kokoro-probe")
         {
+            System.IO.File.WriteAllText(args[1], "entered probe");
             try
             {
                 KokoroWorker.VerifyNativeRuntime();
