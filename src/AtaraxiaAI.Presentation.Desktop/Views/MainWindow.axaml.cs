@@ -9,6 +9,5 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
-        this.Title = RuntimeInformation.IsOSPlatform(OSPlatform.Linux) ? AppInfo.AppDisplayName : string.Empty;
     }
 }

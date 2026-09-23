@@ -9,7 +9,8 @@
         xmlns:v="clr-namespace:AtaraxiaAI.Presentation.Desktop.Views"
         WindowStartupLocation="CenterScreen"
 		x:Name="Win"
-        Icon="/Base/Assets/transparent.ico">
+		Icon="/Base/Assets/logo.ico"
+		Title="AtaraxiaAI">
 
     <v:MainView Grid.Row="1" />
     
