@@ -152,6 +152,7 @@ namespace AtaraxiaAI.Business
 
             _store.SaveAppDataAsync(AppData, InternalStorage.UserStorageDirectory).GetAwaiter().GetResult();
         }
+
         private async Task RefreshQuotasAsync()
         {
             DateTime today = DateTime.Today;
