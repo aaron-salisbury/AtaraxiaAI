@@ -11,10 +11,18 @@ namespace AtaraxiaAI.Data
     {
         private const string AppFile = "AtaraxiaAI.json";
         private const string StorageFile = "InternalStorage.json";
+        private readonly string _storageFilePath;
+
+        public JsonAppDataStore() : this(".") { }
+
+        public JsonAppDataStore(string internalDirectory)
+        {
+            _storageFilePath = Path.Combine(internalDirectory, StorageFile);
+        }
 
         public async Task<InternalStorage> ReadInternalStorageAsync()
         {
-            var storage = await ReadAsync<InternalStorage>(StorageFile);
+            var storage = await ReadAsync<InternalStorage>(_storageFilePath);
             if (storage != null) return storage;
 
             storage = new InternalStorage
@@ -22,7 +30,7 @@ namespace AtaraxiaAI.Data
                 UserStorageDirectory = Path.Combine(
                     Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "AtaraxiaAI")
             };
-            await WriteAsync(StorageFile, storage);
+            await WriteAsync(_storageFilePath, storage);
             return storage;
         }
 
@@ -38,7 +46,7 @@ namespace AtaraxiaAI.Data
                 File.Move(source, destination);
 
             storage = new InternalStorage { UserStorageDirectory = newDirectory };
-            await WriteAsync(StorageFile, storage);
+            await WriteAsync(_storageFilePath, storage);
             return storage;
         }
 

@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AtaraxiaAI.Data", "Ataraxia
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AtaraxiaAI.Integrations", "AtaraxiaAI.Integrations\AtaraxiaAI.Integrations.csproj", "{93D7B8A8-427A-42A5-99B9-1C79C923CBBC}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AtaraxiaAI.Tests", "AtaraxiaAI.Tests\AtaraxiaAI.Tests.csproj", "{8A987D23-F583-47C1-8E75-A155130F1195}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +35,10 @@ Global
 		{93D7B8A8-427A-42A5-99B9-1C79C923CBBC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{93D7B8A8-427A-42A5-99B9-1C79C923CBBC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{93D7B8A8-427A-42A5-99B9-1C79C923CBBC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8A987D23-F583-47C1-8E75-A155130F1195}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8A987D23-F583-47C1-8E75-A155130F1195}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8A987D23-F583-47C1-8E75-A155130F1195}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8A987D23-F583-47C1-8E75-A155130F1195}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
