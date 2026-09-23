@@ -1,4 +1,4 @@
-﻿using AtaraxiaAI.Business.Componants;
+using AtaraxiaAI.Business.Componants;
 using AtaraxiaAI.Business.Services;
 
 namespace AtaraxiaAI.Business.Skills
@@ -7,7 +7,7 @@ namespace AtaraxiaAI.Business.Skills
     {
         internal static void AcquireInsult(SpeechEngine speechEngine)
         {
-            IInsultService insultService = new EvilInsultService();
+            IInsultService insultService = AI.Integrations.CreateInsultService();
 
             string insult = insultService.GetInsultAsync().Result;
 

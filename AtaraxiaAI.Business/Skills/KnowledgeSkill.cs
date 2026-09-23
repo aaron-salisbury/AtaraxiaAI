@@ -1,4 +1,4 @@
-﻿using AtaraxiaAI.Business.Componants;
+using AtaraxiaAI.Business.Componants;
 using AtaraxiaAI.Business.Services;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,8 +15,8 @@ namespace AtaraxiaAI.Business.Skills
         internal KnowledgeSkill(SpeechEngine speechEngine)
         {
             _speechEngine = speechEngine;
-            _aGIService = new GPT3GeneralIntelligence();
-            _streamingAvailabilityService = new WatchModeStreamingAvailabilityService();
+            _aGIService = AI.Integrations.CreateGeneralIntelligence();
+            _streamingAvailabilityService = AI.Integrations.CreateStreamingAvailabilityService();
         }
 
         internal void AnswerMe(string message)

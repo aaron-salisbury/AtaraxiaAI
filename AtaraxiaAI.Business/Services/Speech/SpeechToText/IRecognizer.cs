@@ -1,8 +1,8 @@
-﻿using System;
+using System;
 
 namespace AtaraxiaAI.Business.Services
 {
-    internal interface IRecognizer : IDisposable
+    public interface IRecognizer : IDisposable
     {
         bool IsAvailable();
 

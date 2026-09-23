@@ -1,9 +1,9 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace AtaraxiaAI.Business.Services
 {
-    internal interface IStreamingAvailabilityService
+    public interface IStreamingAvailabilityService
     {
         Task<IEnumerable<string>> GetTVShowStreamOfferingsAsync(string title);
 

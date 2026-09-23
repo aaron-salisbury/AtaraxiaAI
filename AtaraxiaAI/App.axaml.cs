@@ -1,4 +1,8 @@
 using AtaraxiaAI.Base;
+using AtaraxiaAI.Business.Services;
+using AtaraxiaAI.Integrations;
+using AtaraxiaAI.Data;
+using AtaraxiaAI.Business.Persistence;
 using AtaraxiaAI.Views;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
@@ -6,6 +10,7 @@ using Avalonia.Markup.Xaml;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Reflection;
+using RunnethOverStudio.AppToolkit.Modules.Access;
 
 namespace AtaraxiaAI
 {
@@ -31,7 +36,11 @@ namespace AtaraxiaAI
             // HttpClient instances created by IHttpClientFactory are intended to be short-lived.
             // Disposing of such HttpClient instances created by the factory will not lead to socket exhaustion.
             // AddHttpClient() is in the Microsoft.Extensions.Http nuget package.
-            services.AddHttpClient(); 
+            services.AddHttpClient();
+            services.AddLogging();
+            services.AddSingleton<IHttpRequester, HttpRequester>();
+            services.AddSingleton<IIntegrationFactory, IntegrationFactory>();
+            services.AddSingleton<IAppDataStore, JsonAppDataStore>();
 
             // This app requires the naming convention that views end in "View" (Base.ViewLocator.cs),
             // ViewModels end in "ViewModel", and that nothing else ends in either.

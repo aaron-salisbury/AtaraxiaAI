@@ -1,4 +1,4 @@
-﻿using AtaraxiaAI.Business.Services;
+using AtaraxiaAI.Business.Services;
 using NAudio.Wave;
 using System.Globalization;
 using System.IO;
@@ -20,7 +20,7 @@ namespace AtaraxiaAI.Business.Componants
         {
             _culture = culture ?? new CultureInfo("en-US");
             _commandLoop = new OrchestrationEngine(this);
-            _recognizer = new SystemDotSpeechRecognizer(_culture);
+            _recognizer = AI.Integrations.CreateRecognizer(_culture);
 
             SetSynthesizer();
         }
@@ -50,16 +50,16 @@ namespace AtaraxiaAI.Business.Componants
                 switch (synthesizerRequest.Value)
                 {
                     case SpeechSynthesizers.GoogleCloud:
-                        requestedSynthesizer = new GoogleCloudSynthesizer(_culture);
+                        requestedSynthesizer = AI.Integrations.CreateSynthesizer(SpeechSynthesizers.GoogleCloud, _culture);
                         break;
                     case SpeechSynthesizers.MicrosoftAzure:
-                        requestedSynthesizer = new MicrosoftAzureSynthesizer(_culture);
+                        requestedSynthesizer = AI.Integrations.CreateSynthesizer(SpeechSynthesizers.MicrosoftAzure, _culture);
                         break;
                     case SpeechSynthesizers.MicrosoftBing:
-                        requestedSynthesizer = new MicrosoftBingSynthesizer(_culture);
+                        requestedSynthesizer = AI.Integrations.CreateSynthesizer(SpeechSynthesizers.MicrosoftBing, _culture);
                         break;
                     case SpeechSynthesizers.SystemDotSpeech:
-                        requestedSynthesizer = new SystemDotSpeechSynthesizer(_culture);
+                        requestedSynthesizer = AI.Integrations.CreateSynthesizer(SpeechSynthesizers.SystemDotSpeech, _culture);
                         break;
                 }
 
@@ -70,28 +70,28 @@ namespace AtaraxiaAI.Business.Componants
                 }
             }
 
-            ISynthesizer synthesizer = new GoogleCloudSynthesizer(_culture);
+            ISynthesizer synthesizer = AI.Integrations.CreateSynthesizer(SpeechSynthesizers.GoogleCloud, _culture);
             if (synthesizer.IsAvailable())
             {
                 _synthesizer = synthesizer;
                 return;
             }
 
-            synthesizer = new MicrosoftAzureSynthesizer(_culture);
+            synthesizer = AI.Integrations.CreateSynthesizer(SpeechSynthesizers.MicrosoftAzure, _culture);
             if (synthesizer.IsAvailable())
             {
                 _synthesizer = synthesizer;
                 return;
             }
 
-            synthesizer = new MicrosoftBingSynthesizer(_culture);
+            synthesizer = AI.Integrations.CreateSynthesizer(SpeechSynthesizers.MicrosoftBing, _culture);
             if (synthesizer.IsAvailable())
             {
                 _synthesizer = synthesizer;
                 return;
             }
 
-            synthesizer = new SystemDotSpeechSynthesizer(_culture);
+            synthesizer = AI.Integrations.CreateSynthesizer(SpeechSynthesizers.SystemDotSpeech, _culture);
             if (synthesizer.IsAvailable())
             {
                 _synthesizer = synthesizer;

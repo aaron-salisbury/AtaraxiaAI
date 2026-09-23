@@ -1,3 +1,6 @@
+using AtaraxiaAI.Business.Persistence;
+using RunnethOverStudio.AppToolkit.Modules.Access;
+using AtaraxiaAI.Business.Services;
 using AtaraxiaAI.Business;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -47,9 +50,9 @@ namespace AtaraxiaAI.ViewModels
         [ObservableProperty]
         private object? _visionFeedView;
 
-        public MainWindowViewModel(IHttpClientFactory httpClientFactory)
+        public MainWindowViewModel()
         {
-            AI = new AI(Log.Logger, httpClientFactory);
+            AI = new AI(Log.Logger, App.Current.Services.GetRequiredService<IIntegrationFactory>(), App.Current.Services.GetRequiredService<IHttpRequester>(), App.Current.Services.GetRequiredService<IAppDataStore>());
 
             _activateVision = false;
             _visionIcon = "EyeOff";

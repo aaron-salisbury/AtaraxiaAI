@@ -1,9 +1,9 @@
-﻿using AtaraxiaAI.Business.Services.Base.Models;
+using AtaraxiaAI.Business.Services.Base.Models;
 using System.Threading.Tasks;
 
 namespace AtaraxiaAI.Business.Services
 {
-    internal interface IIPLocationService
+    public interface IIPLocationService
     {
         Task<Location> GetLocationByIPAsync(string iPAddress);
     }

@@ -1,8 +1,8 @@
-﻿using System.Threading.Tasks;
+using System.Threading.Tasks;
 
 namespace AtaraxiaAI.Business.Services
 {
-    internal interface IGeneralIntelligence
+    public interface IGeneralIntelligence
     {
         bool IsAvailable();
 

@@ -1,8 +1,8 @@
-﻿using System;
+using System;
 
 namespace AtaraxiaAI.Business.Services.Base.Models
 {
-    internal class Location
+    public class Location
     {
         public string City { get; set; }
         public string Region { get; set; }

@@ -1,4 +1,4 @@
-﻿using AtaraxiaAI.Business.Componants;
+using AtaraxiaAI.Business.Componants;
 using AtaraxiaAI.Business.Services;
 using AtaraxiaAI.Business.Services.Base.Models;
 using System.Threading;
@@ -9,7 +9,7 @@ namespace AtaraxiaAI.Business.Skills
     {
         internal static void TellMeAJoke(SpeechEngine speechEngine)
         {
-            IJokeService jokeService = new Sv443JokeService();
+            IJokeService jokeService = AI.Integrations.CreateJokeService();
 
             Joke joke = jokeService.GetJokeAsync().Result;
 
@@ -18,7 +18,7 @@ namespace AtaraxiaAI.Business.Skills
 
         internal static void TellMeADadJoke(SpeechEngine speechEngine)
         {
-            IJokeService dadJokeService = new CanHazDadJokeService();
+            IJokeService dadJokeService = AI.Integrations.CreateJokeService(dadJoke: true);
 
             Joke joke = dadJokeService.GetJokeAsync().Result;
 

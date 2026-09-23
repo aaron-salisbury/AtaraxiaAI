@@ -1,4 +1,4 @@
-﻿using AtaraxiaAI.Business.Services;
+using AtaraxiaAI.Business.Services;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -22,8 +22,8 @@ namespace AtaraxiaAI.Business.Componants
         internal VisionEngine(Action<byte[]> updateFrameAction)
         {
             _updateFrameAction = updateFrameAction;
-            _objectDetector = new YoloObjectDetector();
-            _ocRecognizer = new TesseractOCR();
+            _objectDetector = AI.Integrations.CreateObjectDetector();
+            _ocRecognizer = AI.Integrations.CreateOpticalCharacterRecognizer();
         }
 
         public void Activate()
@@ -58,10 +58,7 @@ namespace AtaraxiaAI.Business.Componants
                 Deactivate();
             }
 
-            if (_objectDetector is YoloObjectDetector yoloObjectDetector)
-            {
-                yoloObjectDetector.CaptureSource = captureSource;
-            }
+            _objectDetector.CaptureSource = captureSource;
 
             if (wasRunningWhenChangeMade)
             {

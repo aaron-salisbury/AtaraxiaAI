@@ -1,4 +1,4 @@
-﻿using AtaraxiaAI.Business.Services;
+using AtaraxiaAI.Business.Services;
 using System;
 using System.Linq;
 using System.Management;
@@ -30,7 +30,7 @@ namespace AtaraxiaAI.Business.Componants
             OSDescription = RuntimeInformation.OSDescription;
             OSArchitecture = RuntimeInformation.OSArchitecture.ToString();
 
-            IIPAddressService iPService = new IPIFYIPAddressService();
+            IIPAddressService iPService = AI.Integrations.CreateIPAddressService();
             IPAddress = iPService.GetPublicIPAddressAsync().Result;
 
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))

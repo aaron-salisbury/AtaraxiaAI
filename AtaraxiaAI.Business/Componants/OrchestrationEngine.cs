@@ -1,4 +1,4 @@
-﻿using AtaraxiaAI.Business.Skills;
+using AtaraxiaAI.Business.Skills;
 using System;
 using System.Linq;
 

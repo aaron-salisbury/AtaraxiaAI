@@ -44,6 +44,8 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\AtaraxiaAI.Business\AtaraxiaAI.Business.csproj" />
+    <ProjectReference Include="..\AtaraxiaAI.Data\AtaraxiaAI.Data.csproj" />
+    <ProjectReference Include="..\AtaraxiaAI.Integrations\AtaraxiaAI.Integrations.csproj" />
   </ItemGroup>
   <ItemGroup>
     <UpToDateCheckInput Remove="Views\LogsView.axaml" />
