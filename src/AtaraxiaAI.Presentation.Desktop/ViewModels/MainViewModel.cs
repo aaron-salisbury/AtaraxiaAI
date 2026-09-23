@@ -21,6 +21,9 @@ public partial class MainViewModel : BaseViewModel
     private string? _initializationError;
 
     [ObservableProperty]
+    private bool _isInitialized;
+
+    [ObservableProperty]
     private bool _activateVision;
 
     [ObservableProperty]
@@ -79,6 +82,7 @@ public partial class MainViewModel : BaseViewModel
         try
         {
             await Task.Run(() => AI.Initiate(updateFrameAction: vision.SetVisionFrame));
+            IsInitialized = AI.IsInitialized;
         }
         catch (Exception ex)
         {

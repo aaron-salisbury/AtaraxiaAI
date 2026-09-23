@@ -59,11 +59,11 @@
 					</Border.Background>
 					<!-- Icons: https://materialdesignicons.com/ -->
 					<StackPanel Margin="5">
-						<Button Command="{Binding OnVisionClickCommand}" IsEnabled="{Binding AI.IsInitialized}">
+						<Button Command="{Binding OnVisionClickCommand}" IsEnabled="{Binding IsInitialized}">
 							<i:MaterialIcon Kind="{Binding VisionIcon, Converter={StaticResource stringToMaterialIconConverter}}" />
 						</Button>
 
-						<Button Command="{Binding OnSoundClickCommand}" IsEnabled="{Binding AI.IsInitialized}">
+						<Button Command="{Binding OnSoundClickCommand}" IsEnabled="{Binding IsInitialized}">
 							<i:MaterialIcon Kind="{Binding SoundIcon, Converter={StaticResource stringToMaterialIconConverter}}" />
 						</Button>
 
@@ -71,7 +71,7 @@
 							<i:MaterialIcon Kind="{Binding LogsIcon, Converter={StaticResource stringToMaterialIconConverter}}" />
 						</Button>
 
-						<Button Command="{Binding OnSettingsClickCommand}" IsEnabled="{Binding AI.IsInitialized}">
+						<Button Command="{Binding OnSettingsClickCommand}" IsEnabled="{Binding IsInitialized}">
 							<i:MaterialIcon Kind="{Binding SettingsIcon, Converter={StaticResource stringToMaterialIconConverter}}" />
 						</Button>
 					</StackPanel>

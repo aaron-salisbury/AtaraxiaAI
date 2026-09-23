@@ -1,4 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
+using Avalonia.Threading;
+using System.Threading;
 using CommunityToolkit.Mvvm.Input;
 using RunnethOverStudio.AppToolkit.Modules.ComponentModel;
 
@@ -6,6 +8,8 @@ namespace AtaraxiaAI.Presentation.Desktop.ViewModels;
 
 public partial class VisionFeedViewModel : BaseViewModel
 {
+    private byte[]? _pendingFrame;
+    private int _frameUpdateScheduled;
     public RelayCommand OnCameraClickCommand { get; }
 
     [ObservableProperty]
@@ -42,9 +46,14 @@ public partial class VisionFeedViewModel : BaseViewModel
 
     public void SetVisionFrame(byte[] jpeg)
     {
-        if (ShowCameraFeed)
+        Interlocked.Exchange(ref _pendingFrame, jpeg);
+        if (Interlocked.Exchange(ref _frameUpdateScheduled, 1) != 0) return;
+
+        Dispatcher.UIThread.Post(() =>
         {
-            FrameBuffer = jpeg;
-        }
+            byte[]? latest = Interlocked.Exchange(ref _pendingFrame, null);
+            Interlocked.Exchange(ref _frameUpdateScheduled, 0);
+            if (ShowCameraFeed) FrameBuffer = latest;
+        });
     }
 }
