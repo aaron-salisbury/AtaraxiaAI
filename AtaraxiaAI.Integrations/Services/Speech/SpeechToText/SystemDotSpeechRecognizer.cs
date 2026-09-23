@@ -21,6 +21,9 @@ namespace AtaraxiaAI.Integrations.Services
             BuildRecognizer();
         }
 
+        // System.Speech always uses its configured input device.
+        public void UpdateCaptureSource(AtaraxiaAI.Business.Base.Enums.SoundCaptureSources source) { }
+
         bool IRecognizer.IsAvailable() => RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
 
         void IRecognizer.Listen(Action<string> speechRecognizedAction)

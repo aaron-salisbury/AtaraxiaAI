@@ -130,10 +130,7 @@ namespace AtaraxiaAI.Business.Componants
                 DeactivateSpeechRecognition();
             }
 
-            if (_recognizer is VoskRecognizer voskRecognizer)
-            {
-                voskRecognizer.CaptureSource = captureSource;
-            }
+            _recognizer.UpdateCaptureSource(captureSource);
 
             if (wasRunningWhenChangeMade)
             {

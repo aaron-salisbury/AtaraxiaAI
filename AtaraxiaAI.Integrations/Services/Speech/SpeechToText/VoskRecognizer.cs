@@ -17,6 +17,8 @@ namespace AtaraxiaAI.Integrations.Services
     {
         private const float SAMPLE_RATE = 16000f;
 
+        public void UpdateCaptureSource(SoundCaptureSources source) => CaptureSource = source;
+
         internal SoundCaptureSources CaptureSource { get; set; }
 
         private WaveInEvent _micSource;

@@ -8,6 +8,8 @@ namespace AtaraxiaAI.Business.Services
 
         void Listen(Action<string> speechRecognizedAction);
 
+        void UpdateCaptureSource(AtaraxiaAI.Business.Base.Enums.SoundCaptureSources source);
+
         void Pause();
 
         void Unpause();
