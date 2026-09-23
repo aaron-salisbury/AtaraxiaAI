@@ -1,5 +1,6 @@
 using AtaraxiaAI.Business.Services;
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Threading;
 using System.Threading.Tasks;
@@ -16,6 +17,8 @@ namespace AtaraxiaAI.Business.Componants
         private readonly IAudioPlayer _player;
         private readonly IntegrationDependencies _providerContext;
         private readonly CancellationTokenSource _playbackCancellation = new();
+        private readonly HashSet<SpeechSynthesizers> _failedSynthesizers = new();
+        private SpeechSynthesizers? _selectedSynthesizer;
         private OrchestrationEngine _commandLoop { get; set; }
         private IRecognizer _recognizer;
         private ISynthesizer _synthesizer;
@@ -50,6 +53,7 @@ namespace AtaraxiaAI.Business.Componants
             catch (Exception error)
             {
                 _providerContext.Logger.Error(error, "Speech synthesis or playback failed.");
+                if (_selectedSynthesizer is { } failed) _failedSynthesizers.Add(failed);
                 SetSynthesizer();
             }
             finally
@@ -64,13 +68,21 @@ namespace AtaraxiaAI.Business.Componants
             SpeechSynthesizers[] choices = requested is { } selection
                 ? new[] { selection, SpeechSynthesizers.Kokoro, SpeechSynthesizers.SystemDotSpeech }
                 : new[] { SpeechSynthesizers.Kokoro, SpeechSynthesizers.SystemDotSpeech };
+            if (requested is { } retry) _failedSynthesizers.Remove(retry);
             _synthesizer = null;
+            _selectedSynthesizer = null;
             foreach (var choice in choices)
             {
+                if (_failedSynthesizers.Contains(choice)) continue;
                 try
                 {
                     var candidate = _integrations.CreateSynthesizer(choice, _culture);
-                    if (candidate.IsAvailable()) { _synthesizer = candidate; return; }
+                    if (candidate.IsAvailable())
+                    {
+                        _synthesizer = candidate;
+                        _selectedSynthesizer = choice;
+                        return;
+                    }
                 }
                 catch (Exception error) { _providerContext.Logger.Warning(error, "Speech provider {Provider} unavailable.", choice); }
             }

@@ -42,7 +42,13 @@ namespace AtaraxiaAI.Business.Componants
                     string command = message.Remove(0, WAKE_COMMAND.Length);
                     string cleanCommand = string.Concat(command.Where(c => !char.IsWhiteSpace(c)));
 
-                    switch ((SkillMessages)Enum.Parse(typeof(SkillMessages), cleanCommand, true))
+                    if (!Enum.TryParse(cleanCommand, true, out SkillMessages skill))
+                    {
+                        _knowledgeSkill.AnswerMe(command);
+                        return;
+                    }
+
+                    switch (skill)
                     {
                         case SkillMessages.TellMeAJoke:
                             JokeSkill.TellMeAJoke(_speechEngine, _integrations);

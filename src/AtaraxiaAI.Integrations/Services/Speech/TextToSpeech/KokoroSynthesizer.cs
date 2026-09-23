@@ -22,6 +22,7 @@ namespace AtaraxiaAI.Integrations.Services
         public async Task<byte[]> SynthesizeAsync(string message, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
+            if (string.IsNullOrWhiteSpace(message)) return Array.Empty<byte>();
             var model = await Model.Value.WaitAsync(cancellationToken);
             // KokoroSharp produces 24 kHz, mono PCM; wrap it in WAV for the shared player.
             byte[] pcm = await model.SynthesizeAsync(message, KokoroVoiceManager.GetVoice("af_heart"))
