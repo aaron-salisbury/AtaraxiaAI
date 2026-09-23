@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <PublishSingleFile>true</PublishSingleFile>
+    <Product>AtaraxiaAI</Product>
+    <Description>Cross-platform Avalonia application that targets desktop.</Description>
+    <Version>1.0.0</Version>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Avalonia.Desktop" Version="$(AvaloniaVersion)" />
+    <PackageReference Include="Serilog.Extensions.Logging" Version="10.0.0" />
+    <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\AtaraxiaAI.Business\AtaraxiaAI.Business.csproj" />
+    <ProjectReference Include="..\AtaraxiaAI.Data\AtaraxiaAI.Data.csproj" />
+    <ProjectReference Include="..\AtaraxiaAI.Integrations\AtaraxiaAI.Integrations.csproj" />
+    <ProjectReference Include="..\AtaraxiaAI.Presentation.Desktop\AtaraxiaAI.Presentation.Desktop.csproj" />
+  </ItemGroup>
+</Project>

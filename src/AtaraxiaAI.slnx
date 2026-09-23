@@ -1,0 +1,8 @@
+<Solution>
+  <Project Path="AtaraxiaAI.Business/AtaraxiaAI.Business.csproj" />
+  <Project Path="AtaraxiaAI.Data/AtaraxiaAI.Data.csproj" />
+  <Project Path="AtaraxiaAI.Integrations/AtaraxiaAI.Integrations.csproj" />
+  <Project Path="AtaraxiaAI.Presentation.Desktop/AtaraxiaAI.Presentation.Desktop.csproj" />
+  <Project Path="AtaraxiaAI.DesktopApp/AtaraxiaAI.DesktopApp.csproj" />
+  <Project Path="AtaraxiaAI.Tests/AtaraxiaAI.Tests.csproj" />
+</Solution>

@@ -1,0 +1,57 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="AtaraxiaAI.Presentation.Desktop.Views.SettingsView"
+             xmlns:vm="clr-namespace:AtaraxiaAI.Presentation.Desktop.ViewModels"
+			  xmlns:base="clr-namespace:AtaraxiaAI.Presentation.Desktop.Base"
+             x:DataType="vm:SettingsViewModel"
+			 Background="Transparent">
+
+	<UserControl.Styles>
+		<Style Selector="TextBlock.propertyLabel">
+			<Setter Property="FontFamily" Value="/Base/Assets/Fonts/heavy_data.ttf#Heavy Data" />
+			<Setter Property="FontSize" Value="17" />
+			<Setter Property="Margin" Value="0,0,0,5" />
+			<Setter Property="HorizontalAlignment" Value="Right" />
+		</Style>
+	</UserControl.Styles>
+
+	<ScrollViewer>
+		<StackPanel HorizontalAlignment="Right" Margin="0,0,20,0">
+
+			<TextBlock Text="Storage Location" Classes="propertyLabel" />
+			<StackPanel Orientation="Horizontal" Margin="0,0,0,15">
+				<TextBox IsReadOnly="True" Width="200" Text="{Binding UserStorageDirectory}" />
+				<Button Name="StorageLocationBtn" Content="Select Folder" Margin="5,0,0,0" />
+			</StackPanel>
+
+			<TextBlock Text="Vision Capture Source" Classes="propertyLabel" />
+			<ComboBox SelectedItem="{Binding SelectedVisionCaptureSource}"
+					  ItemsSource="{Binding VisionCaptureSourceTypes}"
+					  Width="125"
+					  HorizontalAlignment="Right"
+					  Margin="0,0,0,15">
+				<ComboBox.ItemTemplate>
+					<DataTemplate DataType="base:ComboBoxEnumItem">
+						<TextBlock Text="{Binding Text}" />
+					</DataTemplate>
+				</ComboBox.ItemTemplate>
+			</ComboBox>
+
+			<TextBlock Text="Sound Capture Source" Classes="propertyLabel" />
+			<ComboBox SelectedItem="{Binding SelectedSoundCaptureSource}"
+					  ItemsSource="{Binding SoundCaptureSourceTypes}"
+					  Width="125"
+					  HorizontalAlignment="Right">
+				<ComboBox.ItemTemplate>
+					<DataTemplate DataType="base:ComboBoxEnumItem">
+						<TextBlock Text="{Binding Text}" />
+					</DataTemplate>
+				</ComboBox.ItemTemplate>
+			</ComboBox>
+
+		</StackPanel>
+	</ScrollViewer>
+</UserControl>

@@ -1,0 +1,16 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        x:Class="AtaraxiaAI.Presentation.Desktop.Views.MainWindow"
+		mc:Ignorable="d" d:DesignWidth="1366" d:DesignHeight="768"
+		MinWidth="1100" MinHeight="415"
+		Width="1100" Height="619"
+        xmlns:v="clr-namespace:AtaraxiaAI.Presentation.Desktop.Views"
+        WindowStartupLocation="CenterScreen"
+		x:Name="Win"
+        Icon="/Base/Assets/transparent.ico">
+
+    <v:MainView Grid.Row="1" />
+    
+</Window>
