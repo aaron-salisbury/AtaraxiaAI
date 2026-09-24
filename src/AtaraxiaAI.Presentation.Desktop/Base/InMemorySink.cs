@@ -1,46 +1,32 @@
 using Avalonia.Threading;
 using Serilog.Core;
 using Serilog.Events;
-using Serilog.Formatting;
 using Serilog.Formatting.Display;
 using System;
-using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
 using System.Globalization;
 using System.IO;
 
 namespace AtaraxiaAI.Presentation.Desktop.Base;
 
+public sealed record LogEntry(string Text, bool IsError);
+
 public class InMemorySink : ILogEventSink
 {
-    readonly ITextFormatter _textFormatter = new MessageTemplateTextFormatter("{Timestamp:HH:mm:ss} {Level:u3} | {Message:lj}{NewLine}{Exception}", CultureInfo.InvariantCulture);
+    private readonly MessageTemplateTextFormatter _formatter = new(
+        "{Timestamp:HH:mm:ss} {Level:u3} | {Message:lj}{NewLine}{Exception}", CultureInfo.InvariantCulture);
 
-    private readonly ConcurrentQueue<string> _events;
-    public ConcurrentQueue<string> Events
-    {
-        get { return _events; }
-    }
-
-    public ObservableCollection<string> Messages { get; set; }
-
-    public InMemorySink()
-    {
-        _events = new ConcurrentQueue<string>();
-        Messages = new ObservableCollection<string>();
-    }
+    public ObservableCollection<LogEntry> Messages { get; } = new();
 
     public void Emit(LogEvent logEvent)
     {
-        if (logEvent == null) { throw new ArgumentNullException("LogEvent"); }
-
-        StringWriter renderSpace = new StringWriter();
-        _textFormatter.Format(logEvent, renderSpace);
-        string formattedLogEvent = renderSpace.ToString();
-        Events.Enqueue(formattedLogEvent);
-
+        ArgumentNullException.ThrowIfNull(logEvent);
+        using var writer = new StringWriter();
+        _formatter.Format(logEvent, writer);
+        var entry = new LogEntry(writer.ToString(), logEvent.Level >= LogEventLevel.Error);
         if (Dispatcher.UIThread.CheckAccess())
-            Messages.Add(formattedLogEvent);
+            Messages.Add(entry);
         else
-            Dispatcher.UIThread.Post(() => Messages.Add(formattedLogEvent));
+            Dispatcher.UIThread.Post(() => Messages.Add(entry));
     }
 }

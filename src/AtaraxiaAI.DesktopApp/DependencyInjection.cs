@@ -10,6 +10,8 @@ using Microsoft.Extensions.Logging;
 using RunnethOverStudio.AppToolkit.Modules.Access;
 using RunnethOverStudio.AppToolkit.Modules.Messaging;
 using Serilog;
+using System;
+using System.IO;
 using System.Net;
 using System.Net.Http;
 
@@ -19,17 +21,17 @@ internal static class DependencyInjection
 {
     internal static IServiceCollection BuildServiceCollection()
     {
-        var fileLog = new RelocatableLogSink();
-        fileLog.UseDirectory(new JsonAppDataStore().ReadInternalStorageAsync()
-            .GetAwaiter().GetResult().UserStorageDirectory);
+        string logDirectory = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "AtaraxiaAI");
+        Directory.CreateDirectory(logDirectory);
         Serilog.Log.Logger = new LoggerConfiguration()
             .MinimumLevel.Verbose()
             .WriteTo.Sink(App.InMemorySink)
-            .WriteTo.Sink(fileLog)
+            .WriteTo.File(Path.Combine(logDirectory, "log-.txt"), rollingInterval: RollingInterval.Day,
+                retainedFileCountLimit: 1)
             .CreateLogger();
 
         IServiceCollection services = new ServiceCollection();
-        services.AddSingleton<IAppLogLocation>(fileLog);
 
         // Infrastructure
         services.AddLogging(configure => configure.AddSerilog(Serilog.Log.Logger))
@@ -82,8 +84,7 @@ internal static class DependencyInjection
             sp.GetRequiredService<IIntegrationFactory>(),
             sp.GetRequiredService<IAppDataStore>(),
             sp.GetRequiredService<IAudioPlayer>(),
-            sp.GetRequiredService<IntegrationDependencies>(),
-            sp.GetRequiredService<IAppLogLocation>()));
+            sp.GetRequiredService<IntegrationDependencies>()));
 
         return services;
     }

@@ -1,21 +1,25 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             xmlns:vm="clr-namespace:AtaraxiaAI.Presentation.Desktop.ViewModels"
+             xmlns:base="clr-namespace:AtaraxiaAI.Presentation.Desktop.Base"
              x:Class="AtaraxiaAI.Presentation.Desktop.Views.LogsView"
-			 xmlns:vm="clr-namespace:AtaraxiaAI.Presentation.Desktop.ViewModels"
-			 x:DataType="vm:LogsViewModel"
-			 Background="Transparent">
-
-	<Grid>
-		<ScrollViewer>
-			<TextBlock Margin="5"
-					   Background="Transparent"
-					   TextWrapping="Wrap"
-					   FontFamily="/Base/Assets/Fonts/ProFontWindows.ttf#ProFontWindows"
-					   Text="{Binding LogMessages}" />
-		</ScrollViewer>
-	</Grid>
-	
+             x:DataType="vm:LogsViewModel"
+             Background="Transparent">
+    <UserControl.Styles>
+        <Style Selector="TextBlock.error">
+            <Setter Property="Foreground" Value="OrangeRed" />
+        </Style>
+    </UserControl.Styles>
+    <ScrollViewer x:Name="LogScroller" Background="Transparent">
+        <ItemsControl ItemsSource="{Binding Messages}" Background="Transparent">
+            <ItemsControl.ItemTemplate>
+                <DataTemplate DataType="base:LogEntry">
+                    <TextBlock Margin="5,0" TextWrapping="Wrap"
+                               FontFamily="/Base/Assets/Fonts/ProFontWindows.ttf#ProFontWindows"
+                               Text="{Binding Text}"
+                               Classes.error="{Binding IsError}" />
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+    </ScrollViewer>
 </UserControl>

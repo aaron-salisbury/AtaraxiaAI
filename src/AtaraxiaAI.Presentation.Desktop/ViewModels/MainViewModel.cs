@@ -88,7 +88,6 @@ public partial class MainViewModel : BaseViewModel
         {
             await Task.Run(() => AI.Initiate(updateFrameAction: vision.SetVisionFrame));
             IsInitialized = AI.IsInitialized;
-            _settings.UserStorageDirectory = AI.GetUserStorageDirectory() ?? string.Empty;
         }
         catch (Exception ex)
         {

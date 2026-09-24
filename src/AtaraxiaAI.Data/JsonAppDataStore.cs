@@ -12,41 +12,39 @@ namespace AtaraxiaAI.Data
         private const string AppFile = "AtaraxiaAI.json";
         private const string StorageFile = "InternalStorage.json";
         private readonly string _storageFilePath;
+        private readonly string _dataDirectory;
 
         public JsonAppDataStore() : this(".") { }
 
-        public JsonAppDataStore(string internalDirectory)
+        public JsonAppDataStore(string internalDirectory) : this(internalDirectory,
+            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "AtaraxiaAI")) { }
+
+        public JsonAppDataStore(string internalDirectory, string dataDirectory)
         {
             _storageFilePath = Path.Combine(internalDirectory, StorageFile);
+            _dataDirectory = dataDirectory;
         }
 
         public async Task<InternalStorage> ReadInternalStorageAsync()
         {
-            var storage = await ReadAsync<InternalStorage>(_storageFilePath);
-            if (storage != null) return storage;
-
-            storage = new InternalStorage
+            string directory = _dataDirectory;
+            var previous = await ReadAsync<InternalStorage>(_storageFilePath);
+            string destination = Path.Combine(directory, AppFile);
+            if (previous?.UserStorageDirectory is { Length: > 0 } oldDirectory &&
+                !Path.GetFullPath(oldDirectory).Equals(Path.GetFullPath(directory), StringComparison.OrdinalIgnoreCase) &&
+                !File.Exists(destination))
             {
-                UserStorageDirectory = Path.Combine(
-                    Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "AtaraxiaAI")
-            };
-            await WriteAsync(_storageFilePath, storage);
-            return storage;
-        }
+                string source = Path.Combine(oldDirectory, AppFile);
+                if (File.Exists(source))
+                {
+                    Directory.CreateDirectory(directory);
+                    File.Copy(source, destination, overwrite: false);
+                }
+            }
 
-        public async Task<InternalStorage> UpdateInternalStorageAsync(InternalStorage storage, string newDirectory)
-        {
-            if (string.IsNullOrWhiteSpace(newDirectory))
-                throw new ArgumentException("A storage directory is required.", nameof(newDirectory));
-
-            Directory.CreateDirectory(newDirectory);
-            string source = Path.Combine(storage.UserStorageDirectory, AppFile);
-            string destination = Path.Combine(newDirectory, AppFile);
-            if (File.Exists(source) && !File.Exists(destination))
-                File.Move(source, destination);
-
-            storage = new InternalStorage { UserStorageDirectory = newDirectory };
-            await WriteAsync(_storageFilePath, storage);
+            var storage = new InternalStorage { UserStorageDirectory = directory };
+            if (previous?.UserStorageDirectory != directory)
+                await WriteAsync(_storageFilePath, storage);
             return storage;
         }
 

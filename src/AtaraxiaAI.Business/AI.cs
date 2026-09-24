@@ -20,7 +20,6 @@ namespace AtaraxiaAI.Business
         private int _shutdownRequested;
         private readonly IIntegrationFactory _integrations;
         private readonly IntegrationDependencies _dependencies;
-        private readonly IAppLogLocation? _logLocation;
         private InternalStorage InternalStorage { get; set; }
         private AppData AppData { get; set; }
 
@@ -46,7 +45,7 @@ namespace AtaraxiaAI.Business
         /// <param name="logger">The application's logger.</param>
         /// <param name="integrations">Provider selection for external services.</param>
         /// <param name="store">Local application data store.</param>
-        public AI(ILogger logger, IIntegrationFactory integrations, IAppDataStore store, IAudioPlayer audioPlayer, IntegrationDependencies dependencies, IAppLogLocation? logLocation = null)
+        public AI(ILogger logger, IIntegrationFactory integrations, IAppDataStore store, IAudioPlayer audioPlayer, IntegrationDependencies dependencies)
         {
             _isInitialized = false;
 
@@ -55,7 +54,6 @@ namespace AtaraxiaAI.Business
             _store = store ?? throw new ArgumentNullException(nameof(store));
             _audioPlayer = audioPlayer ?? throw new ArgumentNullException(nameof(audioPlayer));
             _dependencies = dependencies ?? throw new ArgumentNullException(nameof(dependencies));
-            _logLocation = logLocation;
 
         }
 
@@ -99,36 +97,8 @@ namespace AtaraxiaAI.Business
             InternalStorage = await _store.ReadInternalStorageAsync();
             AppData = await _store.ReadAppDataAsync(InternalStorage.UserStorageDirectory) ?? new AppData();
             _dependencies.AppData = AppData;
-            _logLocation?.UseDirectory(InternalStorage.UserStorageDirectory);
             await RefreshQuotasAsync();
             _logger.Information("... Application data loaded.");
-        }
-
-        /// <summary>
-        /// Get the directory path where the application data gets saved.
-        /// </summary>
-        public string GetUserStorageDirectory()
-        {
-            return InternalStorage?.UserStorageDirectory;
-        }
-
-        /// <summary>
-        /// Change the directory path where the application data gets saved.
-        /// Moves existing application data when the destination is empty.
-        /// If the destination already has data, both files are preserved and the destination becomes active.
-        /// </summary>
-        public async Task UpdateUserStorageDirectory(string newUserStorageDirectory)
-        {
-            InternalStorage = await _store.UpdateInternalStorageAsync(InternalStorage, newUserStorageDirectory);
-            _logLocation?.UseDirectory(InternalStorage.UserStorageDirectory);
-
-            // Update AppData in case the user is selecting a network location where they already had it saved.
-            AppData preExistingAppData = await _store.ReadAppDataAsync(newUserStorageDirectory);
-            if (preExistingAppData != null)
-            {
-                AppData = preExistingAppData;
-                _dependencies.AppData = AppData;
-            }
         }
 
         /// <summary>
