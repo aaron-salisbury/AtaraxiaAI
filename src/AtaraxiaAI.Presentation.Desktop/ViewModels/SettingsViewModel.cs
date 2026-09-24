@@ -5,7 +5,6 @@ using RunnethOverStudio.AppToolkit.Modules.ComponentModel;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using static AtaraxiaAI.Business.Base.Enums;
 
 namespace AtaraxiaAI.Presentation.Desktop.ViewModels;
@@ -44,21 +43,9 @@ public partial class SettingsViewModel : BaseViewModel
         }
     }
 
-    private string _userStorageDirectory;
-    public string UserStorageDirectory
-    {
-        get => _userStorageDirectory;
-        set
-        {
-            SetProperty(ref _userStorageDirectory, value);
-
-        }
-    }
-
     public SettingsViewModel(AI ai)
     {
         _ai = ai;
-        _userStorageDirectory = string.Empty;
 
         _visionCaptureSourceTypes = Enum.GetValues(typeof(VisionCaptureSources))
             .Cast<VisionCaptureSources>()
@@ -78,10 +65,5 @@ public partial class SettingsViewModel : BaseViewModel
         _selectedSoundCaptureSource = SoundCaptureSourceTypes
             .Where(cbi => cbi.Value == (int)SoundCaptureSources.SoundCard)
             .First();
-    }
-    public async Task ChangeUserStorageDirectoryAsync(string newDirectory)
-    {
-        await _ai.UpdateUserStorageDirectory(newDirectory);
-        UserStorageDirectory = newDirectory;
     }
 }
