@@ -19,13 +19,17 @@ internal static class DependencyInjection
 {
     internal static IServiceCollection BuildServiceCollection()
     {
+        var fileLog = new RelocatableLogSink();
+        fileLog.UseDirectory(new JsonAppDataStore().ReadInternalStorageAsync()
+            .GetAwaiter().GetResult().UserStorageDirectory);
         Serilog.Log.Logger = new LoggerConfiguration()
             .MinimumLevel.Verbose()
             .WriteTo.Sink(App.InMemorySink)
-            .WriteTo.File("log-.txt", rollingInterval: RollingInterval.Day, retainedFileCountLimit: 1)
+            .WriteTo.Sink(fileLog)
             .CreateLogger();
 
         IServiceCollection services = new ServiceCollection();
+        services.AddSingleton<IAppLogLocation>(fileLog);
 
         // Infrastructure
         services.AddLogging(configure => configure.AddSerilog(Serilog.Log.Logger))
@@ -69,12 +73,17 @@ internal static class DependencyInjection
 
     private static IServiceCollection ComposeBusinessIntegrations(this IServiceCollection services)
     {
+        services.AddSingleton(sp => new IntegrationDependencies(
+            sp.GetRequiredService<IHttpRequester>(), Log.Logger));
         services.AddSingleton<IIntegrationFactory, IntegrationFactory>();
+        services.AddSingleton<IAudioPlayer, WavAudioPlayer>();
         services.AddSingleton(sp => new AI(
             Log.Logger,
             sp.GetRequiredService<IIntegrationFactory>(),
-            sp.GetRequiredService<IHttpRequester>(),
-            sp.GetRequiredService<IAppDataStore>()));
+            sp.GetRequiredService<IAppDataStore>(),
+            sp.GetRequiredService<IAudioPlayer>(),
+            sp.GetRequiredService<IntegrationDependencies>(),
+            sp.GetRequiredService<IAppLogLocation>()));
 
         return services;
     }

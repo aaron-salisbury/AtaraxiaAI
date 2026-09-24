@@ -1,4 +1,3 @@
-using AtaraxiaAI.Business;
 using AtaraxiaAI.Business.Services;
 using AtaraxiaAI.Integrations.Services;
 using System.Globalization;
@@ -9,22 +8,24 @@ namespace AtaraxiaAI.Integrations
 {
     public sealed class IntegrationFactory : IIntegrationFactory
     {
-        public Task CreateModelsAsync() => ModelDownloader.CreateModels(AI.HttpRequester, AI.Logger);
-        public IGeneralIntelligence CreateGeneralIntelligence() => new GPT3GeneralIntelligence();
-        public IIPAddressService CreateIPAddressService() => new IPIFYIPAddressService();
-        public IIPLocationService CreateLocationService() => new IPAPIIPLocationService();
-        public IInsultService CreateInsultService() => new EvilInsultService();
-        public IJokeService CreateJokeService(bool dadJoke = false) => dadJoke ? new CanHazDadJokeService() : new Sv443JokeService();
-        public IObjectDetector CreateObjectDetector() => new YoloObjectDetector();
-        public IOpticalCharacterRecognizer CreateOpticalCharacterRecognizer() => new TesseractOCR();
+        private readonly IntegrationDependencies _dependencies;
+
+        public IntegrationFactory(IntegrationDependencies dependencies) => _dependencies = dependencies;
+        // No configured answer provider is shipped with the app yet.
+        public IAnswerProvider? CreateAnswerProvider() => null;
+        public IInsultService CreateInsultService() => new EvilInsultService(_dependencies);
+        public IJokeService CreateJokeService(bool dadJoke = false) => dadJoke ? new CanHazDadJokeService(_dependencies) : new Sv443JokeService(_dependencies);
+        public IObjectDetector CreateObjectDetector() => new YoloObjectDetector(_dependencies);
+        public IOpticalCharacterRecognizer CreateOpticalCharacterRecognizer() => new TesseractOCR(_dependencies);
         public IRecognizer CreateRecognizer(CultureInfo culture) => new SystemDotSpeechRecognizer(culture);
-        public IStreamingAvailabilityService CreateStreamingAvailabilityService() => new WatchModeStreamingAvailabilityService();
+        public IStreamingAvailabilityService CreateStreamingAvailabilityService() => new WatchModeStreamingAvailabilityService(_dependencies);
         public ISynthesizer CreateSynthesizer(SpeechSynthesizers synthesizer, CultureInfo culture) => synthesizer switch
         {
-            SpeechSynthesizers.GoogleCloud => new GoogleCloudSynthesizer(culture),
-            SpeechSynthesizers.MicrosoftAzure => new MicrosoftAzureSynthesizer(culture),
-            SpeechSynthesizers.MicrosoftBing => new MicrosoftBingSynthesizer(culture),
-            SpeechSynthesizers.SystemDotSpeech => new SystemDotSpeechSynthesizer(culture),
+            SpeechSynthesizers.Kokoro => new KokoroSynthesizer(culture, _dependencies),
+            SpeechSynthesizers.GoogleCloud => new GoogleCloudSynthesizer(culture, _dependencies),
+            SpeechSynthesizers.MicrosoftAzure => new MicrosoftAzureSynthesizer(culture, _dependencies),
+            SpeechSynthesizers.MicrosoftBing => new MicrosoftBingSynthesizer(culture, _dependencies),
+            SpeechSynthesizers.SystemDotSpeech => new SystemDotSpeechSynthesizer(culture, _dependencies),
             _ => throw new System.ArgumentOutOfRangeException(nameof(synthesizer))
         };
     }

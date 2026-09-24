@@ -13,4 +13,15 @@ jobs:
         with:
           dotnet-version: 10.0.x
       - run: dotnet build src/AtaraxiaAI.slnx --configuration Release
+      - name: Verify Kokoro native runtime in desktop host
+        shell: pwsh
+        run: |
+          $probe = Join-Path $env:RUNNER_TEMP 'kokoro-probe.txt'
+          $worker = 'src/AtaraxiaAI.DesktopApp/bin/Release/net10.0/KokoroWorker/AtaraxiaAI.KokoroWorker.exe'
+          if (-not (Test-Path $worker)) { throw 'Kokoro worker must be copied beside the desktop executable.' }
+          $process = Start-Process -FilePath $worker -ArgumentList '--probe', $probe -Wait -PassThru
+          Write-Host "Isolated Kokoro probe exit code: $($process.ExitCode)"
+          if (-not (Test-Path $probe)) { throw 'Kokoro probe did not enter Main.' }
+          Get-Content $probe
+          if ((Get-Content $probe -Raw).Trim() -ne 'ready') { exit 1 }
       - run: dotnet test src/AtaraxiaAI.slnx --configuration Release --no-build

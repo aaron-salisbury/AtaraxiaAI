@@ -1,4 +1,5 @@
 using AtaraxiaAI.Business.Services;
+using Serilog;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -13,22 +14,24 @@ namespace AtaraxiaAI.Business.Componants
             get { return _visionTask is { IsCompleted: false }; }
         }
 
+        private readonly ILogger _logger;
         private IObjectDetector _objectDetector;
         private IOpticalCharacterRecognizer _ocRecognizer;
         private Action<byte[]> _updateFrameAction;
         private CancellationTokenSource? _visionTokenSource;
         private Task? _visionTask;
 
-        internal VisionEngine(Action<byte[]> updateFrameAction)
+        internal VisionEngine(Action<byte[]> updateFrameAction, IIntegrationFactory integrations, ILogger logger)
         {
             _updateFrameAction = updateFrameAction;
-            _objectDetector = AI.Integrations.CreateObjectDetector();
-            _ocRecognizer = AI.Integrations.CreateOpticalCharacterRecognizer();
+            _logger = logger;
+            _objectDetector = integrations.CreateObjectDetector();
+            _ocRecognizer = integrations.CreateOpticalCharacterRecognizer();
         }
 
         public void Activate()
         {
-            AI.Logger.Information("Beginning object detection.");
+            _logger.Information("Beginning object detection.");
 
             Deactivate();
             CancellationTokenSource cancellation = new CancellationTokenSource();
@@ -53,7 +56,7 @@ namespace AtaraxiaAI.Business.Componants
             }
             catch (Exception ex)
             {
-                AI.Logger.Error(ex, "Vision capture failed while stopping.");
+                _logger.Error(ex, "Vision capture failed while stopping.");
             }
             finally
             {
@@ -61,7 +64,7 @@ namespace AtaraxiaAI.Business.Componants
                 cancellation.Dispose();
                 _visionTask = null;
                 _visionTokenSource = null;
-                AI.Logger.Information("Ended object detection.");
+                _logger.Information("Ended object detection.");
             }
         }
 

@@ -7,6 +7,9 @@ namespace AtaraxiaAI.Integrations.Services
 {
     internal class TesseractOCR : IOpticalCharacterRecognizer
     {
+        private readonly IntegrationDependencies _dependencies;
+
+        internal TesseractOCR(IntegrationDependencies dependencies) => _dependencies = dependencies;
         public string ReadTextFromImage(byte[] imageBuffer)
         {
             string text = null;
@@ -23,7 +26,7 @@ namespace AtaraxiaAI.Integrations.Services
             }
             catch (Exception e)
             {
-                AI.Logger.Error($"Failed to parse text from image: {e.Message}");
+                _dependencies.Logger.Error($"Failed to parse text from image: {e.Message}");
             }
 
             return text;

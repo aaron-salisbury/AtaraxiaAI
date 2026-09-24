@@ -3,46 +3,49 @@ using AtaraxiaAI.Business.Services;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace AtaraxiaAI.Business.Skills
 {
     internal class KnowledgeSkill
     {
         private SpeechEngine _speechEngine;
-        private IGeneralIntelligence _aGIService;
+        private IAnswerProvider? _answerProvider;
         private IStreamingAvailabilityService _streamingAvailabilityService;
 
-        internal KnowledgeSkill(SpeechEngine speechEngine)
+        internal KnowledgeSkill(SpeechEngine speechEngine, IIntegrationFactory integrations)
         {
             _speechEngine = speechEngine;
-            _aGIService = AI.Integrations.CreateGeneralIntelligence();
-            _streamingAvailabilityService = AI.Integrations.CreateStreamingAvailabilityService();
+            _answerProvider = integrations.CreateAnswerProvider();
+            _streamingAvailabilityService = integrations.CreateStreamingAvailabilityService();
         }
 
-        internal void AnswerMe(string message)
+        internal async Task AnswerMeAsync(string message, CancellationToken cancellationToken)
         {
-            if (_aGIService.IsAvailable())
+            if (_answerProvider?.IsAvailable() == true)
             {
-                string response = _aGIService.AnswerMe(message).Result;
+                string response = await _answerProvider.AnswerAsync(message);
 
                 if (!string.IsNullOrEmpty(response))
                 {
-                    _speechEngine.Speak(response);
+                    cancellationToken.ThrowIfCancellationRequested();
+                    await _speechEngine.SpeakAsync(response, cancellationToken);
                 }
             }
         }
 
-        internal void GetStreamOfferings(string title, bool isMovie)
+        internal async Task GetStreamOfferingsAsync(string title, bool isMovie, CancellationToken cancellationToken)
         {
             List<string> offerings;
 
             if (isMovie)
             {
-                offerings = _streamingAvailabilityService.GetMovieStreamOfferingsAsync(title).Result?.ToList();
+                offerings = (await _streamingAvailabilityService.GetMovieStreamOfferingsAsync(title))?.ToList();
             }
             else
             {
-                offerings = _streamingAvailabilityService.GetTVShowStreamOfferingsAsync(title).Result?.ToList();
+                offerings = (await _streamingAvailabilityService.GetTVShowStreamOfferingsAsync(title))?.ToList();
             }
 
             if (offerings != null && offerings.Count > 0)
@@ -70,7 +73,8 @@ namespace AtaraxiaAI.Business.Skills
                     }
                 }
 
-                _speechEngine.Speak(sb.ToString());
+                cancellationToken.ThrowIfCancellationRequested();
+                await _speechEngine.SpeakAsync(sb.ToString(), cancellationToken);
             }
         }
     }

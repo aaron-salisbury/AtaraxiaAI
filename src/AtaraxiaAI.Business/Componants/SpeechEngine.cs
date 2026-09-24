@@ -1,8 +1,9 @@
 using AtaraxiaAI.Business.Services;
-using NAudio.Wave;
+using System;
+using System.Collections.Generic;
 using System.Globalization;
-using System.IO;
 using System.Threading;
+using System.Threading.Tasks;
 using static AtaraxiaAI.Business.Base.Enums;
 
 namespace AtaraxiaAI.Business.Componants
@@ -11,103 +12,121 @@ namespace AtaraxiaAI.Business.Componants
     {
         public bool IsSpeechRecognitionRunning { get; set; }
 
-        private CultureInfo _culture;
+        private readonly CultureInfo _culture;
+        private readonly IIntegrationFactory _integrations;
+        private readonly IAudioPlayer _player;
+        private readonly IntegrationDependencies _providerContext;
+        private readonly CancellationTokenSource _playbackCancellation = new();
+        private int _commandQueued;
+        private readonly HashSet<SpeechSynthesizers> _failedSynthesizers = new();
+        private SpeechSynthesizers? _selectedSynthesizer;
         private OrchestrationEngine _commandLoop { get; set; }
         private IRecognizer _recognizer;
         private ISynthesizer _synthesizer;
 
-        internal SpeechEngine(CultureInfo culture = null)
+        internal SpeechEngine(IIntegrationFactory integrations, IAudioPlayer player, IntegrationDependencies providerContext, CultureInfo culture = null)
         {
+            _integrations = integrations;
+            _player = player;
+            _providerContext = providerContext;
             _culture = culture ?? new CultureInfo("en-US");
-            _commandLoop = new OrchestrationEngine(this);
-            _recognizer = AI.Integrations.CreateRecognizer(_culture);
+            _commandLoop = new OrchestrationEngine(this, integrations, providerContext.Logger);
+            _recognizer = _integrations.CreateRecognizer(_culture);
 
             SetSynthesizer();
         }
 
-        internal void Speak(string message)
+        internal async Task SpeakAsync(string message, CancellationToken cancellationToken)
         {
-            if (_synthesizer != null) // Could be null if cloud services are maxed and also not running on Windows.
+            if (_synthesizer == null) return;
+            try
             {
-                _recognizer.Pause();
-                bool spoke = _synthesizer.SpeakAsync(message).Result;
-                _recognizer.Unpause();
-
-                if (!spoke)
+                _providerContext.Logger.Information("Generating speech with {Provider}.", _selectedSynthesizer);
+                byte[] wav = await _synthesizer.SynthesizeAsync(message, cancellationToken);
+                if (wav == null || wav.Length == 0) return;
+                _providerContext.Logger.Information($"*Speaking* \"{message}\"");
+                await _player.PlayAsync(wav, cancellationToken);
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { }
+            catch (Exception error)
+            {
+                _providerContext.Logger.Error(error, "Speech synthesis or playback failed.");
+                if (_selectedSynthesizer is { } failed) _failedSynthesizers.Add(failed);
+                SetSynthesizer();
+                if (_synthesizer != null && !cancellationToken.IsCancellationRequested)
                 {
-                    SetSynthesizer();
-                    Speak(message);
+                    try
+                    {
+                        byte[] fallbackWav = await _synthesizer.SynthesizeAsync(message, cancellationToken);
+                        if (fallbackWav is { Length: > 0 }) await _player.PlayAsync(fallbackWav, cancellationToken);
+                    }
+                    catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { }
+                    catch (Exception fallbackError)
+                    {
+                        _providerContext.Logger.Error(fallbackError, "Fallback speech synthesis or playback failed.");
+                    }
                 }
             }
         }
 
-        internal void SetSynthesizer(SpeechSynthesizers? synthesizerRequest = null)
+        internal void SetSynthesizer(SpeechSynthesizers? requested = null)
         {
-            if (synthesizerRequest != null)
-            {
-                ISynthesizer requestedSynthesizer = null;
-
-                switch (synthesizerRequest.Value)
-                {
-                    case SpeechSynthesizers.GoogleCloud:
-                        requestedSynthesizer = AI.Integrations.CreateSynthesizer(SpeechSynthesizers.GoogleCloud, _culture);
-                        break;
-                    case SpeechSynthesizers.MicrosoftAzure:
-                        requestedSynthesizer = AI.Integrations.CreateSynthesizer(SpeechSynthesizers.MicrosoftAzure, _culture);
-                        break;
-                    case SpeechSynthesizers.MicrosoftBing:
-                        requestedSynthesizer = AI.Integrations.CreateSynthesizer(SpeechSynthesizers.MicrosoftBing, _culture);
-                        break;
-                    case SpeechSynthesizers.SystemDotSpeech:
-                        requestedSynthesizer = AI.Integrations.CreateSynthesizer(SpeechSynthesizers.SystemDotSpeech, _culture);
-                        break;
-                }
-
-                if (requestedSynthesizer != null && requestedSynthesizer.IsAvailable())
-                {
-                    _synthesizer = requestedSynthesizer;
-                    return;
-                }
-            }
-
-            ISynthesizer synthesizer = AI.Integrations.CreateSynthesizer(SpeechSynthesizers.GoogleCloud, _culture);
-            if (synthesizer.IsAvailable())
-            {
-                _synthesizer = synthesizer;
-                return;
-            }
-
-            synthesizer = AI.Integrations.CreateSynthesizer(SpeechSynthesizers.MicrosoftAzure, _culture);
-            if (synthesizer.IsAvailable())
-            {
-                _synthesizer = synthesizer;
-                return;
-            }
-
-            synthesizer = AI.Integrations.CreateSynthesizer(SpeechSynthesizers.MicrosoftBing, _culture);
-            if (synthesizer.IsAvailable())
-            {
-                _synthesizer = synthesizer;
-                return;
-            }
-
-            synthesizer = AI.Integrations.CreateSynthesizer(SpeechSynthesizers.SystemDotSpeech, _culture);
-            if (synthesizer.IsAvailable())
-            {
-                _synthesizer = synthesizer;
-                return;
-            }
-
+            SpeechSynthesizers[] choices = requested is { } selection
+                ? new[] { selection, SpeechSynthesizers.Kokoro, SpeechSynthesizers.SystemDotSpeech }
+                : new[] { SpeechSynthesizers.Kokoro, SpeechSynthesizers.SystemDotSpeech };
+            if (requested is { } retry) _failedSynthesizers.Remove(retry);
             _synthesizer = null;
-            AI.Logger.Warning("No speech synthesizer is currently available.");
+            _selectedSynthesizer = null;
+            foreach (var choice in choices)
+            {
+                if (_failedSynthesizers.Contains(choice)) continue;
+                try
+                {
+                    var candidate = _integrations.CreateSynthesizer(choice, _culture);
+                    if (candidate.IsAvailable())
+                    {
+                        _synthesizer = candidate;
+                        _selectedSynthesizer = choice;
+                        return;
+                    }
+                }
+                catch (Exception error) { _providerContext.Logger.Warning(error, "Speech provider {Provider} unavailable.", choice); }
+            }
+            _providerContext.Logger.Warning("No speech synthesizer is currently available.");
         }
+
+        private void OnSpeechRecognized(string message)
+        {
+            // System.Speech invokes this on its recognition callback. Return before stopping
+            // recognition, performing HTTP requests, or loading the synthesis model.
+            if (Interlocked.CompareExchange(ref _commandQueued, 1, 0) != 0) return;
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    if (IsSpeechRecognitionRunning)
+                        await _commandLoop.HeardAsync(message, _playbackCancellation.Token);
+                }
+                catch (OperationCanceledException) when (_playbackCancellation.IsCancellationRequested) { }
+                catch (Exception error)
+                {
+                    _providerContext.Logger.Error(error, "Failed to process spoken command.");
+                }
+                finally
+                {
+                    Interlocked.Exchange(ref _commandQueued, 0);
+                }
+            });
+        }
+
+        public void CancelPlayback() => _playbackCancellation.Cancel();
 
         public void ActivateSpeechRecognition()
         {
-            AI.Logger.Information("Beginning speech recognition.");
+            _providerContext.Logger.Information("Beginning speech recognition.");
 
             DeactivateSpeechRecognition();
-            _recognizer.Listen(_commandLoop.Heard);
+            _recognizer.Listen(OnSpeechRecognized);
             IsSpeechRecognitionRunning = true;
         }
 
@@ -116,7 +135,7 @@ namespace AtaraxiaAI.Business.Componants
             if (IsSpeechRecognitionRunning)
             {
                 _recognizer.Dispose();
-                AI.Logger.Information("Ended speech recognition.");
+                _providerContext.Logger.Information("Ended speech recognition.");
                 IsSpeechRecognitionRunning = false;
             }
         }
@@ -138,26 +157,5 @@ namespace AtaraxiaAI.Business.Componants
             }
         }
 
-        internal static void StreamSpeechToSpeaker(byte[] speechWavBuffer, string originalText = null)
-        {
-            using (var ms = new MemoryStream(speechWavBuffer))
-            using (var rdr = new WaveFileReader(ms))
-            using (var wavStream = WaveFormatConversionStream.CreatePcmStream(rdr))
-            using (var provider = new BlockAlignReductionStream(wavStream))
-            using (var waveOut = new WaveOutEvent())
-            {
-                if (!string.IsNullOrEmpty(originalText))
-                {
-                    AI.Logger.Information($"*Speaking* \"{originalText}\"");
-                }
-
-                waveOut.Init(provider);
-                waveOut.Play();
-                while (waveOut.PlaybackState == PlaybackState.Playing)
-                {
-                    Thread.Sleep(100);
-                }
-            }
-        }
     }
 }

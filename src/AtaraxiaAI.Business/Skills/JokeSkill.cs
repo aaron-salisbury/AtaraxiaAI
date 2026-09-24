@@ -2,43 +2,40 @@ using AtaraxiaAI.Business.Componants;
 using AtaraxiaAI.Business.Services;
 using AtaraxiaAI.Business.Services.Base.Models;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace AtaraxiaAI.Business.Skills
 {
     internal static class JokeSkill
     {
-        internal static void TellMeAJoke(SpeechEngine speechEngine)
+        internal static async Task TellMeAJokeAsync(SpeechEngine speechEngine, IIntegrationFactory integrations, CancellationToken cancellationToken)
         {
-            IJokeService jokeService = AI.Integrations.CreateJokeService();
-
-            Joke joke = jokeService.GetJokeAsync().Result;
-
-            SayJoke(joke, speechEngine);
+            IJokeService jokeService = integrations.CreateJokeService();
+            Joke joke = await jokeService.GetJokeAsync();
+            cancellationToken.ThrowIfCancellationRequested();
+            await SayJokeAsync(joke, speechEngine, cancellationToken);
         }
 
-        internal static void TellMeADadJoke(SpeechEngine speechEngine)
+        internal static async Task TellMeADadJokeAsync(SpeechEngine speechEngine, IIntegrationFactory integrations, CancellationToken cancellationToken)
         {
-            IJokeService dadJokeService = AI.Integrations.CreateJokeService(dadJoke: true);
-
-            Joke joke = dadJokeService.GetJokeAsync().Result;
-
-            SayJoke(joke, speechEngine);
+            IJokeService dadJokeService = integrations.CreateJokeService(dadJoke: true);
+            Joke joke = await dadJokeService.GetJokeAsync();
+            cancellationToken.ThrowIfCancellationRequested();
+            await SayJokeAsync(joke, speechEngine, cancellationToken);
         }
 
-        private static void SayJoke(Joke joke, SpeechEngine speechEngine)
+        private static async Task SayJokeAsync(Joke joke, SpeechEngine speechEngine, CancellationToken cancellationToken)
         {
-            if (joke != null)
+            if (joke == null) return;
+            if (joke.JokeType == Joke.JokeTypes.Single && !string.IsNullOrEmpty(joke.JokeLine))
             {
-                if (joke.JokeType == Joke.JokeTypes.Single && !string.IsNullOrEmpty(joke.JokeLine))
-                {
-                    speechEngine.Speak(joke.JokeLine);
-                }
-                else if (joke.JokeType == Joke.JokeTypes.TwoPart && !string.IsNullOrEmpty(joke.Setup) && !string.IsNullOrEmpty(joke.Delivery))
-                {
-                    speechEngine.Speak(joke.Setup);
-                    Thread.Sleep(500);
-                    speechEngine.Speak(joke.Delivery);
-                }
+                await speechEngine.SpeakAsync(joke.JokeLine, cancellationToken);
+            }
+            else if (joke.JokeType == Joke.JokeTypes.TwoPart && !string.IsNullOrEmpty(joke.Setup) && !string.IsNullOrEmpty(joke.Delivery))
+            {
+                await speechEngine.SpeakAsync(joke.Setup, cancellationToken);
+                await Task.Delay(500, cancellationToken);
+                await speechEngine.SpeakAsync(joke.Delivery, cancellationToken);
             }
         }
     }

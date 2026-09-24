@@ -58,7 +58,7 @@ public partial class SettingsViewModel : BaseViewModel
     public SettingsViewModel(AI ai)
     {
         _ai = ai;
-        _userStorageDirectory = _ai.GetUserStorageDirectory() ?? string.Empty;
+        _userStorageDirectory = string.Empty;
 
         _visionCaptureSourceTypes = Enum.GetValues(typeof(VisionCaptureSources))
             .Cast<VisionCaptureSources>()

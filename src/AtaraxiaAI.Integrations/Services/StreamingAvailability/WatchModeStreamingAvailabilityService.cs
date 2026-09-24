@@ -18,6 +18,7 @@ namespace AtaraxiaAI.Integrations.Services
     // https://api.watchmode.com/docs/#api-reference
     internal class WatchModeStreamingAvailabilityService : IStreamingAvailabilityService
     {
+        private readonly IntegrationDependencies _dependencies;
         private const string API_KEY = null; //TODO: Use your own key.
         private const int API_USAGE_MAX = 1000;
         private const string INTERNAL_DIRECTORY = "./";
@@ -27,9 +28,11 @@ namespace AtaraxiaAI.Integrations.Services
         private DateTime? _lastIDPullDate;
         private string _iDsPath;
 
-        internal WatchModeStreamingAvailabilityService()
+        internal WatchModeStreamingAvailabilityService(IntegrationDependencies dependencies)
         {
-            RefreshIDs();
+            _dependencies = dependencies;
+            // A missing API key must not trigger a network download during startup.
+            if (!string.IsNullOrWhiteSpace(API_KEY)) RefreshIDs();
         }
 
         public async Task<IEnumerable<string>> GetMovieStreamOfferingsAsync(string title)
@@ -57,7 +60,7 @@ namespace AtaraxiaAI.Integrations.Services
             {
                 string url = string.Format(URL_SOURCES_FORMAT, watchmodeID, API_KEY);
 
-                string json = await AI.HttpRequester.SendHTTPJsonRequestAsync(url);
+                string json = await _dependencies.HttpRequester.SendHTTPJsonRequestAsync(url);
 
                 if (!string.IsNullOrEmpty(json))
                 {
@@ -71,7 +74,7 @@ namespace AtaraxiaAI.Integrations.Services
                     }
                 }
 
-                AI.AppData.WatchmodeCurrentAPIUsage++;
+                _dependencies.AppData.WatchmodeCurrentAPIUsage++;
             }
 
             return sources;
@@ -86,7 +89,7 @@ namespace AtaraxiaAI.Integrations.Services
             // Set, then save.
 
             return !string.IsNullOrEmpty(API_KEY) &&
-                API_USAGE_MAX > AI.AppData.WatchmodeCurrentAPIUsage;
+                API_USAGE_MAX > _dependencies.AppData.WatchmodeCurrentAPIUsage;
         }
 
         private void RefreshIDs()
@@ -102,7 +105,7 @@ namespace AtaraxiaAI.Integrations.Services
 
                 if (!File.Exists(_iDsPath) || File.GetCreationTime(_iDsPath).Date != currentDate)
                 {
-                    AI.HttpRequester.DownloadFileAsync(FILE_ADDRESS, _iDsPath, true).Wait();
+                    _dependencies.HttpRequester.DownloadFileAsync(FILE_ADDRESS, _iDsPath, true).Wait();
                 }
             }
         }

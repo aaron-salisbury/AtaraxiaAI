@@ -1,9 +1,6 @@
-using AtaraxiaAI.Business;
-using AtaraxiaAI.Business.Componants;
 using AtaraxiaAI.Business.Services;
 using AtaraxiaAI.Integrations.DTOs;
 using NAudio.Wave;
-using RunnethOverStudio.AppToolkit.Modules.Access;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -41,8 +38,11 @@ namespace AtaraxiaAI.Integrations.Services
             Streaming
         }
 
-        internal MicrosoftBingSynthesizer(CultureInfo culture = null)
+        private readonly IntegrationDependencies _context;
+
+        internal MicrosoftBingSynthesizer(CultureInfo culture, IntegrationDependencies context)
         {
+            _context = context ?? throw new ArgumentNullException(nameof(context));
             _secureTrustedClientToken = ScrapeEdgeClientToken().Result;
 
             if (_secureTrustedClientToken != null)
@@ -54,7 +54,7 @@ namespace AtaraxiaAI.Integrations.Services
 
         bool ISynthesizer.IsAvailable() => _secureTrustedClientToken != null && !string.IsNullOrEmpty(_voice);
 
-        async Task<bool> ISynthesizer.SpeakAsync(string message)
+        async Task<byte[]> ISynthesizer.SynthesizeAsync(string message, CancellationToken cancellationToken)
         {
             using (ClientWebSocket webSocket = new ClientWebSocket())
             {
@@ -65,7 +65,7 @@ namespace AtaraxiaAI.Integrations.Services
                 await _slimlock.WaitAsync();
                 try
                 {
-                    CancellationToken cancelToken = CancellationToken.None;
+                    CancellationToken cancelToken = cancellationToken;
                     string requestID = GetConnectionID();
                     string url = string.Format(URL_SPEECH_FORMAT, new NetworkCredential(string.Empty, _secureTrustedClientToken).Password, GetConnectionID());
 
@@ -81,26 +81,22 @@ namespace AtaraxiaAI.Integrations.Services
                     await webSocket.SendAsync(new ArraySegment<byte>(Encoding.UTF8.GetBytes(json)), WebSocketMessageType.Text, true, cancelToken);
                     await webSocket.SendAsync(new ArraySegment<byte>(Encoding.UTF8.GetBytes(GetSSML(requestID, _voice, message))), WebSocketMessageType.Text, true, cancelToken);
 
-                    while (!audioTask.IsCompleted)
-                    {
-                        await Task.Delay(10);
-                    }
+                    await audioTask;
 
                     using (MemoryStream retMs = new MemoryStream())
                     using (MemoryStream ms = new MemoryStream(audioTask.Result.ToArray()))
                     using (Mp3FileReader reader = new Mp3FileReader(ms))
-                    using (RawSourceWaveStream rs = new RawSourceWaveStream(reader, new WaveFormat(16000, 1)))
-                    using (WaveStream pcmStream = WaveFormatConversionStream.CreatePcmStream(rs))
+                    using (WaveStream pcmStream = WaveFormatConversionStream.CreatePcmStream(reader))
                     {
                         WaveFileWriter.WriteWavFileToStream(retMs, pcmStream);
-                        SpeechEngine.StreamSpeechToSpeaker(retMs.ToArray(), message);
+                        return retMs.ToArray();
                     }
 
-                    return true;
+
                 }
                 catch (Exception e)
                 {
-                    AI.Logger.Error($"Failed to synthesize speech: {e.Message}");
+                    _context.Logger.Error($"Failed to synthesize speech: {e.Message}");
                 }
                 finally
                 {
@@ -108,10 +104,10 @@ namespace AtaraxiaAI.Integrations.Services
                 }
             }
 
-            return false;
+            return null;
         }
 
-        private static async Task<SecureString> ScrapeEdgeClientToken()
+        private async Task<SecureString> ScrapeEdgeClientToken()
         {
             const string URL_CONSTANTS = "https://raw.githubusercontent.com/rany2/edge-tts/master/src/edge_tts/constants.py";
             const string TOKEN_CONSTANT = "TRUSTED_CLIENT_TOKEN = \"";
@@ -121,7 +117,7 @@ namespace AtaraxiaAI.Integrations.Services
 
             try
             {
-                using (StreamReader stream = new StreamReader(new MemoryStream(await AI.HttpRequester.GetWebRequestSerializedAsync(URL_CONSTANTS))))
+                using (StreamReader stream = new StreamReader(new MemoryStream(await _context.HttpRequester.GetWebRequestSerializedAsync(URL_CONSTANTS))))
                 {
                     string response = stream.ReadToEnd();
 
@@ -155,13 +151,13 @@ namespace AtaraxiaAI.Integrations.Services
                     errorMessage += $": {error}";
                 }
 
-                AI.Logger.Error(errorMessage);
+                _context.Logger.Error(errorMessage);
             }
 
             return scrapedEdgeClientToken;
         }
 
-        private static async Task<string> GetBingVoiceForCulture(CultureInfo culture, SecureString secureToken, bool isFemale = true)
+        private async Task<string> GetBingVoiceForCulture(CultureInfo culture, SecureString secureToken, bool isFemale = true)
         {
             const string URL_VOICES_FORMAT = "https://speech.platform.bing.com/consumer/speech/synthesize/readaloud/voices/list?trustedclienttoken={0}";
 
@@ -174,7 +170,7 @@ namespace AtaraxiaAI.Integrations.Services
             else
             {
                 string url = string.Format(URL_VOICES_FORMAT, new NetworkCredential(string.Empty, secureToken).Password);
-                string json = await AI.HttpRequester.SendHTTPJsonRequestAsync(url);
+                string json = await _context.HttpRequester.SendHTTPJsonRequestAsync(url);
                 List<BingVoice> voices = JsonSerializer.Deserialize<List<BingVoice>>(json);
 
                 voice = voices
@@ -185,7 +181,7 @@ namespace AtaraxiaAI.Integrations.Services
 
             if (string.IsNullOrEmpty(voice))
             {
-                AI.Logger.Error("Failed to set Bing synthesizer voice.");
+                _context.Logger.Error("Failed to set Bing synthesizer voice.");
             }
 
             return voice;
@@ -209,7 +205,7 @@ namespace AtaraxiaAI.Integrations.Services
             sSMLBuilder.Append("<speak version='1.0' xmlns='http://www.w3.org/2001/10/synthesis' xml:lang='en-US'>");
             sSMLBuilder.Append($"<voice name='{voice}'>");
             sSMLBuilder.Append($"<prosody pitch='{PITCH}' rate='{RATE}' volume='{VOLUME}'>");
-            sSMLBuilder.Append(sentence);
+            sSMLBuilder.Append(SecurityElement.Escape(sentence));
             sSMLBuilder.Append("</prosody></voice></speak>");
 
             return sSMLBuilder.ToString();
@@ -237,7 +233,7 @@ namespace AtaraxiaAI.Integrations.Services
                     continue;
                 }
 
-                buffer.Write(array, (int)buffer.Position, receive.Count);
+                buffer.Write(array, 0, receive.Count);
                 if (receive.EndOfMessage == false)
                 {
                     continue;

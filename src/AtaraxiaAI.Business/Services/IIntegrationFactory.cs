@@ -6,10 +6,7 @@ namespace AtaraxiaAI.Business.Services
 {
     public interface IIntegrationFactory
     {
-        Task CreateModelsAsync();
-        IGeneralIntelligence CreateGeneralIntelligence();
-        IIPAddressService CreateIPAddressService();
-        IIPLocationService CreateLocationService();
+        IAnswerProvider? CreateAnswerProvider();
         IInsultService CreateInsultService();
         IJokeService CreateJokeService(bool dadJoke = false);
         IObjectDetector CreateObjectDetector();

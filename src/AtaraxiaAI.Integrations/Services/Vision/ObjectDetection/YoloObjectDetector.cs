@@ -1,4 +1,3 @@
-using AtaraxiaAI.Business;
 using AtaraxiaAI.Business.Services;
 using Emgu.CV;
 using Emgu.CV.Dnn;
@@ -17,13 +16,15 @@ namespace AtaraxiaAI.Integrations.Services
 {
     internal class YoloObjectDetector : IObjectDetector
     {
+        private readonly IntegrationDependencies _dependencies;
         public VisionCaptureSources CaptureSource { get; set; }
 
         private Net _net;
         private string[] _classLabels;
 
-        internal YoloObjectDetector(VisionCaptureSources captureSource = VisionCaptureSources.Screen)
+        internal YoloObjectDetector(IntegrationDependencies dependencies, VisionCaptureSources captureSource = VisionCaptureSources.Screen)
         {
+            _dependencies = dependencies;
             CaptureSource = captureSource;
             _classLabels = ModelAssets.CocoLabels;
 
@@ -37,13 +38,13 @@ namespace AtaraxiaAI.Integrations.Services
             }
             catch (Exception e)
             {
-                AI.Logger.Error($"Failed to build neural net: {e.Message}");
+                _dependencies.Logger.Error($"Failed to build neural net: {e.Message}");
             }
         }
 
         void IObjectDetector.Initiate(Action<byte[]> updateFrameAction, CancellationToken cancelToken)
         {
-            AI.Logger.Information("Initializing vision engine.");
+            _dependencies.Logger.Information("Initializing vision engine.");
 
             double? widthFactor = null;
             double? heightFactor = null;
@@ -56,10 +57,10 @@ namespace AtaraxiaAI.Integrations.Services
                 Display captureDisplay = displays.First();
 
                 using IScreenCapture screenCapture = screenCaptureService.GetScreenCapture(captureDisplay);
-                CaptureZone captureZone = screenCapture.RegisterCaptureZone(0, 0, screenCapture.Display.Width, screenCapture.Display.Height);
+                ICaptureZone captureZone = screenCapture.RegisterCaptureZone(0, 0, screenCapture.Display.Width, screenCapture.Display.Height);
                 while (!cancelToken.IsCancellationRequested)
                 {
-                    Image<Bgra, byte> frame = GetScreenshotImage(screenCapture, captureZone).Result;
+                    using Image<Bgra, byte> frame = GetScreenshotImage(screenCapture, captureZone).Result;
 
                     if (widthFactor == null || heightFactor == null)
                     {
@@ -178,22 +179,26 @@ namespace AtaraxiaAI.Integrations.Services
             return frameOut.ToJpegData();
         }
 
-        private static Task<Image<Bgra, byte>> GetScreenshotImage(IScreenCapture screenCapture, CaptureZone captureZone)
+        private static Task<Image<Bgra, byte>> GetScreenshotImage(IScreenCapture screenCapture, ICaptureZone captureZone)
         {
             return Task.Run(() =>
             {
                 screenCapture.CaptureScreen();
 
-                lock (captureZone.Buffer)
+                using IDisposable captureLock = captureZone.Lock();
+                byte[] buffer = captureZone.RawBuffer.ToArray();
+
+                GCHandle pinnedArray = GCHandle.Alloc(buffer, GCHandleType.Pinned);
+                try
                 {
-                    GCHandle pinnedArray = GCHandle.Alloc(captureZone.Buffer, GCHandleType.Pinned);
-                    IntPtr pointer = pinnedArray.AddrOfPinnedObject();
-
-                    Image<Bgra, byte> cvImage = new Image<Bgra, byte>(captureZone.Width, captureZone.Height, captureZone.Stride, pointer);
-
+                    using var cvImage = new Image<Bgra, byte>(captureZone.Width, captureZone.Height,
+                        captureZone.Stride, pinnedArray.AddrOfPinnedObject());
+                    // The image constructor retains the pointer. Copy while it is still pinned.
+                    return cvImage.Copy();
+                }
+                finally
+                {
                     pinnedArray.Free();
-
-                    return cvImage;
                 }
             });
         }

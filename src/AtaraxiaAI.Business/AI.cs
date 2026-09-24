@@ -14,13 +14,15 @@ namespace AtaraxiaAI.Business
 {
     public class AI : ObservableObject
     {
-        internal static ILogger Logger { get; private set; }
         private readonly IAppDataStore _store;
+        private readonly IAudioPlayer _audioPlayer;
+        private readonly ILogger _logger;
         private int _shutdownRequested;
-        internal static IIntegrationFactory Integrations { get; private set; }
-        internal static IHttpRequester HttpRequester { get; private set; }
-        internal static InternalStorage InternalStorage { get; private set; }
-        internal static AppData AppData { get; private set; }
+        private readonly IIntegrationFactory _integrations;
+        private readonly IntegrationDependencies _dependencies;
+        private readonly IAppLogLocation? _logLocation;
+        private InternalStorage InternalStorage { get; set; }
+        private AppData AppData { get; set; }
 
         private bool _isInitialized;
         public bool IsInitialized
@@ -36,7 +38,6 @@ namespace AtaraxiaAI.Business
         public SpeechEngine SpeechEngine { get; set; }
         public VisionEngine VisionEngine { get; set; }
 
-        internal SystemInfo SystemInfo { get; set; }
         internal Robot Peripherals { get; set; }
 
         /// <summary>
@@ -44,23 +45,18 @@ namespace AtaraxiaAI.Business
         /// </summary>
         /// <param name="logger">The application's logger.</param>
         /// <param name="integrations">Provider selection for external services.</param>
-        /// <param name="httpRequester">HTTP requests used by integration adapters.</param>
         /// <param name="store">Local application data store.</param>
-        public AI(ILogger logger, IIntegrationFactory integrations, IHttpRequester httpRequester, IAppDataStore store)
+        public AI(ILogger logger, IIntegrationFactory integrations, IAppDataStore store, IAudioPlayer audioPlayer, IntegrationDependencies dependencies, IAppLogLocation? logLocation = null)
         {
             _isInitialized = false;
 
-            Logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            Integrations = integrations ?? throw new ArgumentNullException(nameof(integrations));
-            HttpRequester = httpRequester ?? throw new ArgumentNullException(nameof(httpRequester));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _integrations = integrations ?? throw new ArgumentNullException(nameof(integrations));
             _store = store ?? throw new ArgumentNullException(nameof(store));
-            // Settings reads the storage directory during window construction.
-            Task.Run(async () =>
-            {
-                InternalStorage = await _store.ReadInternalStorageAsync();
-                AppData = await _store.ReadAppDataAsync(InternalStorage.UserStorageDirectory) ?? new AppData();
-                await RefreshQuotasAsync();
-            }).GetAwaiter().GetResult();
+            _audioPlayer = audioPlayer ?? throw new ArgumentNullException(nameof(audioPlayer));
+            _dependencies = dependencies ?? throw new ArgumentNullException(nameof(dependencies));
+            _logLocation = logLocation;
+
         }
 
         /// <summary>
@@ -69,37 +65,43 @@ namespace AtaraxiaAI.Business
         /// <param name="updateFrameAction">The function that should be called and passed the frame after the vision model processes it.</param>
         public async Task Initiate(Action<byte[]> updateFrameAction)
         {
-            Logger.Information("Initializing ...");
-            Logger.Information("... Gathering system data.");
-            SystemInfo = new SystemInfo();
-
-            Logger.Information("... Mocking peripherals.");
+            _logger.Information("Initializing ...");
+            await InitializeStorageAsync();
+            if (Volatile.Read(ref _shutdownRequested) != 0) return;
+            _logger.Information("... Mocking peripherals.");
             Peripherals = new Robot { AutoDelay = 250 };
 
-            Logger.Information("... Acquiring region data.");
-            IIPLocationService locationService = AI.Integrations.CreateLocationService();
-            Location location = await locationService.GetLocationByIPAsync(SystemInfo.IPAddress);
-
-            Logger.Information("... Verifying ML models.");
-            await Integrations.CreateModelsAsync();
+            _logger.Information("... Using bundled YOLO model. Kokoro will load when speech is requested.");
 
             if (Volatile.Read(ref _shutdownRequested) != 0) return;
 
-            Logger.Information("... Initializing vision engine.");
-            VisionEngine = new VisionEngine(updateFrameAction);
+            _logger.Information("... Initializing vision engine.");
+            VisionEngine = new VisionEngine(updateFrameAction, _integrations, _logger);
 
-            Logger.Information("... Initializing speech engine.");
-            SpeechEngine = new SpeechEngine();
+            _logger.Information("... Initializing speech engine.");
+            SpeechEngine = new SpeechEngine(_integrations, _audioPlayer, _dependencies);
 
             if (Volatile.Read(ref _shutdownRequested) != 0)
             {
                 VisionEngine?.Deactivate();
+                SpeechEngine?.CancelPlayback();
                 SpeechEngine?.DeactivateSpeechRecognition();
                 return;
             }
 
             IsInitialized = true;
-            Logger.Information("Initialization complete.");
+            _logger.Information("Initialization complete.");
+        }
+
+        internal async Task InitializeStorageAsync()
+        {
+            _logger.Information("... Loading application data.");
+            InternalStorage = await _store.ReadInternalStorageAsync();
+            AppData = await _store.ReadAppDataAsync(InternalStorage.UserStorageDirectory) ?? new AppData();
+            _dependencies.AppData = AppData;
+            _logLocation?.UseDirectory(InternalStorage.UserStorageDirectory);
+            await RefreshQuotasAsync();
+            _logger.Information("... Application data loaded.");
         }
 
         /// <summary>
@@ -118,12 +120,14 @@ namespace AtaraxiaAI.Business
         public async Task UpdateUserStorageDirectory(string newUserStorageDirectory)
         {
             InternalStorage = await _store.UpdateInternalStorageAsync(InternalStorage, newUserStorageDirectory);
+            _logLocation?.UseDirectory(InternalStorage.UserStorageDirectory);
 
             // Update AppData in case the user is selecting a network location where they already had it saved.
             AppData preExistingAppData = await _store.ReadAppDataAsync(newUserStorageDirectory);
             if (preExistingAppData != null)
             {
                 AppData = preExistingAppData;
+                _dependencies.AppData = AppData;
             }
         }
 
@@ -133,7 +137,7 @@ namespace AtaraxiaAI.Business
         public void Shutdown()
         {
             if (Interlocked.Exchange(ref _shutdownRequested, 1) != 0) return;
-            Logger.Information("Shutting down.");
+            _logger.Information("Shutting down.");
 
             try
             {
@@ -141,20 +145,23 @@ namespace AtaraxiaAI.Business
             }
             catch (Exception ex)
             {
-                Logger.Error(ex, "Failed to stop vision capture.");
+                _logger.Error(ex, "Failed to stop vision capture.");
             }
 
             try
             {
+                SpeechEngine?.CancelPlayback();
                 SpeechEngine?.DeactivateSpeechRecognition();
             }
             catch (Exception ex)
             {
-                Logger.Error(ex, "Failed to stop speech recognition.");
+                _logger.Error(ex, "Failed to stop speech recognition.");
             }
 
-            _store.SaveAppDataAsync(AppData, InternalStorage.UserStorageDirectory).GetAwaiter().GetResult();
+            if (AppData != null && InternalStorage != null)
+                _store.SaveAppDataAsync(AppData, InternalStorage.UserStorageDirectory).GetAwaiter().GetResult();
         }
+
         private async Task RefreshQuotasAsync()
         {
             DateTime today = DateTime.Today;

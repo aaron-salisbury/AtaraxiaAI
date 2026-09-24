@@ -1,8 +1,5 @@
-using AtaraxiaAI.Business;
-using AtaraxiaAI.Business.Componants;
 using AtaraxiaAI.Business.Services;
 using Google.Cloud.TextToSpeech.V1;
-using Google.Protobuf;
 using System;
 using System.Globalization;
 using System.Threading.Tasks;
@@ -26,9 +23,12 @@ namespace AtaraxiaAI.Integrations.Services
         private AudioConfig _audioConfig;
         private VoiceSelectionParams _voice;
 
-        internal GoogleCloudSynthesizer(CultureInfo culture = null)
+        private readonly IntegrationDependencies _context;
+
+        internal GoogleCloudSynthesizer(CultureInfo culture, IntegrationDependencies context)
         {
-            if (AI.AppData.GoogleCloudSpeechToTextByteCount < FREE_LIMIT && CREDENTIALS_SET)
+            _context = context ?? throw new ArgumentNullException(nameof(context));
+            if (_context.AppData.GoogleCloudSpeechToTextByteCount < FREE_LIMIT && CREDENTIALS_SET)
             {
                 culture = culture ?? new CultureInfo("en-US");
                 _audioConfig = new AudioConfig { AudioEncoding = AudioEncoding.Linear16 };
@@ -45,36 +45,17 @@ namespace AtaraxiaAI.Integrations.Services
             }
         }
 
-        bool ISynthesizer.IsAvailable() => AI.AppData.GoogleCloudSpeechToTextByteCount < FREE_LIMIT && CREDENTIALS_SET;
+        bool ISynthesizer.IsAvailable() => _context.AppData.GoogleCloudSpeechToTextByteCount < FREE_LIMIT && CREDENTIALS_SET;
 
-        async Task<bool> ISynthesizer.SpeakAsync(string message)
+        async Task<byte[]> ISynthesizer.SynthesizeAsync(string message, System.Threading.CancellationToken cancellationToken)
         {
-            bool isSuccessful = false;
-
-            if (AI.AppData.GoogleCloudSpeechToTextByteCount + message.Length <= FREE_LIMIT)
-            {
-                SynthesisInput input = new SynthesisInput { Text = message };
-                SynthesizeSpeechResponse response = await _synthesizer.SynthesizeSpeechAsync(input, _voice, _audioConfig);
-
-                try
-                {
-                    SpeechEngine.StreamSpeechToSpeaker(response.AudioContent.ToByteArray(), message);
-                    isSuccessful = true;
-                }
-                catch (Exception e)
-                {
-                    AI.Logger.Error($"Failed to synthesize speech: {e.Message}");
-                }
-
-                AI.AppData.GoogleCloudSpeechToTextByteCount += input.ToByteArray().Length;
-            }
-            else
-            {
-                // If we're this close to the limit, just max it out and don't bother to try again until next month.
-                AI.AppData.GoogleCloudSpeechToTextByteCount = FREE_LIMIT;
-            }
-
-            return isSuccessful;
+            cancellationToken.ThrowIfCancellationRequested();
+            if (_context.AppData.GoogleCloudSpeechToTextByteCount + message.Length > FREE_LIMIT) return null;
+            var input = new SynthesisInput { Text = message };
+            var response = await _synthesizer.SynthesizeSpeechAsync(input, _voice, _audioConfig);
+            cancellationToken.ThrowIfCancellationRequested();
+            _context.AppData.GoogleCloudSpeechToTextByteCount += message.Length;
+            return response.AudioContent.ToByteArray();
         }
     }
 }
