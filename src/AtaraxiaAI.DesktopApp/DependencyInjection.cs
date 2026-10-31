@@ -21,8 +21,7 @@ internal static class DependencyInjection
 {
     internal static IServiceCollection BuildServiceCollection()
     {
-        string logDirectory = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "AtaraxiaAI");
+        string logDirectory = JsonAppDataStore.DefaultDataDirectory;
         Directory.CreateDirectory(logDirectory);
         Serilog.Log.Logger = new LoggerConfiguration()
             .MinimumLevel.Verbose()

@@ -20,7 +20,6 @@ namespace AtaraxiaAI.Business
         private int _shutdownRequested;
         private readonly IIntegrationFactory _integrations;
         private readonly IntegrationDependencies _dependencies;
-        private InternalStorage InternalStorage { get; set; }
         private AppData AppData { get; set; }
 
         private bool _isInitialized;
@@ -94,8 +93,7 @@ namespace AtaraxiaAI.Business
         internal async Task InitializeStorageAsync()
         {
             _logger.Information("... Loading application data.");
-            InternalStorage = await _store.ReadInternalStorageAsync();
-            AppData = await _store.ReadAppDataAsync(InternalStorage.UserStorageDirectory) ?? new AppData();
+            AppData = await _store.ReadAppDataAsync() ?? new AppData();
             _dependencies.AppData = AppData;
             await RefreshQuotasAsync();
             _logger.Information("... Application data loaded.");
@@ -128,8 +126,8 @@ namespace AtaraxiaAI.Business
                 _logger.Error(ex, "Failed to stop speech recognition.");
             }
 
-            if (AppData != null && InternalStorage != null)
-                _store.SaveAppDataAsync(AppData, InternalStorage.UserStorageDirectory).GetAwaiter().GetResult();
+            if (AppData != null)
+                _store.SaveAppDataAsync(AppData).GetAwaiter().GetResult();
         }
 
         private async Task RefreshQuotasAsync()
@@ -150,7 +148,7 @@ namespace AtaraxiaAI.Business
                 AppData.WatchmodeCurrentAPIUsage = 0;
                 changed = true;
             }
-            if (changed) await _store.SaveAppDataAsync(AppData, InternalStorage.UserStorageDirectory);
+            if (changed) await _store.SaveAppDataAsync(AppData);
         }
     }
 }

@@ -3,7 +3,6 @@ using AtaraxiaAI.Data;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.IO;
-using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace AtaraxiaAI.Tests;
@@ -24,38 +23,36 @@ public sealed class JsonAppDataStoreTests
     public void Cleanup() => Directory.Delete(_root, recursive: true);
 
     [TestMethod]
-    public async Task MigratesLegacyStorageToDefaultWithoutDeletingOriginal()
+    public async Task ReadsNothingBeforeFirstSave()
     {
-        string oldDirectory = Path.Combine(_root, "saved");
-        string defaultDirectory = Path.Combine(_root, "default");
-        Directory.CreateDirectory(oldDirectory);
-        await File.WriteAllTextAsync(Path.Combine(_root, "InternalStorage.json"),
-            JsonSerializer.Serialize(new InternalStorage { UserStorageDirectory = oldDirectory }));
-        await File.WriteAllTextAsync(Path.Combine(oldDirectory, "AtaraxiaAI.json"),
-            "{\"WatchmodeCurrentAPIUsage\":42}");
+        var store = new JsonAppDataStore(Path.Combine(_root, "data"));
 
-        var store = new JsonAppDataStore(_root, defaultDirectory);
-        var storage = await store.ReadInternalStorageAsync();
-
-        Assert.AreEqual(defaultDirectory, storage.UserStorageDirectory);
-        Assert.AreEqual(42, (await store.ReadAppDataAsync(defaultDirectory)).WatchmodeCurrentAPIUsage);
-        Assert.IsTrue(File.Exists(Path.Combine(oldDirectory, "AtaraxiaAI.json")));
-        Assert.AreEqual(defaultDirectory, (await store.ReadInternalStorageAsync()).UserStorageDirectory);
+        Assert.IsNull(await store.ReadAppDataAsync());
     }
 
     [TestMethod]
-    public async Task MigrationPreservesExistingDefaultData()
+    public async Task SavedDataRoundTrips()
     {
-        string oldDirectory = Path.Combine(_root, "saved");
-        string defaultDirectory = Path.Combine(_root, "default");
-        var store = new JsonAppDataStore(_root, defaultDirectory);
-        await store.SaveAppDataAsync(new AppData { WatchmodeCurrentAPIUsage = 1 }, oldDirectory);
-        await store.SaveAppDataAsync(new AppData { WatchmodeCurrentAPIUsage = 17 }, defaultDirectory);
-        await File.WriteAllTextAsync(Path.Combine(_root, "InternalStorage.json"),
-            JsonSerializer.Serialize(new InternalStorage { UserStorageDirectory = oldDirectory }));
+        string directory = Path.Combine(_root, "data");
+        var store = new JsonAppDataStore(directory);
+        var resetsOn = new DateTime(2026, 11, 15);
 
-        await store.ReadInternalStorageAsync();
+        await store.SaveAppDataAsync(new AppData { WatchmodeCurrentAPIUsage = 42, WatchmodeQuotaResetsOn = resetsOn });
+        var data = await new JsonAppDataStore(directory).ReadAppDataAsync();
 
-        Assert.AreEqual(17, (await store.ReadAppDataAsync(defaultDirectory)).WatchmodeCurrentAPIUsage);
+        Assert.AreEqual(42, data.WatchmodeCurrentAPIUsage);
+        Assert.AreEqual(resetsOn, data.WatchmodeQuotaResetsOn);
+        Assert.IsTrue(File.Exists(Path.Combine(directory, "AtaraxiaAI.json")));
+    }
+
+    [TestMethod]
+    public async Task DeleteRemovesSavedData()
+    {
+        var store = new JsonAppDataStore(Path.Combine(_root, "data"));
+        await store.SaveAppDataAsync(new AppData { WatchmodeCurrentAPIUsage = 1 });
+
+        store.DeleteAppData();
+
+        Assert.IsNull(await store.ReadAppDataAsync());
     }
 }

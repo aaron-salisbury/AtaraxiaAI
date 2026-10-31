@@ -28,7 +28,19 @@ public partial class LogsView : UserControl
         }
     }
 
-    private void OnMessagesChanged(object? sender, NotifyCollectionChangedEventArgs e) => ScrollToNewest();
+    private void OnMessagesChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    {
+        // Follow new entries only while the user is already viewing the newest ones, so scrolling up to read stays put.
+        // Checked before layout runs, so the extent still reflects the content the user was looking at.
+        if (e.Action == NotifyCollectionChangedAction.Add && IsScrolledToEnd())
+            ScrollToNewest();
+    }
+
+    private bool IsScrolledToEnd()
+    {
+        const double tolerance = 4;
+        return LogScroller.Offset.Y + LogScroller.Viewport.Height >= LogScroller.Extent.Height - tolerance;
+    }
 
     private void ScrollToNewest() => Dispatcher.UIThread.Post(() => LogScroller.ScrollToEnd(), DispatcherPriority.Loaded);
 }
