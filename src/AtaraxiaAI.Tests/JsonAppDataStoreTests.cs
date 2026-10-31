@@ -1,14 +1,8 @@
-using AtaraxiaAI.Business;
 using AtaraxiaAI.Business.Persistence;
-using AtaraxiaAI.Business.Services;
 using AtaraxiaAI.Data;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using RunnethOverStudio.AppToolkit.Modules.Access;
-using Serilog;
 using System;
 using System.IO;
-using System.Reflection;
-using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace AtaraxiaAI.Tests;
@@ -29,86 +23,36 @@ public sealed class JsonAppDataStoreTests
     public void Cleanup() => Directory.Delete(_root, recursive: true);
 
     [TestMethod]
-    public async Task ReadsExistingFileNamesAndProperties()
+    public async Task ReadsNothingBeforeFirstSave()
     {
-        string directory = Path.Combine(_root, "saved");
-        Directory.CreateDirectory(directory);
-        await File.WriteAllTextAsync(Path.Combine(_root, "InternalStorage.json"),
-            JsonSerializer.Serialize(new InternalStorage { UserStorageDirectory = directory }));
-        await File.WriteAllTextAsync(Path.Combine(directory, "AtaraxiaAI.json"),
-            "{\"MonthOfLastCloudServicesRoll\":7,\"WatchmodeCurrentAPIUsage\":42}");
+        var store = new JsonAppDataStore(Path.Combine(_root, "data"));
 
-        var store = new JsonAppDataStore(_root);
-        var storage = await store.ReadInternalStorageAsync();
-        var data = await store.ReadAppDataAsync(storage.UserStorageDirectory);
+        Assert.IsNull(await store.ReadAppDataAsync());
+    }
 
-        Assert.AreEqual(directory, storage.UserStorageDirectory);
-        Assert.AreEqual(7, data.MonthOfLastCloudServicesRoll);
+    [TestMethod]
+    public async Task SavedDataRoundTrips()
+    {
+        string directory = Path.Combine(_root, "data");
+        var store = new JsonAppDataStore(directory);
+        var resetsOn = new DateTime(2026, 11, 15);
+
+        await store.SaveAppDataAsync(new AppData { WatchmodeCurrentAPIUsage = 42, WatchmodeQuotaResetsOn = resetsOn });
+        var data = await new JsonAppDataStore(directory).ReadAppDataAsync();
+
         Assert.AreEqual(42, data.WatchmodeCurrentAPIUsage);
+        Assert.AreEqual(resetsOn, data.WatchmodeQuotaResetsOn);
+        Assert.IsTrue(File.Exists(Path.Combine(directory, "AtaraxiaAI.json")));
     }
 
     [TestMethod]
-    public async Task MovingStoragePreservesAnExistingDestinationFile()
+    public async Task DeleteRemovesSavedData()
     {
-        string oldDirectory = Path.Combine(_root, "old");
-        string newDirectory = Path.Combine(_root, "new");
-        var store = new JsonAppDataStore(_root);
-        await store.SaveAppDataAsync(new AppData { WatchmodeCurrentAPIUsage = 1 }, oldDirectory);
-        await store.SaveAppDataAsync(new AppData { WatchmodeCurrentAPIUsage = 17 }, newDirectory);
+        var store = new JsonAppDataStore(Path.Combine(_root, "data"));
+        await store.SaveAppDataAsync(new AppData { WatchmodeCurrentAPIUsage = 1 });
 
-        var moved = await store.UpdateInternalStorageAsync(
-            new InternalStorage { UserStorageDirectory = oldDirectory }, newDirectory);
+        store.DeleteAppData();
 
-        Assert.AreEqual(newDirectory, moved.UserStorageDirectory);
-        Assert.AreEqual(17, (await store.ReadAppDataAsync(newDirectory)).WatchmodeCurrentAPIUsage);
-        Assert.AreEqual(1, (await store.ReadAppDataAsync(oldDirectory)).WatchmodeCurrentAPIUsage);
-        Assert.AreEqual(newDirectory, (await store.ReadInternalStorageAsync()).UserStorageDirectory);
-    }
-
-    [TestMethod]
-    public async Task ChangingStorageThroughAiPreservesPreviousDataWhenDestinationExists()
-    {
-        string oldDirectory = Path.Combine(_root, "old");
-        string newDirectory = Path.Combine(_root, "new");
-        var store = new JsonAppDataStore(_root);
-        await store.SaveAppDataAsync(new AppData { WatchmodeCurrentAPIUsage = 1 }, oldDirectory);
-        await store.SaveAppDataAsync(new AppData { WatchmodeCurrentAPIUsage = 17 }, newDirectory);
-        await store.UpdateInternalStorageAsync(new InternalStorage { UserStorageDirectory = oldDirectory }, oldDirectory);
-
-        var dependencies = new IntegrationDependencies(
-            DispatchProxy.Create<IHttpRequester, UnusedDependency>(),
-            new LoggerConfiguration().CreateLogger());
-        var ai = new AI(new LoggerConfiguration().CreateLogger(),
-            DispatchProxy.Create<IIntegrationFactory, UnusedDependency>(),
-            store,
-            DispatchProxy.Create<IAudioPlayer, UnusedDependency>(), dependencies);
-
-        await ai.InitializeStorageAsync();
-        await ai.UpdateUserStorageDirectory(newDirectory);
-
-        Assert.AreEqual(1, (await store.ReadAppDataAsync(oldDirectory)).WatchmodeCurrentAPIUsage);
-        Assert.AreEqual(17, (await store.ReadAppDataAsync(newDirectory)).WatchmodeCurrentAPIUsage);
-        Assert.AreEqual(17, dependencies.AppData.WatchmodeCurrentAPIUsage);
-    }
-
-    public class UnusedDependency : DispatchProxy
-    {
-        protected override object? Invoke(MethodInfo? targetMethod, object?[]? args) =>
-            throw new InvalidOperationException("This dependency should not be invoked by the storage test.");
-    }
-
-    [TestMethod]
-    public async Task MovesAppDataWhenDestinationIsEmpty()
-    {
-        string oldDirectory = Path.Combine(_root, "old");
-        string newDirectory = Path.Combine(_root, "new");
-        var store = new JsonAppDataStore(_root);
-        await store.SaveAppDataAsync(new AppData { WatchmodeCurrentAPIUsage = 9 }, oldDirectory);
-
-        await store.UpdateInternalStorageAsync(
-            new InternalStorage { UserStorageDirectory = oldDirectory }, newDirectory);
-
-        Assert.IsFalse(File.Exists(Path.Combine(oldDirectory, "AtaraxiaAI.json")));
-        Assert.AreEqual(9, (await store.ReadAppDataAsync(newDirectory)).WatchmodeCurrentAPIUsage);
+        Assert.IsNull(await store.ReadAppDataAsync());
     }
 }

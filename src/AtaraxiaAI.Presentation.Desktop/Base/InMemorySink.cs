@@ -1,46 +1,50 @@
 using Avalonia.Threading;
 using Serilog.Core;
 using Serilog.Events;
-using Serilog.Formatting;
 using Serilog.Formatting.Display;
 using System;
-using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
 using System.Globalization;
 using System.IO;
 
 namespace AtaraxiaAI.Presentation.Desktop.Base;
 
+public sealed record LogEntry(string Text, bool IsError);
+
 public class InMemorySink : ILogEventSink
 {
-    readonly ITextFormatter _textFormatter = new MessageTemplateTextFormatter("{Timestamp:HH:mm:ss} {Level:u3} | {Message:lj}{NewLine}{Exception}", CultureInfo.InvariantCulture);
+    public const int DefaultCapacity = 500;
 
-    private readonly ConcurrentQueue<string> _events;
-    public ConcurrentQueue<string> Events
+    private readonly MessageTemplateTextFormatter _formatter = new(
+        "{Timestamp:HH:mm:ss} {Level:u3} | {Message:lj}{NewLine}{Exception}", CultureInfo.InvariantCulture);
+    private readonly int _capacity;
+
+    public InMemorySink(int capacity = DefaultCapacity)
     {
-        get { return _events; }
+        ArgumentOutOfRangeException.ThrowIfLessThan(capacity, 1);
+        _capacity = capacity;
     }
 
-    public ObservableCollection<string> Messages { get; set; }
-
-    public InMemorySink()
-    {
-        _events = new ConcurrentQueue<string>();
-        Messages = new ObservableCollection<string>();
-    }
+    /// <summary>The most recent log entries, oldest first. Older entries are dropped beyond the capacity.</summary>
+    public ObservableCollection<LogEntry> Messages { get; } = new();
 
     public void Emit(LogEvent logEvent)
     {
-        if (logEvent == null) { throw new ArgumentNullException("LogEvent"); }
-
-        StringWriter renderSpace = new StringWriter();
-        _textFormatter.Format(logEvent, renderSpace);
-        string formattedLogEvent = renderSpace.ToString();
-        Events.Enqueue(formattedLogEvent);
-
+        ArgumentNullException.ThrowIfNull(logEvent);
+        using var writer = new StringWriter();
+        _formatter.Format(logEvent, writer);
+        // The template separates the message from any exception with a newline; trim the one left at the end.
+        var entry = new LogEntry(writer.ToString().TrimEnd(), logEvent.Level >= LogEventLevel.Error);
         if (Dispatcher.UIThread.CheckAccess())
-            Messages.Add(formattedLogEvent);
+            Add(entry);
         else
-            Dispatcher.UIThread.Post(() => Messages.Add(formattedLogEvent));
+            Dispatcher.UIThread.Post(() => Add(entry));
+    }
+
+    private void Add(LogEntry entry)
+    {
+        Messages.Add(entry);
+        while (Messages.Count > _capacity)
+            Messages.RemoveAt(0);
     }
 }
