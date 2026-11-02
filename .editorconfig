@@ -19,6 +19,7 @@ tab_width = 4
 csharp_style_namespace_declarations = file_scoped:suggestion
 
 # Using directives
+dotnet_diagnostic.IDE0005.severity = warning
 dotnet_sort_system_directives_first = false
 dotnet_separate_import_directive_groups = false
 csharp_using_directive_placement = outside_namespace:suggestion
@@ -33,10 +34,15 @@ dotnet_style_qualification_for_event = false:suggestion
 dotnet_style_predefined_type_for_locals_parameters_members = true:suggestion
 dotnet_style_predefined_type_for_member_access = true:suggestion
 
-# Type inference
-csharp_style_var_for_built_in_types = false:suggestion
-csharp_style_var_when_type_is_apparent = false:suggestion
-csharp_style_var_elsewhere = false:suggestion
+# Prefer explicit types instead of var
+csharp_style_var_for_built_in_types = false
+csharp_style_var_when_type_is_apparent = false
+csharp_style_var_elsewhere = false
+dotnet_diagnostic.IDE0008.severity = warning
+
+# Prefer target-typed new expressions
+csharp_style_implicit_object_creation_when_type_is_apparent = true
+dotnet_diagnostic.IDE0090.severity = warning
 
 # Primary constructors
 csharp_style_prefer_primary_constructors = false:suggestion
@@ -73,10 +79,10 @@ csharp_style_expression_bodied_lambdas = when_on_single_line:suggestion
 csharp_style_expression_bodied_local_functions = false:suggestion
 
 # Braces
-csharp_prefer_braces = true:suggestion
-csharp_new_line_before_open_brace = all
+csharp_prefer_braces = true:warning
 
 # New lines
+csharp_new_line_before_open_brace = all
 csharp_new_line_before_else = true
 csharp_new_line_before_catch = true
 csharp_new_line_before_finally = true
@@ -113,9 +119,54 @@ csharp_space_between_method_declaration_parameter_list_parentheses = false
 csharp_space_between_parentheses = false
 csharp_space_between_square_brackets = false
 
+# Naming conventions remain IDE suggestions because dotnet format cannot Fix All IDE1006 at solution scope.
+# All constants: UPPER_SNAKE_CASE
+dotnet_naming_rule.constants.symbols = constants
+dotnet_naming_rule.constants.style = upper_snake_case
+dotnet_naming_rule.constants.severity = suggestion
+dotnet_naming_symbols.constants.applicable_kinds = field
+dotnet_naming_symbols.constants.applicable_accessibilities = *
+dotnet_naming_symbols.constants.required_modifiers = const
+dotnet_naming_style.upper_snake_case.capitalization = all_upper
+dotnet_naming_style.upper_snake_case.word_separator = _
+
+# Private static readonly fields: UPPER_SNAKE_CASE
+dotnet_naming_rule.private_static_readonly_fields.symbols = private_static_readonly_fields
+dotnet_naming_rule.private_static_readonly_fields.style = upper_snake_case
+dotnet_naming_rule.private_static_readonly_fields.severity = suggestion
+dotnet_naming_symbols.private_static_readonly_fields.applicable_kinds = field
+dotnet_naming_symbols.private_static_readonly_fields.applicable_accessibilities = private
+dotnet_naming_symbols.private_static_readonly_fields.required_modifiers = static, readonly
+
+# Private mutable static fields: s_fieldName
+dotnet_naming_rule.private_static_fields.symbols = private_static_fields
+dotnet_naming_rule.private_static_fields.style = static_camel_case
+dotnet_naming_rule.private_static_fields.severity = suggestion
+dotnet_naming_symbols.private_static_fields.applicable_kinds = field
+dotnet_naming_symbols.private_static_fields.applicable_accessibilities = private
+dotnet_naming_symbols.private_static_fields.required_modifiers = static
+dotnet_naming_style.static_camel_case.required_prefix = s_
+dotnet_naming_style.static_camel_case.capitalization = camel_case
+
+# Private instance fields: _fieldName
+dotnet_naming_rule.private_instance_fields.symbols = private_instance_fields
+dotnet_naming_rule.private_instance_fields.style = underscore_camel_case
+dotnet_naming_rule.private_instance_fields.severity = suggestion
+dotnet_naming_symbols.private_instance_fields.applicable_kinds = field
+dotnet_naming_symbols.private_instance_fields.applicable_accessibilities = private
+dotnet_naming_symbols.private_instance_fields.required_modifiers =
+dotnet_naming_style.underscore_camel_case.required_prefix = _
+dotnet_naming_style.underscore_camel_case.capitalization = camel_case
+
+# XML documentation
+dotnet_diagnostic.CS1591.severity = suggestion
+
 # CommunityToolkit.Mvvm
 # Keep ObservableProperty on backing fields rather than requiring generated partial properties.
 dotnet_diagnostic.MVVMTK0042.severity = none
 
-# XML documentation
-dotnet_diagnostic.CS1591.severity = suggestion
+# MSTest
+# Warning severity lets 'dotnet format' apply these rules' code fixes automatically.
+dotnet_diagnostic.MSTEST0037.severity = warning # Use proper 'Assert' methods
+dotnet_diagnostic.MSTEST0049.severity = warning # Flow TestContext.CancellationToken to async operations
+dotnet_diagnostic.MSTEST0068.severity = warning # Use 'Assert' instead of 'CollectionAssert'

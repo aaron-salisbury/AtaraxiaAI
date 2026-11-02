@@ -1,24 +1,52 @@
-Ataraxia AI
-===============
+# AtaraxiaAI
 
-Building out a virtual assistant and familiarizing myself with Machine Learning along the way.
+AtaraxiaAI is a .NET desktop sandbox for experimenting with machine learning and AI capabilities in a virtual-assistant interface. It brings speech, vision, and small service-backed skills together in an Avalonia UI. The project is experimental; its features and platform support are still evolving.
 
-Three-tier C# application that uses the Avalonia framework, following the MVVM design pattern, for the presentation layer and .NET libraries for the business & data layers.
+## What is here now
 
-Building
---------
+- An Avalonia desktop app with vision, sound, settings, and log panels.
+- Object detection on screen or webcam frames using bundled YOLOv3-tiny assets, plus a Tesseract OCR adapter.
+- Windows `System.Speech` recognition for the fixed **“Hey Robot”** command set: jokes, dad jokes, an insult response, and a prototype streaming-availability lookup.
+- Speech output through a local Kokoro worker, with Windows system speech as a fallback. Other speech providers have adapters but are not selected by default.
+- Local JSON storage for application counters and a rolling log file under the user's local application data directory.
 
-Run `dotnet build/cake.cs` from the repository root to restore, build (Release), verify the Kokoro speech worker, and test the solution; it uses [Cake.Sdk](https://cakebuild.net/docs/running-builds/runners/cake-sdk), pinned in `global.json`. Pass script arguments after `--` to change what runs, for example `dotnet build/cake.cs -- --target=Build --configuration=Debug` (without the `--`, `dotnet` consumes `--configuration` itself and the build stays in Release). There is no hosted CI, because GitHub Actions minutes are metered.
+The app does not currently configure a general question-answering provider. The streaming command also uses a hard-coded title, so it is a prototype rather than a general search feature. Vision capture uses Windows-specific DX11 and DirectShow implementations, and speech recognition uses Windows `System.Speech`; the desktop UI framework itself is cross-platform.
 
-Attributions
-------------
+## Build and run
 
-Application icon "[AI](https://www.flaticon.com/free-icon/ai_1693857)" by photo3idea_studio.
+Install the .NET 10 SDK (see [`global.json`](global.json)). From the repository root:
 
-Background image "[High Tech Magma Texture Background](https://freesvg.org/high-tech-magma-texture-background)" by OpenClipart.
+```powershell
+dotnet build/cake.cs
+dotnet run --project src/AtaraxiaAI.DesktopApp/AtaraxiaAI.DesktopApp.csproj
+```
 
-System log font "[ProFont](https://www.fontsquirrel.com/fonts/ProFontWindows)" by SQ Software.
+The Cake script restores and builds the solution in Release, probes the copied Kokoro worker and its native ONNX runtime, then runs the tests. To run a different target or configuration, pass script arguments after `--`:
 
-General font "[Heavy Data](https://www.fontsquirrel.com/fonts/Heavy-Data)" by Vic Fieger.
+```powershell
+dotnet build/cake.cs -- --target=Build --configuration=Debug
+```
 
-Streaming data powered by "[Watchmode](https://www.watchmode.com/)".
+The app's active capture and speech paths are currently most suitable for Windows. Vision requires access to a screen or webcam; speech input requires a compatible audio device. Some service-backed skills require network access and provider credentials. There is no hosted CI; the Cake script is the local verification path.
+
+## Repository layout
+
+| Path | Responsibility |
+| --- | --- |
+| `src/AtaraxiaAI.Business` | Application behavior and service contracts |
+| `src/AtaraxiaAI.Data` | Local JSON persistence |
+| `src/AtaraxiaAI.Integrations` | ML models and external service adapters |
+| `src/AtaraxiaAI.Presentation.Desktop` | Avalonia views and view models |
+| `src/AtaraxiaAI.DesktopApp` | Executable and dependency composition |
+| `src/AtaraxiaAI.KokoroWorker` | Separate local speech-synthesis process |
+| `src/AtaraxiaAI.Tests` | Automated tests |
+
+See [product specification](docs/product_specification.md) for the current scope and [development conventions](docs/development_conventions.md) for contributor guidance.
+
+## Attributions
+
+- Application icon: [AI](https://www.flaticon.com/free-icon/ai_1693857) by photo3idea_studio.
+- Background image: [High Tech Magma Texture Background](https://freesvg.org/high-tech-magma-texture-background) by OpenClipart.
+- System log font: [ProFont](https://www.fontsquirrel.com/fonts/ProFontWindows) by SQ Software.
+- General font: [Heavy Data](https://www.fontsquirrel.com/fonts/Heavy-Data) by Vic Fieger.
+- Streaming data: [Watchmode](https://www.watchmode.com/).

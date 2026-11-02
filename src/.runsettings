@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<RunSettings>
+    <RunConfiguration>
+      <!-- For Visual Studio's Test Explorer, which otherwise creates TestResults in the solution root. Command-line runs
+           (dotnet test, Cake) use Microsoft.Testing.Platform, which ignores this; HomiliaMessenger.Tests.csproj points them at
+           the test project's bin folder instead. -->
+      <ResultsDirectory>%temp%\TestResults</ResultsDirectory>
+  </RunConfiguration>
+</RunSettings>
