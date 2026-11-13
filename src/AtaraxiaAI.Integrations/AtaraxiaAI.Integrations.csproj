@@ -30,7 +30,6 @@
     <Content Include="Detection\Vision\YOLO\yolov3.cfg" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="Detection\Vision\YOLO\yolov3-tiny.cfg" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="Detection\Vision\YOLO\yolov3-tiny.weights" CopyToOutputDirectory="PreserveNewest" />
-    <Content Include="Detection\Voice\Vosk\vosk-model-small-en-us-0.15.zip" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>

@@ -90,7 +90,7 @@ public partial class MainViewModel : BaseViewModel
             IsInitialized = AI.IsInitialized;
             if (IsInitialized)
             {
-                await _settings.ApplyStoredSpeechSettingsAsync();
+                await _settings.ApplyStoredSettingsAsync();
             }
         }
         catch (Exception ex)
@@ -132,10 +132,10 @@ public partial class MainViewModel : BaseViewModel
             SoundIcon = "MicOff";
             AI.SpeechEngine.DeactivateSpeechRecognition();
         }
-        else
+        else if (AI?.SpeechEngine.ActivateSpeechRecognition() == true)
         {
+            // Listening can fail to start, for example without an audio input device; the reason is logged.
             SoundIcon = "Microphone";
-            AI?.SpeechEngine.ActivateSpeechRecognition();
         }
     }
 
@@ -163,7 +163,7 @@ public partial class MainViewModel : BaseViewModel
         else
         {
             SettingsIcon = "Cog";
-            _settings.RefreshSpeechSource();
+            _settings.RefreshSources();
             ShowSettings = true;
         }
     }

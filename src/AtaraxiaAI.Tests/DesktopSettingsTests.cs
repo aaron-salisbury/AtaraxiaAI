@@ -61,4 +61,39 @@ public sealed class DesktopSettingsTests
         File.WriteAllText(path, "{ \"Speech\": { \"Source\": \"MicrosoftBing\" } }");
         Assert.AreEqual(new SpeechSettings(), new DesktopSettings(_directory).GetSpeechSettings());
     }
+
+    [TestMethod]
+    public void WithNothingStoredSystemRecognitionIsTheDefault()
+    {
+        Assert.AreEqual(new RecognitionSettings(SpeechRecognizers.SystemDotSpeech), new DesktopSettings(_directory).GetRecognitionSettings());
+    }
+
+    [TestMethod]
+    public void RecognitionAndSpeechChoicesAreKeptSeparately()
+    {
+        DesktopSettings settings = new(_directory);
+        SpeechSettings speech = new(SpeechSynthesizers.Kokoro, VoiceGenderFilter.Female, "bf_emma");
+
+        settings.SetRecognitionSettings(new RecognitionSettings(SpeechRecognizers.Vosk));
+        settings.SetSpeechSettings(speech);
+
+        DesktopSettings reopened = new(_directory);
+        Assert.AreEqual(new RecognitionSettings(SpeechRecognizers.Vosk), reopened.GetRecognitionSettings());
+        Assert.AreEqual(speech, reopened.GetSpeechSettings());
+    }
+
+    [TestMethod]
+    public void AnOutdatedSectionDoesNotLoseTheOthers()
+    {
+        Directory.CreateDirectory(_directory);
+        File.WriteAllText(
+            Path.Combine(_directory, "desktop-settings.json"),
+            "{ \"Recognition\": { \"Source\": \"Vosk\" }, \"Speech\": { \"Source\": \"MicrosoftBing\" } }");
+        DesktopSettings settings = new(_directory);
+
+        Assert.AreEqual(new SpeechSettings(), settings.GetSpeechSettings());
+        settings.SetSpeechSettings(new SpeechSettings(SpeechSynthesizers.Kokoro));
+
+        Assert.AreEqual(new RecognitionSettings(SpeechRecognizers.Vosk), new DesktopSettings(_directory).GetRecognitionSettings());
+    }
 }

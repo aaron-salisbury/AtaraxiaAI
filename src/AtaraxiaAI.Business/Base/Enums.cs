@@ -25,6 +25,15 @@ public class Enums
         Kokoro
     }
 
+    public enum SpeechRecognizers
+    {
+        [Display(Name = "System")]
+        SystemDotSpeech,
+
+        [Display(Name = "Vosk")]
+        Vosk
+    }
+
     public enum VoiceGender
     {
         Female,

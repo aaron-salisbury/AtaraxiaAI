@@ -163,6 +163,99 @@ public sealed class SpeechSelectionTests
         CollectionAssert.AreEqual(new[] { ADAM.Id }, kokoro.SpokenVoices);
     }
 
+    [TestMethod]
+    public void UsersChooseSystemOrVoskRecognitionInThatOrder()
+    {
+        CollectionAssert.AreEqual(
+            new[] { SpeechRecognizers.SystemDotSpeech, SpeechRecognizers.Vosk },
+            new List<SpeechRecognizers>(SpeechEngine.SelectableRecognizers));
+    }
+
+    [TestMethod]
+    public async Task SelectingARecognizerWhileListeningPreparesItAndKeepsListeningWithIt()
+    {
+        FakeIntegrationFactory factory = new();
+        List<double> reported = [];
+        factory.Recognizers[SpeechRecognizers.Vosk].Prepare = (progress, _) =>
+        {
+            progress?.Report(100);
+            return Task.FromResult(true);
+        };
+        SpeechEngine engine = Create(factory);
+        Assert.IsTrue(engine.ActivateSpeechRecognition());
+
+        bool selected = await engine.SelectRecognizerAsync(SpeechRecognizers.Vosk, new ImmediateProgress(reported.Add), TestContext.CancellationToken);
+
+        Assert.IsTrue(selected);
+        Assert.AreEqual(SpeechRecognizers.Vosk, engine.ActiveRecognizer);
+        Assert.IsTrue(engine.IsSpeechRecognitionRunning);
+        Assert.IsFalse(factory.Recognizers[SpeechRecognizers.SystemDotSpeech].IsListening);
+        Assert.IsTrue(factory.Recognizers[SpeechRecognizers.Vosk].IsListening);
+        CollectionAssert.AreEqual(new[] { 100d }, reported);
+    }
+
+    [TestMethod]
+    public async Task ARecognizerThatCannotBePreparedLeavesTheCurrentOneListening()
+    {
+        FakeIntegrationFactory factory = new();
+        factory.Recognizers[SpeechRecognizers.Vosk].Prepare = (_, _) => throw new InvalidOperationException("offline");
+        SpeechEngine engine = Create(factory);
+        engine.ActivateSpeechRecognition();
+
+        bool selected = await engine.SelectRecognizerAsync(SpeechRecognizers.Vosk, cancellationToken: TestContext.CancellationToken);
+
+        Assert.IsFalse(selected);
+        Assert.AreEqual(SpeechRecognizers.SystemDotSpeech, engine.ActiveRecognizer);
+        Assert.IsTrue(factory.Recognizers[SpeechRecognizers.SystemDotSpeech].IsListening);
+        Assert.IsFalse(factory.Recognizers[SpeechRecognizers.Vosk].IsListening);
+    }
+
+    [TestMethod]
+    public async Task ACanceledRecognizerSelectionThrowsAndLeavesTheCurrentOneInUse()
+    {
+        FakeIntegrationFactory factory = new();
+        TaskCompletionSource started = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        factory.Recognizers[SpeechRecognizers.Vosk].Prepare = async (_, token) =>
+        {
+            started.TrySetResult();
+            await Task.Delay(Timeout.Infinite, token);
+            return true;
+        };
+        SpeechEngine engine = Create(factory);
+        using CancellationTokenSource cancel = new();
+
+        Task<bool> selecting = engine.SelectRecognizerAsync(SpeechRecognizers.Vosk, cancellationToken: cancel.Token);
+        await started.Task.WaitAsync(TestContext.CancellationToken);
+        cancel.Cancel();
+
+        await Assert.ThrowsAsync<OperationCanceledException>(() => selecting);
+        Assert.AreEqual(SpeechRecognizers.SystemDotSpeech, engine.ActiveRecognizer);
+    }
+
+    [TestMethod]
+    public async Task TheChosenCaptureSourceCarriesOverToANewRecognizer()
+    {
+        FakeIntegrationFactory factory = new();
+        SpeechEngine engine = Create(factory);
+
+        engine.UpdateCaptureSource(SoundCaptureSources.Microphone);
+        await engine.SelectRecognizerAsync(SpeechRecognizers.Vosk, cancellationToken: TestContext.CancellationToken);
+
+        Assert.AreEqual(SoundCaptureSources.Microphone, factory.Recognizers[SpeechRecognizers.SystemDotSpeech].CaptureSource);
+        Assert.AreEqual(SoundCaptureSources.Microphone, factory.Recognizers[SpeechRecognizers.Vosk].CaptureSource);
+    }
+
+    [TestMethod]
+    public void ListeningThatCannotStartIsReportedRatherThanThrown()
+    {
+        FakeIntegrationFactory factory = new();
+        factory.Recognizer.ListenFailure = new InvalidOperationException("No audio input device.");
+        SpeechEngine engine = Create(factory);
+
+        Assert.IsFalse(engine.ActivateSpeechRecognition());
+        Assert.IsFalse(engine.IsSpeechRecognitionRunning);
+    }
+
     private static SpeechEngine Create(FakeIntegrationFactory factory)
     {
         return new SpeechEngine(factory, TestDependencies.SilentPlayer, TestDependencies.Create());

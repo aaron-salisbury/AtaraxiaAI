@@ -4,6 +4,10 @@ namespace AtaraxiaAI.Presentation.Desktop.Settings;
 /// <remarks>Follows QmlativDevAssistant's desktop settings.</remarks>
 public interface IDesktopSettings
 {
+    RecognitionSettings GetRecognitionSettings();
+
+    void SetRecognitionSettings(RecognitionSettings settings);
+
     SpeechSettings GetSpeechSettings();
 
     void SetSpeechSettings(SpeechSettings settings);

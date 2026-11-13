@@ -40,9 +40,9 @@ public sealed class SpeechCommandTests
         // This must return even while the joke request has not completed.
         await Task.Run(() => factory.Recognizer.Fire("Hey Robot, tell me a joke."), TestContext.CancellationToken).WaitAsync(TIMEOUT, TestContext.CancellationToken);
         await fetching.Task.WaitAsync(TIMEOUT, TestContext.CancellationToken);
-        Assert.AreEqual(0, factory.Recognizer.PauseCalls);
+        Assert.AreEqual(0, factory.Recognizer.StopCalls);
         pendingJoke.SetResult(new Joke { JokeType = Joke.JokeTypes.Single, JokeLine = "A joke" });
         await played.Task.WaitAsync(TIMEOUT, TestContext.CancellationToken);
-        Assert.AreEqual(0, factory.Recognizer.PauseCalls);
+        Assert.AreEqual(0, factory.Recognizer.StopCalls);
     }
 }

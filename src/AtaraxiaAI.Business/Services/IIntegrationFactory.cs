@@ -10,7 +10,7 @@ public interface IIntegrationFactory
     IJokeService CreateJokeService(bool dadJoke = false);
     IObjectDetector CreateObjectDetector();
     IOpticalCharacterRecognizer CreateOpticalCharacterRecognizer();
-    IRecognizer CreateRecognizer(CultureInfo culture);
+    IRecognizer CreateRecognizer(SpeechRecognizers recognizer, CultureInfo culture);
     IStreamingAvailabilityService CreateStreamingAvailabilityService();
     ISynthesizer CreateSynthesizer(SpeechSynthesizers synthesizer, CultureInfo culture);
 }

@@ -23,7 +23,7 @@ public static class DependencyInjection
         services.AddSingleton<IIntegrationFactory>(provider => new IntegrationFactory(
             provider.GetRequiredService<IntegrationDependencies>(),
             provider.GetRequiredService<IHttpClientFactory>(),
-            Path.Combine(applicationDataDirectory, "Speech", "Kokoro")));
+            Path.Combine(applicationDataDirectory, "Speech")));
 
         return services;
     }
