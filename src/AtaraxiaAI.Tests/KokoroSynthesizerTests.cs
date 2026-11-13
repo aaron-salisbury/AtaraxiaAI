@@ -10,7 +10,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
-using System.Net.Http;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
@@ -31,7 +30,7 @@ public sealed class KokoroSynthesizerTests
     public async Task Prepare_DownloadsAndVerifiesTheModelOnceReportingProgress()
     {
         using TestFolder folder = new();
-        using Server server = new(MODEL);
+        using FakeModelServer server = new(MODEL);
         using KokoroSynthesizer kokoro = Create(folder.Path, server);
         List<double> progress = [];
         Assert.IsFalse(kokoro.IsAvailable());
@@ -51,7 +50,7 @@ public sealed class KokoroSynthesizerTests
     public async Task Prepare_CorruptOrFailedDownloadsAreNeverAvailableAndCanBeRetried()
     {
         using TestFolder folder = new();
-        using Server server = new([.. Enumerable.Repeat((byte)'x', MODEL.Length)]);
+        using FakeModelServer server = new([.. Enumerable.Repeat((byte)'x', MODEL.Length)]);
         using KokoroSynthesizer kokoro = Create(folder.Path, server);
 
         Assert.IsFalse(await kokoro.PrepareAsync(null, TestContext.CancellationToken));
@@ -69,7 +68,7 @@ public sealed class KokoroSynthesizerTests
     public async Task Prepare_CancellationReleasesTheGateAndDoesNotInstallAPartialModel()
     {
         using TestFolder folder = new();
-        using Server server = new(MODEL) { Hold = true };
+        using FakeModelServer server = new(MODEL) { Hold = true };
         using KokoroSynthesizer kokoro = Create(folder.Path, server);
         using CancellationTokenSource canceled = new();
 
@@ -87,7 +86,7 @@ public sealed class KokoroSynthesizerTests
     public async Task Prepare_ResumesAfterAConnectionDropsInsteadOfStartingOver()
     {
         using TestFolder folder = new();
-        using Server server = new(MODEL) { DropAfter = 10 };
+        using FakeModelServer server = new(MODEL) { DropAfter = 10 };
         using KokoroSynthesizer kokoro = Create(folder.Path, server);
 
         bool dropped = await kokoro.PrepareAsync(null, TestContext.CancellationToken);
@@ -106,7 +105,7 @@ public sealed class KokoroSynthesizerTests
     public async Task Prepare_AnOversizedDownloadFails()
     {
         using TestFolder folder = new();
-        using Server server = new([.. MODEL, .. MODEL]);
+        using FakeModelServer server = new([.. MODEL, .. MODEL]);
         using KokoroSynthesizer kokoro = Create(folder.Path, server);
 
         Assert.IsFalse(await kokoro.PrepareAsync(null, TestContext.CancellationToken));
@@ -117,7 +116,7 @@ public sealed class KokoroSynthesizerTests
     public async Task Synthesize_FailsBeforeTheModelIsDownloaded()
     {
         using TestFolder folder = new();
-        using Server server = new(MODEL);
+        using FakeModelServer server = new(MODEL);
         using KokoroSynthesizer kokoro = Create(folder.Path, server);
 
         await Assert.ThrowsAsync<InvalidOperationException>(() => kokoro.SynthesizeAsync("Hello", null, TestContext.CancellationToken));
@@ -177,7 +176,7 @@ public sealed class KokoroSynthesizerTests
     public void Voices_EveryListedVoiceIsBundledWithHeartAsTheDefault()
     {
         using TestFolder folder = new();
-        using Server server = new(MODEL);
+        using FakeModelServer server = new(MODEL);
         using KokoroSynthesizer kokoro = Create(folder.Path, server);
 
         Assert.AreEqual("af_heart", kokoro.Voices[0].Id);
@@ -203,7 +202,7 @@ public sealed class KokoroSynthesizerTests
 
         using TestFolder folder = new();
         File.Copy(modelPath, Path.Combine(folder.Path, "kokoro.onnx"));
-        using Server server = new(MODEL);
+        using FakeModelServer server = new(MODEL);
         using KokoroSynthesizer kokoro = new(folder.Path, server, TestDependencies.Logger);
         string message = "Hello " + char.ConvertFromUtf32(0x1F642) + ", how are you today?";
 
@@ -219,7 +218,7 @@ public sealed class KokoroSynthesizerTests
         Assert.AreEqual(0, server.Requests);
     }
 
-    private static KokoroSynthesizer Create(string directory, Server server)
+    private static KokoroSynthesizer Create(string directory, FakeModelServer server)
     {
         return new(directory, server, TestDependencies.Logger, DOWNLOAD);
     }
@@ -229,91 +228,6 @@ public sealed class KokoroSynthesizerTests
         public void Report(double value)
         {
             report(value);
-        }
-    }
-
-    /// <remarks>Adapted from HomiliaMessenger's Kokoro speech tests.</remarks>
-    private sealed class Server : HttpMessageHandler, IHttpClientFactory
-    {
-        public Server(byte[] content)
-        {
-            Content = content;
-        }
-
-        public byte[] Content { get; set; }
-        public HttpStatusCode Status { get; set; } = HttpStatusCode.OK;
-        public bool Hold { get; set; }
-        public int? DropAfter { get; set; }
-        public long? LastRangeStart { get; private set; }
-        public int Requests { get; private set; }
-        public TaskCompletionSource Started { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
-
-        public HttpClient CreateClient(string name)
-        {
-            return new(this, disposeHandler: false);
-        }
-
-        protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
-        {
-            Requests++;
-            Started.TrySetResult();
-            if (Hold)
-            {
-                await Task.Delay(Timeout.Infinite, cancellationToken);
-            }
-
-            if (Status != HttpStatusCode.OK)
-            {
-                return new(Status);
-            }
-
-            long start = request.Headers.Range?.Ranges.First().From ?? 0;
-            LastRangeStart = start > 0 ? start : LastRangeStart;
-            byte[] body = Content[(int)start..];
-            HttpContent content = DropAfter is { } drop ? new StreamContent(new DroppingStream(body, drop)) : new ByteArrayContent(body);
-            return new(start > 0 ? HttpStatusCode.PartialContent : HttpStatusCode.OK) { Content = content };
-        }
-    }
-
-    /// <summary>Sends the first bytes, then fails as a dropped connection does.</summary>
-    private sealed class DroppingStream(byte[] content, int dropAfter) : MemoryStream(content)
-    {
-        public override int Read(byte[] buffer, int offset, int count)
-        {
-            if (Position >= dropAfter)
-            {
-                throw new IOException("The connection was reset.");
-            }
-
-            return base.Read(buffer, offset, (int)Math.Min(count, dropAfter - Position));
-        }
-
-        public override Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
-        {
-            return Task.FromResult(Read(buffer, offset, count));
-        }
-
-        public override ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default)
-        {
-            byte[] chunk = new byte[buffer.Length];
-            int read = Read(chunk, 0, chunk.Length);
-            chunk.AsSpan(0, read).CopyTo(buffer.Span);
-            return ValueTask.FromResult(read);
-        }
-    }
-
-    private sealed class TestFolder : IDisposable
-    {
-        public TestFolder()
-        {
-            Directory.CreateDirectory(Path);
-        }
-
-        public string Path { get; } = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "AtaraxiaKokoro-" + Guid.NewGuid().ToString("N"));
-
-        public void Dispose()
-        {
-            Directory.Delete(Path, recursive: true);
         }
     }
 }

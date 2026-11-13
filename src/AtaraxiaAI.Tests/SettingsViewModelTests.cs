@@ -26,7 +26,9 @@ public sealed class SettingsViewModelTests
     {
         (SettingsViewModel settings, _, _) = await CreateAsync();
 
+        CollectionAssert.AreEqual(new[] { "System", "Vosk" }, settings.RecognizerSourceTypes.Select(item => item.Text).ToArray());
         CollectionAssert.AreEqual(new[] { "System", "Kokoro" }, settings.SpeechSourceTypes.Select(item => item.Text).ToArray());
+        Assert.AreEqual("System", settings.SelectedRecognizerSource.Text);
         CollectionAssert.AreEqual(new[] { "Male", "Female", "Both" }, settings.VoiceGenderTypes.Select(item => item.Text).ToArray());
         Assert.AreEqual("System", settings.SelectedSpeechSource.Text);
         Assert.AreEqual("Both", settings.SelectedVoiceGender.Text);
@@ -46,15 +48,15 @@ public sealed class SettingsViewModelTests
             });
 
         settings.SelectedSpeechSource = SourceItem(settings, SpeechSynthesizers.Kokoro);
-        await TestDependencies.WaitUntilAsync(() => settings.IsSpeechProgressKnown);
+        await TestDependencies.WaitUntilAsync(() => settings.SpeechPreparation.IsProgressKnown);
 
-        Assert.IsTrue(settings.IsPreparingSpeech);
+        Assert.IsTrue(settings.SpeechPreparation.IsPreparing);
         Assert.IsFalse(settings.HasVoiceChoices);
-        Assert.AreEqual(42d, settings.SpeechProgress);
-        Assert.AreEqual("Downloading Kokoro… 42%", settings.SpeechStatus);
+        Assert.AreEqual(42d, settings.SpeechPreparation.Progress);
+        Assert.AreEqual("Downloading Kokoro… 42%", settings.SpeechPreparation.Status);
         finishDownload.SetResult();
-        await TestDependencies.WaitUntilAsync(() => !settings.IsPreparingSpeech);
-        Assert.IsNull(settings.SpeechStatus);
+        await TestDependencies.WaitUntilAsync(() => !settings.SpeechPreparation.IsPreparing);
+        Assert.IsNull(settings.SpeechPreparation.Status);
         Assert.AreEqual(SpeechSynthesizers.Kokoro, ai.SpeechEngine.ActiveSynthesizer);
         Assert.AreEqual(SpeechSynthesizers.Kokoro, stored.Speech.Source);
         Assert.IsTrue(settings.HasVoiceChoices);
@@ -77,9 +79,9 @@ public sealed class SettingsViewModelTests
             });
 
         settings.SelectedSpeechSource = SourceItem(settings, SpeechSynthesizers.Kokoro);
-        await TestDependencies.WaitUntilAsync(() => settings.IsSpeechProgressKnown);
+        await TestDependencies.WaitUntilAsync(() => settings.SpeechPreparation.IsProgressKnown);
         settings.SelectedSpeechSource = SourceItem(settings, SpeechSynthesizers.SystemDotSpeech);
-        await TestDependencies.WaitUntilAsync(() => !settings.IsPreparingSpeech);
+        await TestDependencies.WaitUntilAsync(() => !settings.SpeechPreparation.IsPreparing);
 
         Assert.IsTrue(downloadToken.IsCancellationRequested);
         Assert.AreEqual(SpeechSynthesizers.SystemDotSpeech, ai.SpeechEngine.ActiveSynthesizer);
@@ -93,20 +95,27 @@ public sealed class SettingsViewModelTests
             factory.Synthesizers[SpeechSynthesizers.Kokoro].Prepare = (_, _) => Task.FromResult(false));
 
         settings.SelectedSpeechSource = SourceItem(settings, SpeechSynthesizers.Kokoro);
-        await TestDependencies.WaitUntilAsync(() => !settings.IsPreparingSpeech);
+        await TestDependencies.WaitUntilAsync(() => !settings.SpeechPreparation.IsPreparing);
 
         Assert.AreEqual("System", settings.SelectedSpeechSource.Text);
-        Assert.AreEqual("Kokoro is unavailable. See the logs for details.", settings.SpeechStatus);
+        Assert.AreEqual("Kokoro is unavailable. See the logs for details.", settings.SpeechPreparation.Status);
         Assert.AreEqual(SpeechSynthesizers.SystemDotSpeech, stored.Speech.Source);
     }
 
     [TestMethod]
     public async Task StoredChoicesAreAppliedAtStartupWithoutPlayingASample()
     {
-        MemoryDesktopSettings stored = new() { Speech = new SpeechSettings(SpeechSynthesizers.Kokoro, VoiceGenderFilter.Male, ADAM.Id) };
+        MemoryDesktopSettings stored = new()
+        {
+            Recognition = new RecognitionSettings(SpeechRecognizers.Vosk),
+            Speech = new SpeechSettings(SpeechSynthesizers.Kokoro, VoiceGenderFilter.Male, ADAM.Id)
+        };
         (SettingsViewModel settings, AI ai, FakeIntegrationFactory factory) = await CreateWithFactoryAsync(stored);
 
-        await settings.ApplyStoredSpeechSettingsAsync();
+        await settings.ApplyStoredSettingsAsync();
+
+        Assert.AreEqual("Vosk", settings.SelectedRecognizerSource.Text);
+        Assert.AreEqual(SpeechRecognizers.Vosk, ai.SpeechEngine.ActiveRecognizer);
 
         Assert.AreEqual("Kokoro", settings.SelectedSpeechSource.Text);
         Assert.AreEqual("Male", settings.SelectedVoiceGender.Text);
@@ -145,6 +154,58 @@ public sealed class SettingsViewModelTests
         Assert.AreEqual(EMMA.Id, stored.Speech.VoiceId);
         Assert.AreEqual(EMMA.Id, ai.SpeechEngine.VoiceId);
         Assert.AreEqual(EMMA.Id, factory.Synthesizers[SpeechSynthesizers.Kokoro].SpokenVoices[0]);
+    }
+
+    [TestMethod]
+    public async Task ChoosingVoskShowsDownloadProgressThenInstallingAndStoresTheChoice()
+    {
+        TaskCompletionSource finishDownload = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        TaskCompletionSource downloaded = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        (SettingsViewModel settings, AI ai, MemoryDesktopSettings stored) = await CreateAsync(factory =>
+            factory.Recognizers[SpeechRecognizers.Vosk].Prepare = async (progress, token) =>
+            {
+                progress?.Report(30);
+                await finishDownload.Task.WaitAsync(token);
+                progress?.Report(100);
+                await downloaded.Task.WaitAsync(token);
+                return true;
+            });
+
+        settings.SelectedRecognizerSource = RecognizerItem(settings, SpeechRecognizers.Vosk);
+        await TestDependencies.WaitUntilAsync(() => settings.RecognizerPreparation.IsProgressKnown);
+
+        Assert.IsTrue(settings.RecognizerPreparation.IsPreparing);
+        Assert.AreEqual("Downloading Vosk… 30%", settings.RecognizerPreparation.Status);
+        // Recognizer and speech sources are prepared independently.
+        Assert.IsFalse(settings.SpeechPreparation.IsPreparing);
+        finishDownload.SetResult();
+        await TestDependencies.WaitUntilAsync(() => settings.RecognizerPreparation.Status == "Installing Vosk…");
+        downloaded.SetResult();
+        await TestDependencies.WaitUntilAsync(() => !settings.RecognizerPreparation.IsPreparing);
+
+        Assert.IsNull(settings.RecognizerPreparation.Status);
+        Assert.AreEqual(SpeechRecognizers.Vosk, ai.SpeechEngine.ActiveRecognizer);
+        Assert.AreEqual(SpeechRecognizers.Vosk, stored.Recognition.Source);
+    }
+
+    [TestMethod]
+    public async Task AnUnavailableRecognizerIsReportedNotStoredAndTheSelectionReturnsToSystem()
+    {
+        (SettingsViewModel settings, AI ai, MemoryDesktopSettings stored) = await CreateAsync(factory =>
+            factory.Recognizers[SpeechRecognizers.Vosk].Prepare = (_, _) => Task.FromResult(false));
+
+        settings.SelectedRecognizerSource = RecognizerItem(settings, SpeechRecognizers.Vosk);
+        await TestDependencies.WaitUntilAsync(() => !settings.RecognizerPreparation.IsPreparing);
+
+        Assert.AreEqual("System", settings.SelectedRecognizerSource.Text);
+        Assert.AreEqual("Vosk is unavailable. See the logs for details.", settings.RecognizerPreparation.Status);
+        Assert.AreEqual(SpeechRecognizers.SystemDotSpeech, ai.SpeechEngine.ActiveRecognizer);
+        Assert.AreEqual(SpeechRecognizers.SystemDotSpeech, stored.Recognition.Source);
+    }
+
+    private static ComboBoxEnumItem RecognizerItem(SettingsViewModel settings, SpeechRecognizers kind)
+    {
+        return settings.RecognizerSourceTypes.Single(item => item.Value == (int)kind);
     }
 
     private static ComboBoxEnumItem SourceItem(SettingsViewModel settings, SpeechSynthesizers kind)

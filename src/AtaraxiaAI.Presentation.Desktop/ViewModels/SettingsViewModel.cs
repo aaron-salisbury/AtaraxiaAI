@@ -2,12 +2,14 @@ using AtaraxiaAI.Business;
 using AtaraxiaAI.Business.Componants;
 using AtaraxiaAI.Business.Services;
 using AtaraxiaAI.Presentation.Desktop.Base;
+using AtaraxiaAI.Presentation.Desktop.Models;
 using AtaraxiaAI.Presentation.Desktop.Settings;
 using CommunityToolkit.Mvvm.ComponentModel;
 using RunnethOverStudio.AppToolkit.Modules.ComponentModel;
 using Serilog;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -24,6 +26,9 @@ public partial class SettingsViewModel : BaseViewModel
     private List<ComboBoxEnumItem> _soundCaptureSourceTypes;
 
     [ObservableProperty]
+    private List<ComboBoxEnumItem> _recognizerSourceTypes;
+
+    [ObservableProperty]
     private List<ComboBoxEnumItem> _speechSourceTypes;
 
     [ObservableProperty]
@@ -37,26 +42,18 @@ public partial class SettingsViewModel : BaseViewModel
     [ObservableProperty]
     private bool _hasVoiceChoices;
 
-    /// <summary>Whether a speech source is being prepared, which may include downloading its model.</summary>
-    [ObservableProperty]
-    private bool _isPreparingSpeech;
-
-    /// <summary>Whether <see cref="SpeechProgress"/> reports a download; otherwise preparation has no known length.</summary>
-    [ObservableProperty]
-    private bool _isSpeechProgressKnown;
-
-    [ObservableProperty]
-    private double _speechProgress;
-
-    [ObservableProperty]
-    private string? _speechStatus;
-
     private readonly AI _ai;
     private readonly IDesktopSettings _desktopSettings;
+    private RecognitionSettings _recognitionSettings;
     private SpeechSettings _speechSettings;
-    private CancellationTokenSource? _speechSelection;
     private CancellationTokenSource? _voiceSample;
     private bool _showingVoices;
+
+    /// <summary>Progress while a chosen recognizer source is prepared, such as Vosk's one-time model download.</summary>
+    public SourcePreparation RecognizerPreparation { get; } = new();
+
+    /// <summary>Progress while a chosen speech source is prepared, such as Kokoro's one-time model download.</summary>
+    public SourcePreparation SpeechPreparation { get; } = new();
 
     private ComboBoxEnumItem _selectedVisionCaptureSource;
     public ComboBoxEnumItem SelectedVisionCaptureSource
@@ -82,6 +79,19 @@ public partial class SettingsViewModel : BaseViewModel
             if (value is not null)
             {
                 _ai.SpeechEngine?.UpdateCaptureSource((SoundCaptureSources)value.Value);
+            }
+        }
+    }
+
+    private ComboBoxEnumItem _selectedRecognizerSource;
+    public ComboBoxEnumItem SelectedRecognizerSource
+    {
+        get => _selectedRecognizerSource;
+        set
+        {
+            if (SetProperty(ref _selectedRecognizerSource, value) && value is not null)
+            {
+                _ = SelectRecognizerSourceAsync((SpeechRecognizers)value.Value);
             }
         }
     }
@@ -136,11 +146,14 @@ public partial class SettingsViewModel : BaseViewModel
     {
         _ai = ai;
         _desktopSettings = desktopSettings ?? throw new ArgumentNullException(nameof(desktopSettings));
+        _recognitionSettings = desktopSettings.GetRecognitionSettings();
         _speechSettings = desktopSettings.GetSpeechSettings();
 
         _visionCaptureSourceTypes = [.. Enum.GetValues<VisionCaptureSources>().Select(ComboBoxEnumItem.From)];
 
         _soundCaptureSourceTypes = [.. Enum.GetValues<SoundCaptureSources>().Select(ComboBoxEnumItem.From)];
+
+        _recognizerSourceTypes = [.. SpeechEngine.SelectableRecognizers.Select(ComboBoxEnumItem.From)];
 
         _speechSourceTypes = [.. SpeechEngine.SelectableSynthesizers.Select(ComboBoxEnumItem.From)];
 
@@ -155,6 +168,9 @@ public partial class SettingsViewModel : BaseViewModel
             .Where(cbi => cbi.Value == (int)SoundCaptureSources.SoundCard)
             .First();
 
+        _selectedRecognizerSource = RecognizerSourceTypes.FirstOrDefault(cbi => cbi.Value == (int)_recognitionSettings.Source)
+            ?? RecognizerSourceTypes.First(cbi => cbi.Value == (int)SpeechEngine.DEFAULT_RECOGNIZER);
+
         _selectedSpeechSource = SpeechSourceTypes.FirstOrDefault(cbi => cbi.Value == (int)_speechSettings.Source)
             ?? SpeechSourceTypes.First(cbi => cbi.Value == (int)SpeechEngine.DEFAULT_SYNTHESIZER);
 
@@ -163,9 +179,10 @@ public partial class SettingsViewModel : BaseViewModel
     }
 
     /// <summary>
-    /// Applies the stored speech choices once the AI has initialized, which may resume downloading a stored source.
+    /// Applies the stored recognizer and speech choices once the AI has initialized, which may resume downloading a
+    /// stored source's model.
     /// </summary>
-    public async Task ApplyStoredSpeechSettingsAsync()
+    public async Task ApplyStoredSettingsAsync()
     {
         if (_ai.SpeechEngine is not { } engine)
         {
@@ -173,34 +190,93 @@ public partial class SettingsViewModel : BaseViewModel
         }
 
         engine.VoiceId = _speechSettings.VoiceId;
-        if (engine.ActiveSynthesizer == (SpeechSynthesizers)_selectedSpeechSource.Value)
+
+        // Read both choices before starting either, since a selection that completes shows the source actually in use.
+        SpeechRecognizers storedRecognizer = (SpeechRecognizers)_selectedRecognizerSource.Value;
+        SpeechSynthesizers storedSpeech = (SpeechSynthesizers)_selectedSpeechSource.Value;
+
+        Task recognizer = engine.ActiveRecognizer == storedRecognizer
+            ? Task.CompletedTask
+            : SelectRecognizerSourceAsync(storedRecognizer);
+
+        Task speech;
+        if (engine.ActiveSynthesizer == storedSpeech)
         {
             ShowVoices();
-            return;
+            speech = Task.CompletedTask;
+        }
+        else
+        {
+            speech = SelectSpeechSourceAsync(storedSpeech);
         }
 
-        await SelectSpeechSourceAsync((SpeechSynthesizers)_selectedSpeechSource.Value);
+        await Task.WhenAll(recognizer, speech);
     }
 
     /// <summary>
-    /// Shows the speech source actually in use, which differs from the selection when a source could not be prepared or
-    /// failed while speaking.
+    /// Shows the recognizer and speech sources actually in use, which differ from the selections when a source could not
+    /// be prepared or failed while speaking.
     /// </summary>
-    public void RefreshSpeechSource()
+    public void RefreshSources()
     {
-        if (IsPreparingSpeech || _ai.SpeechEngine?.ActiveSynthesizer is not { } active)
-        {
-            return;
-        }
+        RefreshRecognizerSource();
+        RefreshSpeechSource();
+    }
 
-        if (SpeechSourceTypes.FirstOrDefault(cbi => cbi.Value == (int)active) is { } item && !ReferenceEquals(item, _selectedSpeechSource))
+    private void RefreshRecognizerSource()
+    {
+        if (!RecognizerPreparation.IsPreparing
+            && _ai.SpeechEngine is { } engine
+            && RecognizerSourceTypes.FirstOrDefault(cbi => cbi.Value == (int)engine.ActiveRecognizer) is { } recognizer
+            && !ReferenceEquals(recognizer, _selectedRecognizerSource))
         {
             // Set the field directly so showing the actual source does not select it again.
-            _selectedSpeechSource = item;
+            _selectedRecognizerSource = recognizer;
+            OnPropertyChanged(nameof(SelectedRecognizerSource));
+        }
+    }
+
+    private void RefreshSpeechSource()
+    {
+        if (!SpeechPreparation.IsPreparing
+            && _ai.SpeechEngine?.ActiveSynthesizer is { } active
+            && SpeechSourceTypes.FirstOrDefault(cbi => cbi.Value == (int)active) is { } speech
+            && !ReferenceEquals(speech, _selectedSpeechSource))
+        {
+            _selectedSpeechSource = speech;
             OnPropertyChanged(nameof(SelectedSpeechSource));
         }
 
         ShowVoices();
+    }
+
+    /// <summary>
+    /// Switches recognition to the chosen source, showing download progress when it needs a model. Choosing another
+    /// source meanwhile cancels the unfinished download, which resumes the next time the source is chosen.
+    /// </summary>
+    private async Task SelectRecognizerSourceAsync(SpeechRecognizers requested)
+    {
+        if (_ai.SpeechEngine is not { } engine)
+        {
+            return;
+        }
+
+        bool? selected = await RecognizerPreparation.RunAsync(
+            DisplayName(requested),
+            (progress, cancellationToken) => engine.SelectRecognizerAsync(requested, progress, cancellationToken));
+
+        if (selected is null)
+        {
+            return;
+        }
+
+        if (selected.Value)
+        {
+            _recognitionSettings = _recognitionSettings with { Source = requested };
+            Save(() => _desktopSettings.SetRecognitionSettings(_recognitionSettings));
+        }
+
+        RefreshRecognizerSource();
     }
 
     /// <summary>
@@ -214,62 +290,25 @@ public partial class SettingsViewModel : BaseViewModel
             return;
         }
 
-        string name = ComboBoxEnumItem.From(requested).Text ?? requested.ToString();
-        _speechSelection?.Cancel();
-        CancellationTokenSource selection = new();
-        _speechSelection = selection;
+        Task<bool?> preparing = SpeechPreparation.RunAsync(
+            DisplayName(requested),
+            (progress, cancellationToken) => engine.SelectSynthesizerAsync(requested, progress, cancellationToken));
 
-        IsPreparingSpeech = true;
-        IsSpeechProgressKnown = false;
-        SpeechProgress = 0;
-        SpeechStatus = $"Preparing {name}…";
+        // Preparation has started, so this hides the previous source's voices until the new source is ready.
         ShowVoices();
+        bool? selected = await preparing;
 
-        Progress<double> progress = new(percent =>
+        if (selected is null)
         {
-            if (ReferenceEquals(_speechSelection, selection))
-            {
-                IsSpeechProgressKnown = true;
-                SpeechProgress = percent;
-                SpeechStatus = $"Downloading {name}… {percent:0}%";
-            }
-        });
+            return;
+        }
 
-        try
+        if (selected.Value)
         {
-            bool selected = await engine.SelectSynthesizerAsync(requested, progress, selection.Token);
-            if (ReferenceEquals(_speechSelection, selection))
-            {
-                SpeechStatus = selected ? null : $"{name} is unavailable. See the logs for details.";
-                if (selected)
-                {
-                    SaveSpeechSettings(_speechSettings with { Source = requested });
-                }
-            }
+            SaveSpeechSettings(_speechSettings with { Source = requested });
         }
-        catch (OperationCanceledException) when (selection.IsCancellationRequested)
-        {
-            // Another source was chosen; its selection reports the outcome.
-        }
-        catch (Exception error)
-        {
-            Log.Error(error, "Failed to change the speech source to {Provider}.", requested);
-            if (ReferenceEquals(_speechSelection, selection))
-            {
-                SpeechStatus = $"Could not change the speech source: {error.Message}";
-            }
-        }
-        finally
-        {
-            if (ReferenceEquals(_speechSelection, selection))
-            {
-                _speechSelection = null;
-                IsPreparingSpeech = false;
-                RefreshSpeechSource();
-            }
 
-            selection.Dispose();
-        }
+        RefreshSpeechSource();
     }
 
     /// <summary>
@@ -278,7 +317,7 @@ public partial class SettingsViewModel : BaseViewModel
     /// </summary>
     private void ShowVoices()
     {
-        IReadOnlyList<SpeechVoice> available = IsPreparingSpeech ? [] : _ai.SpeechEngine?.ActiveVoices ?? [];
+        IReadOnlyList<SpeechVoice> available = SpeechPreparation.IsPreparing ? [] : _ai.SpeechEngine?.ActiveVoices ?? [];
         VoiceGenderFilter filter = (VoiceGenderFilter)_selectedVoiceGender.Value;
         string? chosen = available.Any(voice => voice.Id == _speechSettings.VoiceId) ? _speechSettings.VoiceId : available.FirstOrDefault()?.Id;
 
@@ -320,14 +359,23 @@ public partial class SettingsViewModel : BaseViewModel
     private void SaveSpeechSettings(SpeechSettings settings)
     {
         _speechSettings = settings;
+        Save(() => _desktopSettings.SetSpeechSettings(settings));
+    }
 
+    private static void Save(Action save)
+    {
         try
         {
-            _desktopSettings.SetSpeechSettings(settings);
+            save();
         }
-        catch (Exception error) when (error is System.IO.IOException or UnauthorizedAccessException)
+        catch (Exception error) when (error is IOException or UnauthorizedAccessException)
         {
-            Log.Warning(error, "Could not save the speech settings.");
+            Log.Warning(error, "Could not save the desktop settings.");
         }
+    }
+
+    private static string DisplayName<TEnum>(TEnum value) where TEnum : struct, Enum
+    {
+        return ComboBoxEnumItem.From(value).Text ?? value.ToString();
     }
 }

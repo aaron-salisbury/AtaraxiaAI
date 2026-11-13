@@ -57,8 +57,20 @@ internal static class TestDependencies
 
 internal sealed class MemoryDesktopSettings : IDesktopSettings
 {
+    public RecognitionSettings Recognition { get; set; } = new();
     public SpeechSettings Speech { get; set; } = new();
     public int Saves { get; private set; }
+
+    public RecognitionSettings GetRecognitionSettings()
+    {
+        return Recognition;
+    }
+
+    public void SetRecognitionSettings(RecognitionSettings settings)
+    {
+        Recognition = settings;
+        Saves++;
+    }
 
     public SpeechSettings GetSpeechSettings()
     {
@@ -104,16 +116,32 @@ internal sealed class FakeSynthesizer : ISynthesizer
 internal sealed class FakeRecognizer : IRecognizer
 {
     private Action<string>? _callback;
-    public int PauseCalls { get; private set; }
+
+    public Func<IProgress<double>?, CancellationToken, Task<bool>> Prepare { get; set; } = (_, _) => Task.FromResult(true);
+    public Exception? ListenFailure { get; set; }
+    public bool IsListening { get; private set; }
+    public int StopCalls { get; private set; }
+    public SoundCaptureSources? CaptureSource { get; private set; }
 
     public bool IsAvailable()
     {
         return true;
     }
 
+    public Task<bool> PrepareAsync(IProgress<double>? progress, CancellationToken cancellationToken)
+    {
+        return Prepare(progress, cancellationToken);
+    }
+
     public void Listen(Action<string> speechRecognizedAction)
     {
+        if (ListenFailure is not null)
+        {
+            throw ListenFailure;
+        }
+
         _callback = speechRecognizedAction;
+        IsListening = true;
     }
 
     public void Fire(string text)
@@ -121,17 +149,15 @@ internal sealed class FakeRecognizer : IRecognizer
         _callback!(text);
     }
 
+    public void Stop()
+    {
+        StopCalls++;
+        IsListening = false;
+    }
+
     public void UpdateCaptureSource(SoundCaptureSources source)
     {
-    }
-
-    public void Pause()
-    {
-        PauseCalls++;
-    }
-
-    public void Unpause()
-    {
+        CaptureSource = source;
     }
 
     public void Dispose()
@@ -144,7 +170,11 @@ internal sealed class FakeIntegrationFactory : IIntegrationFactory
     public Dictionary<SpeechSynthesizers, FakeSynthesizer> Synthesizers { get; } =
         Enum.GetValues<SpeechSynthesizers>().ToDictionary(kind => kind, _ => new FakeSynthesizer());
 
-    public FakeRecognizer Recognizer { get; } = new();
+    public Dictionary<SpeechRecognizers, FakeRecognizer> Recognizers { get; } =
+        Enum.GetValues<SpeechRecognizers>().ToDictionary(kind => kind, _ => new FakeRecognizer());
+
+    /// <summary>The default System recognizer, which a new speech engine starts with.</summary>
+    public FakeRecognizer Recognizer => Recognizers[SpeechRecognizers.SystemDotSpeech];
     public IJokeService? JokeService { get; set; }
 
     public IAnswerProvider? CreateAnswerProvider()
@@ -172,9 +202,9 @@ internal sealed class FakeIntegrationFactory : IIntegrationFactory
         throw new NotSupportedException();
     }
 
-    public IRecognizer CreateRecognizer(System.Globalization.CultureInfo culture)
+    public IRecognizer CreateRecognizer(SpeechRecognizers recognizer, System.Globalization.CultureInfo culture)
     {
-        return Recognizer;
+        return Recognizers[recognizer];
     }
 
     public IStreamingAvailabilityService CreateStreamingAvailabilityService()

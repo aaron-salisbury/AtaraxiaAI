@@ -6,11 +6,11 @@ AtaraxiaAI is a .NET desktop sandbox for experimenting with machine learning and
 
 - An Avalonia desktop app with vision, sound, settings, and log panels.
 - Object detection on screen or webcam frames using bundled YOLOv3-tiny assets, plus a Tesseract OCR adapter.
-- Windows `System.Speech` recognition for the fixed **“Hey Robot”** command set: jokes, dad jokes, an insult response, and a prototype streaming-availability lookup.
+- Speech recognition for the **“Hey Robot”** command set (jokes, dad jokes, an insult response, and a prototype streaming-availability lookup) from a source chosen in settings: System (Windows `System.Speech`, the default) or Vosk. Vosk runs offline and downloads its US English model (about 131 MB) the first time it is chosen, showing progress in the settings overlay. It listens to the microphone or, with the sound card capture source, to what the computer is playing.
 - Speech output from a source chosen in settings: System (Windows speech, the default) or Kokoro. Kokoro runs locally in the app and downloads its model (about 326 MB) the first time it is chosen, showing progress in the settings overlay. Kokoro offers 28 American and British English voices, filtered by gender, and choosing one plays a short sample. If a source cannot be prepared, the current one stays in use; Windows system speech is the fallback.
-- Speech choices kept between launches in `desktop-settings.json`, and a rolling log file, under the user's local application data directory.
+- Recognizer and speech choices kept between launches in `desktop-settings.json`, and a rolling log file, under the user's local application data directory.
 
-The app does not currently configure a general question-answering provider. The streaming command also uses a hard-coded title, so it is a prototype rather than a general search feature. Vision capture uses Windows-specific DX11 and DirectShow implementations, and speech recognition uses Windows `System.Speech`; the desktop UI framework itself is cross-platform.
+The app does not currently configure a general question-answering provider. The streaming command also uses a hard-coded title, so it is a prototype rather than a general search feature. Vision capture uses Windows-specific DX11 and DirectShow implementations, and the default speech recognition uses Windows `System.Speech`; the desktop UI framework itself is cross-platform.
 
 ## Build and run
 

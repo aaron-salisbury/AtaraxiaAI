@@ -8,6 +8,10 @@
     <ProjectReference Include="..\AtaraxiaAI.Presentation.Desktop\AtaraxiaAI.Presentation.Desktop.csproj" />
   </ItemGroup>
   <ItemGroup>
+    <!-- A recording of spoken digits for the real Vosk recognition test. -->
+    <Content Include="Assets\vosk-digits.wav" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+  <ItemGroup>
     <PackageReference Update="Microsoft.Testing.Extensions.CodeCoverage" Version="18.11.2" />
   </ItemGroup>
   <ItemGroup>

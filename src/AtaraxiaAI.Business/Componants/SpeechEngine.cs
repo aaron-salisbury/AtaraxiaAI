@@ -22,7 +22,19 @@ public class SpeechEngine
         SpeechSynthesizers.Kokoro
     ];
 
-    public bool IsSpeechRecognitionRunning { get; set; }
+    public const SpeechRecognizers DEFAULT_RECOGNIZER = SpeechRecognizers.SystemDotSpeech;
+
+    /// <summary>Recognizer sources the user can choose, in display order.</summary>
+    public static IReadOnlyList<SpeechRecognizers> SelectableRecognizers { get; } =
+    [
+        SpeechRecognizers.SystemDotSpeech,
+        SpeechRecognizers.Vosk
+    ];
+
+    public bool IsSpeechRecognitionRunning { get; private set; }
+
+    /// <summary>The recognizer source in use.</summary>
+    public SpeechRecognizers ActiveRecognizer => _recognition.Kind;
 
     /// <summary>The speech source in use, or <see langword="null"/> when none is available.</summary>
     public SpeechSynthesizers? ActiveSynthesizer => _active?.Kind;
@@ -45,7 +57,10 @@ public class SpeechEngine
     private int _commandQueued;
     private ActiveSpeech? _active;
     private readonly OrchestrationEngine _commandLoop;
-    private readonly IRecognizer _recognizer;
+    private readonly SemaphoreSlim _recognizerGate = new(1, 1);
+    private readonly object _recognitionLock = new();
+    private ActiveRecognition _recognition;
+    private SoundCaptureSources _captureSource = SoundCaptureSources.SoundCard;
 
     internal SpeechEngine(IIntegrationFactory integrations, IAudioPlayer player, IntegrationDependencies providerContext, CultureInfo? culture = null)
     {
@@ -54,7 +69,8 @@ public class SpeechEngine
         _providerContext = providerContext;
         _culture = culture ?? new CultureInfo("en-US");
         _commandLoop = new OrchestrationEngine(this, integrations, providerContext.Logger);
-        _recognizer = _integrations.CreateRecognizer(_culture);
+        _recognition = new ActiveRecognition(DEFAULT_RECOGNIZER, _integrations.CreateRecognizer(DEFAULT_RECOGNIZER, _culture));
+        _recognition.Recognizer.UpdateCaptureSource(_captureSource);
     }
 
     /// <summary>
@@ -229,7 +245,7 @@ public class SpeechEngine
 
     private void OnSpeechRecognized(string message)
     {
-        // System.Speech invokes this on its recognition callback. Return before stopping
+        // Recognizers invoke this on their recognition or audio capture thread. Return before stopping
         // recognition, performing HTTP requests, or loading the synthesis model.
         if (Interlocked.CompareExchange(ref _commandQueued, 1, 0) != 0)
         {
@@ -264,41 +280,123 @@ public class SpeechEngine
         _playbackCancellation.Cancel();
     }
 
-    public void ActivateSpeechRecognition()
+    /// <summary>
+    /// Switches recognition to <paramref name="requested"/>, first preparing it, which may download a model. If it
+    /// cannot be prepared, the current recognizer stays in use. Listening continues with the new recognizer.
+    /// </summary>
+    /// <param name="progress">Receives download progress from 0 to 100 when the recognizer must download something.</param>
+    /// <returns>Whether <paramref name="requested"/> is now in use.</returns>
+    /// <exception cref="OperationCanceledException">The selection was canceled; the current recognizer stays in use.</exception>
+    public async Task<bool> SelectRecognizerAsync(SpeechRecognizers requested, IProgress<double>? progress = null, CancellationToken cancellationToken = default)
     {
-        _providerContext.Logger.Information("Beginning speech recognition.");
+        await _recognizerGate.WaitAsync(cancellationToken);
+        try
+        {
+            if (_recognition.Kind == requested)
+            {
+                return true;
+            }
 
-        DeactivateSpeechRecognition();
-        _recognizer.Listen(OnSpeechRecognized);
-        IsSpeechRecognitionRunning = true;
+            IRecognizer candidate;
+            try
+            {
+                candidate = _integrations.CreateRecognizer(requested, _culture);
+                if (!await candidate.PrepareAsync(progress, cancellationToken) || !candidate.IsAvailable())
+                {
+                    _providerContext.Logger.Warning("{Recognizer} is unavailable; still using {Current}.", requested, _recognition.Kind);
+                    return false;
+                }
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                throw;
+            }
+            catch (Exception error)
+            {
+                _providerContext.Logger.Warning(error, "Speech recognizer {Recognizer} unavailable.", requested);
+                return false;
+            }
+
+            lock (_recognitionLock)
+            {
+                bool wasListening = IsSpeechRecognitionRunning;
+                StopListening();
+                candidate.UpdateCaptureSource(_captureSource);
+                _recognition = new ActiveRecognition(requested, candidate);
+                _providerContext.Logger.Information("Recognizer source set to {Recognizer}.", requested);
+                if (wasListening)
+                {
+                    ActivateSpeechRecognition();
+                }
+            }
+
+            return true;
+        }
+        finally
+        {
+            _recognizerGate.Release();
+        }
+    }
+
+    /// <summary>Starts listening with the recognizer in use.</summary>
+    /// <returns>Whether listening started. A failure, such as having no audio input device, is logged.</returns>
+    public bool ActivateSpeechRecognition()
+    {
+        lock (_recognitionLock)
+        {
+            StopListening();
+            _providerContext.Logger.Information("Beginning speech recognition with {Recognizer}.", _recognition.Kind);
+
+            try
+            {
+                _recognition.Recognizer.Listen(OnSpeechRecognized);
+                IsSpeechRecognitionRunning = true;
+                return true;
+            }
+            catch (Exception error)
+            {
+                _providerContext.Logger.Error(error, "Could not start speech recognition with {Recognizer}.", _recognition.Kind);
+                _recognition.Recognizer.Stop();
+                return false;
+            }
+        }
     }
 
     public void DeactivateSpeechRecognition()
     {
-        if (IsSpeechRecognitionRunning)
+        lock (_recognitionLock)
         {
-            _recognizer.Dispose();
-            _providerContext.Logger.Information("Ended speech recognition.");
-            IsSpeechRecognitionRunning = false;
+            StopListening();
         }
     }
 
     public void UpdateCaptureSource(SoundCaptureSources captureSource)
     {
-        bool wasRunningWhenChangeMade = IsSpeechRecognitionRunning;
-
-        if (wasRunningWhenChangeMade)
+        lock (_recognitionLock)
         {
-            DeactivateSpeechRecognition();
-        }
+            _captureSource = captureSource;
+            bool wasListening = IsSpeechRecognitionRunning;
+            StopListening();
+            _recognition.Recognizer.UpdateCaptureSource(captureSource);
 
-        _recognizer.UpdateCaptureSource(captureSource);
-
-        if (wasRunningWhenChangeMade)
-        {
-            ActivateSpeechRecognition();
+            if (wasListening)
+            {
+                ActivateSpeechRecognition();
+            }
         }
     }
+
+    private void StopListening()
+    {
+        if (IsSpeechRecognitionRunning)
+        {
+            _recognition.Recognizer.Stop();
+            _providerContext.Logger.Information("Ended speech recognition.");
+            IsSpeechRecognitionRunning = false;
+        }
+    }
+
+    private sealed record ActiveRecognition(SpeechRecognizers Kind, IRecognizer Recognizer);
 
     private sealed record ActiveSpeech(SpeechSynthesizers Kind, ISynthesizer Synthesizer);
 }
