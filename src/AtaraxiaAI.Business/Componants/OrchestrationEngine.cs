@@ -1,73 +1,72 @@
-using AtaraxiaAI.Business.Skills;
 using AtaraxiaAI.Business.Services;
+using AtaraxiaAI.Business.Skills;
 using Serilog;
 using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace AtaraxiaAI.Business.Componants
+namespace AtaraxiaAI.Business.Componants;
+
+internal class OrchestrationEngine
 {
-    internal class OrchestrationEngine
+    internal const string WAKE_COMMAND = "Hey Robot";
+
+    internal enum SkillMessages
     {
-        internal const string WAKE_COMMAND = "Hey Robot";
+        TellMeAJoke,
+        TellMeADadJoke,
+        RespondWithInsult,
+        IsMovieStreaming
+    }
 
-        internal enum SkillMessages
+    private readonly IIntegrationFactory _integrations;
+    private readonly ILogger _logger;
+    private readonly SpeechEngine _speechEngine;
+    private readonly KnowledgeSkill _knowledgeSkill;
+
+    internal OrchestrationEngine(SpeechEngine speechEngine, IIntegrationFactory integrations, ILogger logger)
+    {
+        _speechEngine = speechEngine;
+        _integrations = integrations;
+        _logger = logger;
+        _knowledgeSkill = new KnowledgeSkill(_speechEngine, integrations);
+    }
+
+    internal async Task HeardAsync(string message, CancellationToken cancellationToken)
+    {
+        if (!string.IsNullOrEmpty(message))
         {
-            TellMeAJoke,
-            TellMeADadJoke,
-            RespondWithInsult,
-            IsMovieStreaming
-        }
+            _logger.Information($"*Heard* \"{message}\".");
 
-        private readonly IIntegrationFactory _integrations;
-        private readonly ILogger _logger;
-        private SpeechEngine _speechEngine;
-        private KnowledgeSkill _knowledgeSkill;
-
-        internal OrchestrationEngine(SpeechEngine speechEngine, IIntegrationFactory integrations, ILogger logger)
-        {
-            _speechEngine = speechEngine;
-            _integrations = integrations;
-            _logger = logger;
-            _knowledgeSkill = new KnowledgeSkill(_speechEngine, integrations);
-        }
-
-        internal async Task HeardAsync(string message, CancellationToken cancellationToken)
-        {
-            if (!string.IsNullOrEmpty(message))
+            if (message.StartsWith(WAKE_COMMAND, StringComparison.OrdinalIgnoreCase))
             {
-                _logger.Information($"*Heard* \"{message}\".");
+                string command = message.Remove(0, WAKE_COMMAND.Length);
+                string cleanCommand = string.Concat(command.Where(char.IsLetter));
 
-                if (message.StartsWith(WAKE_COMMAND, StringComparison.OrdinalIgnoreCase))
+                if (!Enum.TryParse(cleanCommand, true, out SkillMessages skill))
                 {
-                    string command = message.Remove(0, WAKE_COMMAND.Length);
-                    string cleanCommand = string.Concat(command.Where(char.IsLetter));
+                    await _knowledgeSkill.AnswerMeAsync(command, cancellationToken);
+                    return;
+                }
 
-                    if (!Enum.TryParse(cleanCommand, true, out SkillMessages skill))
-                    {
+                switch (skill)
+                {
+                    case SkillMessages.TellMeAJoke:
+                        await JokeSkill.TellMeAJokeAsync(_speechEngine, _integrations, cancellationToken);
+                        break;
+                    case SkillMessages.TellMeADadJoke:
+                        await JokeSkill.TellMeADadJokeAsync(_speechEngine, _integrations, cancellationToken);
+                        break;
+                    case SkillMessages.RespondWithInsult:
+                        await ResponseSkill.AcquireInsultAsync(_speechEngine, _integrations, cancellationToken);
+                        break;
+                    case SkillMessages.IsMovieStreaming:
+                        await _knowledgeSkill.GetStreamOfferingsAsync("Black Adam", true, cancellationToken); //TODO: Need a way to communicate the title.
+                        break;
+                    default:
                         await _knowledgeSkill.AnswerMeAsync(command, cancellationToken);
-                        return;
-                    }
-
-                    switch (skill)
-                    {
-                        case SkillMessages.TellMeAJoke:
-                            await JokeSkill.TellMeAJokeAsync(_speechEngine, _integrations, cancellationToken);
-                            break;
-                        case SkillMessages.TellMeADadJoke:
-                            await JokeSkill.TellMeADadJokeAsync(_speechEngine, _integrations, cancellationToken);
-                            break;
-                        case SkillMessages.RespondWithInsult:
-                            await ResponseSkill.AcquireInsultAsync(_speechEngine, _integrations, cancellationToken);
-                            break;
-                        case SkillMessages.IsMovieStreaming:
-                            await _knowledgeSkill.GetStreamOfferingsAsync("Black Adam", true, cancellationToken); //TODO: Need a way to communicate the title.
-                            break;
-                        default:
-                            await _knowledgeSkill.AnswerMeAsync(command, cancellationToken);
-                            break;
-                    }
+                        break;
                 }
             }
         }

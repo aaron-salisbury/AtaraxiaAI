@@ -1,98 +1,102 @@
-using AtaraxiaAI.Business;
 using AtaraxiaAI.Business.Services;
 using AtaraxiaAI.Business.Services.Base.Models;
 using AtaraxiaAI.Integrations.DTOs;
-using RunnethOverStudio.AppToolkit.Modules.Access;
 using System.Collections.Generic;
 using System.Text.Json;
 using System.Threading.Tasks;
 
-namespace AtaraxiaAI.Integrations.Services
+namespace AtaraxiaAI.Integrations.Services;
+
+// https://sv443.net/jokeapi/v2/
+internal class Sv443JokeService : IJokeService
 {
-    // https://sv443.net/jokeapi/v2/
-    internal class Sv443JokeService : IJokeService
+    private readonly IntegrationDependencies _dependencies;
+    private const string URL_FORMAT = "https://v2.jokeapi.dev/joke/{0}"; // {0}Categories
+
+    internal enum CategoryTypes
     {
-        private readonly IntegrationDependencies _dependencies;
-        private const string URL_FORMAT = "https://v2.jokeapi.dev/joke/{0}"; // {0}Categories
+        Any,
+        Programming,
+        Miscellaneous,
+        Dark,
+        Pun,
+        Spooky,
+        Christmas
+    }
 
-        internal enum CategoryTypes
+    internal enum JokeTypes
+    {
+        Any,
+        Single,
+        TwoPart
+    }
+
+    internal IEnumerable<CategoryTypes> Categories { get; set; }
+    internal Sv443JokeFlags Flags { get; set; }
+    internal JokeTypes JokeType { get; set; }
+
+    internal Sv443JokeService(IntegrationDependencies dependencies, IEnumerable<CategoryTypes> categories = null, Sv443JokeFlags flags = null, JokeTypes jokeType = JokeTypes.Any)
+    {
+        _dependencies = dependencies;
+        Categories = categories;
+        Flags = flags;
+        JokeType = jokeType;
+    }
+
+    async Task<Joke> IJokeService.GetJokeAsync()
+    {
+        _dependencies.Logger.Information("Acquiring joke.");
+
+        Joke joke = null;
+
+        Categories = Categories ?? [CategoryTypes.Any];
+        string categoryParams = string.Join(",", Categories);
+
+        Flags = Flags ?? Sv443JokeFlags.BuildSafeFlags();
+        string blacklistParams = Flags.GetBlacklistParams();
+
+        List<string> query = [];
+
+        if (!string.IsNullOrEmpty(blacklistParams))
         {
-            Any,
-            Programming,
-            Miscellaneous,
-            Dark,
-            Pun,
-            Spooky,
-            Christmas
+            query.Add($"blacklistFlags={blacklistParams}");
         }
 
-        internal enum JokeTypes
+        if (JokeType != JokeTypes.Any)
         {
-            Any,
-            Single,
-            TwoPart
+            query.Add($"type={JokeType.ToString().ToLowerInvariant()}");
         }
 
-        internal IEnumerable<CategoryTypes> Categories { get; set; }
-        internal Sv443JokeFlags Flags { get; set; }
-        internal JokeTypes JokeType { get; set; }
-
-        internal Sv443JokeService(IntegrationDependencies dependencies, IEnumerable<CategoryTypes> categories = null, Sv443JokeFlags flags = null, JokeTypes jokeType = JokeTypes.Any)
+        string url = string.Format(URL_FORMAT, categoryParams);
+        if (query.Count > 0)
         {
-            _dependencies = dependencies;
-            Categories = categories;
-            Flags = flags;
-            JokeType = jokeType;
+            url += "?" + string.Join("&", query);
         }
 
-        async Task<Joke> IJokeService.GetJokeAsync()
+        string json = await _dependencies.HttpRequester.SendHTTPJsonRequestAsync(url);
+
+        if (!string.IsNullOrEmpty(json))
         {
-            _dependencies.Logger.Information("Acquiring joke.");
+            Sv443Joke sv443Joke = JsonSerializer.Deserialize<Sv443Joke>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
-            Joke joke = null;
-
-            Categories = Categories ?? new CategoryTypes[] { CategoryTypes.Any };
-            string categoryParams = string.Join(",", Categories);
-
-            Flags = Flags ?? Sv443JokeFlags.BuildSafeFlags();
-            string blacklistParams = Flags.GetBlacklistParams();
-
-            string url = string.Format(URL_FORMAT, categoryParams);
-
-            if (!string.IsNullOrEmpty(blacklistParams))
+            // An error response has no joke type.
+            if (sv443Joke is { Error: false } && System.Enum.TryParse(sv443Joke.Type, ignoreCase: true, out Joke.JokeTypes jokeType))
             {
-                url += $"?blacklistFlags={blacklistParams}";
-            }
-
-            if (JokeType != JokeTypes.Any)
-            {
-                url += $"?type={JokeType.ToString().ToLower()}";
-            }
-
-            string json = await _dependencies.HttpRequester.SendHTTPJsonRequestAsync(url);
-
-            if (!string.IsNullOrEmpty(json))
-            {
-                Sv443Joke sv443Joke = JsonSerializer.Deserialize<Sv443Joke>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-
-                if (sv443Joke != null)
+                joke = new Joke
                 {
-                    joke = new Joke
-                    {
-                        JokeType = (Joke.JokeTypes)System.Enum.Parse(typeof(Joke.JokeTypes), sv443Joke.Type, true),
-                        JokeLine = sv443Joke.Joke,
-                        Setup = sv443Joke.Setup,
-                        Delivery = sv443Joke.Delivery
-                    };
-                }
+                    JokeType = jokeType,
+                    JokeLine = sv443Joke.Joke,
+                    Setup = sv443Joke.Setup,
+                    Delivery = sv443Joke.Delivery
+                };
             }
-
-            if (joke == null)
-            {
-                _dependencies.Logger.Error("Failed to aquire joke.");
-            }
-
-            return joke;
         }
+
+        if (joke == null)
+        {
+            _dependencies.Logger.Error("Failed to acquire joke.");
+        }
+
+        return joke;
     }
 }

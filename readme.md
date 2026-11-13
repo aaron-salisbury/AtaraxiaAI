@@ -7,8 +7,8 @@ AtaraxiaAI is a .NET desktop sandbox for experimenting with machine learning and
 - An Avalonia desktop app with vision, sound, settings, and log panels.
 - Object detection on screen or webcam frames using bundled YOLOv3-tiny assets, plus a Tesseract OCR adapter.
 - Windows `System.Speech` recognition for the fixed **“Hey Robot”** command set: jokes, dad jokes, an insult response, and a prototype streaming-availability lookup.
-- Speech output through a local Kokoro worker, with Windows system speech as a fallback. Other speech providers have adapters but are not selected by default.
-- Local JSON storage for application counters and a rolling log file under the user's local application data directory.
+- Speech output from a source chosen in settings: System (Windows speech, the default) or Kokoro. Kokoro runs locally in the app and downloads its model (about 326 MB) the first time it is chosen, showing progress in the settings overlay. Kokoro offers 28 American and British English voices, filtered by gender, and choosing one plays a short sample. If a source cannot be prepared, the current one stays in use; Windows system speech is the fallback.
+- Speech choices kept between launches in `desktop-settings.json`, and a rolling log file, under the user's local application data directory.
 
 The app does not currently configure a general question-answering provider. The streaming command also uses a hard-coded title, so it is a prototype rather than a general search feature. Vision capture uses Windows-specific DX11 and DirectShow implementations, and speech recognition uses Windows `System.Speech`; the desktop UI framework itself is cross-platform.
 
@@ -21,7 +21,7 @@ dotnet build/cake.cs
 dotnet run --project src/AtaraxiaAI.DesktopApp/AtaraxiaAI.DesktopApp.csproj
 ```
 
-The Cake script restores and builds the solution in Release, probes the copied Kokoro worker and its native ONNX runtime, then runs the tests. To run a different target or configuration, pass script arguments after `--`:
+The Cake script restores and builds the solution in Release, then runs the tests. To run a different target or configuration, pass script arguments after `--`:
 
 ```powershell
 dotnet build/cake.cs -- --target=Build --configuration=Debug
@@ -34,11 +34,9 @@ The app's active capture and speech paths are currently most suitable for Window
 | Path | Responsibility |
 | --- | --- |
 | `src/AtaraxiaAI.Business` | Application behavior and service contracts |
-| `src/AtaraxiaAI.Data` | Local JSON persistence |
 | `src/AtaraxiaAI.Integrations` | ML models and external service adapters |
 | `src/AtaraxiaAI.Presentation.Desktop` | Avalonia views and view models |
 | `src/AtaraxiaAI.DesktopApp` | Executable and dependency composition |
-| `src/AtaraxiaAI.KokoroWorker` | Separate local speech-synthesis process |
 | `src/AtaraxiaAI.Tests` | Automated tests |
 
 See [product specification](docs/product_specification.md) for the current scope and [development conventions](docs/development_conventions.md) for contributor guidance.

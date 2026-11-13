@@ -88,6 +88,10 @@ public partial class MainViewModel : BaseViewModel
         {
             await Task.Run(() => AI.Initiate(updateFrameAction: vision.SetVisionFrame));
             IsInitialized = AI.IsInitialized;
+            if (IsInitialized)
+            {
+                await _settings.ApplyStoredSpeechSettingsAsync();
+            }
         }
         catch (Exception ex)
         {
@@ -100,7 +104,10 @@ public partial class MainViewModel : BaseViewModel
         }
     }
 
-    public void Shutdown() => AI.Shutdown();
+    public void Shutdown()
+    {
+        AI.Shutdown();
+    }
 
     private void OnVisionClick()
     {
@@ -156,6 +163,7 @@ public partial class MainViewModel : BaseViewModel
         else
         {
             SettingsIcon = "Cog";
+            _settings.RefreshSpeechSource();
             ShowSettings = true;
         }
     }

@@ -1,17 +1,16 @@
 using System;
 
-namespace AtaraxiaAI.Integrations.DTOs
+namespace AtaraxiaAI.Integrations.DTOs;
+
+[Serializable]
+internal class EvilInsult
 {
-    [Serializable]
-    internal class EvilInsult
-    {
-        public string Number { get; set; }
-        public string Language { get; set; }
-        public string Insult { get; set; }
-        public string Created { get; set; }
-        public string Shown { get; set; }
-        public string Createdby { get; set; }
-        public string Active { get; set; }
-        public string Comment { get; set; }
-    }
+    public string Number { get; set; }
+    public string Language { get; set; }
+    public string Insult { get; set; }
+    public string Created { get; set; }
+    public string Shown { get; set; }
+    public string Createdby { get; set; }
+    public string Active { get; set; }
+    public string Comment { get; set; }
 }

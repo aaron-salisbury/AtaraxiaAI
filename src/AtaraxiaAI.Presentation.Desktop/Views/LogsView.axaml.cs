@@ -18,8 +18,8 @@ public partial class LogsView : UserControl
 
     private void OnDataContextChanged(object? sender, EventArgs e)
     {
-        if (_currentModel is not null)
-            _currentModel.Messages.CollectionChanged -= OnMessagesChanged;
+        _currentModel?.Messages.CollectionChanged -= OnMessagesChanged;
+
         _currentModel = DataContext as LogsViewModel;
         if (_currentModel is { } model)
         {
@@ -33,7 +33,9 @@ public partial class LogsView : UserControl
         // Follow new entries only while the user is already viewing the newest ones, so scrolling up to read stays put.
         // Checked before layout runs, so the extent still reflects the content the user was looking at.
         if (e.Action == NotifyCollectionChangedAction.Add && IsScrolledToEnd())
+        {
             ScrollToNewest();
+        }
     }
 
     private bool IsScrolledToEnd()
@@ -42,5 +44,8 @@ public partial class LogsView : UserControl
         return LogScroller.Offset.Y + LogScroller.Viewport.Height >= LogScroller.Extent.Height - tolerance;
     }
 
-    private void ScrollToNewest() => Dispatcher.UIThread.Post(() => LogScroller.ScrollToEnd(), DispatcherPriority.Loaded);
+    private void ScrollToNewest()
+    {
+        Dispatcher.UIThread.Post(() => LogScroller.ScrollToEnd(), DispatcherPriority.Loaded);
+    }
 }

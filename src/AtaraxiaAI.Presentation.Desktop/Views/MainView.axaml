@@ -35,7 +35,7 @@
 			</Setter>
 		</Style>
 	</UserControl.Styles>
-	
+
 	<Grid RowDefinitions="30, *">
 
 		<!-- Background -->
@@ -113,7 +113,7 @@
 										Content="{Binding SettingsView}"
 										IsVisible="{Binding ShowSettings}" />
 					</Grid>
-					
+
 				</Grid>
 			</Border>
 		</Grid>

@@ -16,7 +16,7 @@ public class BytesToBitmapConverter : IValueConverter
         }
         else if (value is byte[] imageBuffer)
         {
-            using MemoryStream ms = new MemoryStream(imageBuffer);
+            using MemoryStream ms = new(imageBuffer);
             return new Avalonia.Media.Imaging.Bitmap(ms);
         }
         else

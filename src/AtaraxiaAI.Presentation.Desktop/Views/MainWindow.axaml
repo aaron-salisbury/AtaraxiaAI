@@ -13,5 +13,5 @@
 		Title="AtaraxiaAI">
 
     <v:MainView Grid.Row="1" />
-    
+
 </Window>

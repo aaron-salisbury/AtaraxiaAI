@@ -6,6 +6,7 @@
              x:Class="AtaraxiaAI.Presentation.Desktop.Views.SettingsView"
              xmlns:vm="clr-namespace:AtaraxiaAI.Presentation.Desktop.ViewModels"
 			  xmlns:base="clr-namespace:AtaraxiaAI.Presentation.Desktop.Base"
+			  xmlns:services="clr-namespace:AtaraxiaAI.Business.Services;assembly=AtaraxiaAI.Business"
              x:DataType="vm:SettingsViewModel"
 			 Background="Transparent">
 
@@ -38,6 +39,19 @@
 			<ComboBox SelectedItem="{Binding SelectedSoundCaptureSource}"
 					  ItemsSource="{Binding SoundCaptureSourceTypes}"
 					  Width="125"
+					  HorizontalAlignment="Right"
+					  Margin="0,0,0,15">
+				<ComboBox.ItemTemplate>
+					<DataTemplate DataType="base:ComboBoxEnumItem">
+						<TextBlock Text="{Binding Text}" />
+					</DataTemplate>
+				</ComboBox.ItemTemplate>
+			</ComboBox>
+
+			<TextBlock Text="Speech Source" Classes="propertyLabel" />
+			<ComboBox SelectedItem="{Binding SelectedSpeechSource}"
+					  ItemsSource="{Binding SpeechSourceTypes}"
+					  Width="125"
 					  HorizontalAlignment="Right">
 				<ComboBox.ItemTemplate>
 					<DataTemplate DataType="base:ComboBoxEnumItem">
@@ -45,6 +59,57 @@
 					</DataTemplate>
 				</ComboBox.ItemTemplate>
 			</ComboBox>
+
+			<!-- Shown while a speech source is prepared, such as Kokoro's one-time model download. -->
+			<ProgressBar Width="125"
+						 Height="6"
+						 MinHeight="6"
+						 Margin="0,8,0,0"
+						 HorizontalAlignment="Right"
+						 Minimum="0"
+						 Maximum="100"
+						 Value="{Binding SpeechProgress}"
+						 IsIndeterminate="{Binding !IsSpeechProgressKnown}"
+						 IsVisible="{Binding IsPreparingSpeech}"
+						 Foreground="#cc5200" />
+			<TextBlock Text="{Binding SpeechStatus}"
+					   IsVisible="{Binding SpeechStatus, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+					   MaxWidth="200"
+					   Margin="0,5,0,0"
+					   FontSize="12"
+					   TextAlignment="Right"
+					   TextWrapping="Wrap"
+					   HorizontalAlignment="Right" />
+
+			<!-- Revealed for speech sources that offer a choice of voices. Choosing a voice plays a short sample. -->
+			<StackPanel IsVisible="{Binding HasVoiceChoices}" HorizontalAlignment="Right" Margin="0,15,0,0">
+				<TextBlock Text="Voice Gender" Classes="propertyLabel" />
+				<ComboBox SelectedItem="{Binding SelectedVoiceGender}"
+						  ItemsSource="{Binding VoiceGenderTypes}"
+						  Width="125"
+						  HorizontalAlignment="Right"
+						  Margin="0,0,0,15">
+					<ComboBox.ItemTemplate>
+						<DataTemplate DataType="base:ComboBoxEnumItem">
+							<TextBlock Text="{Binding Text}" />
+						</DataTemplate>
+					</ComboBox.ItemTemplate>
+				</ComboBox>
+
+				<TextBlock Text="Voice" Classes="propertyLabel" />
+				<ListBox SelectedItem="{Binding SelectedVoice}"
+						 ItemsSource="{Binding Voices}"
+						 Width="200"
+						 MaxHeight="200"
+						 HorizontalAlignment="Right"
+						 Background="Transparent">
+					<ListBox.ItemTemplate>
+						<DataTemplate DataType="services:SpeechVoice">
+							<TextBlock Text="{Binding DisplayName}" />
+						</DataTemplate>
+					</ListBox.ItemTemplate>
+				</ListBox>
+			</StackPanel>
 
 		</StackPanel>
 	</ScrollViewer>

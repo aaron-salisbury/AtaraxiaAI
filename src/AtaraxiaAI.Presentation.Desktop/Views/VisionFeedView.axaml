@@ -29,5 +29,5 @@
 			<i:MaterialIcon Kind="{Binding CameraIcon, Converter={StaticResource stringToMaterialIconConverter}}" />
 		</Button>
 	</Grid>
-	
+
 </UserControl>

@@ -1,7 +1,5 @@
 using AtaraxiaAI.Business;
-using AtaraxiaAI.Business.Persistence;
 using AtaraxiaAI.Business.Services;
-using AtaraxiaAI.Data;
 using AtaraxiaAI.Integrations;
 using AtaraxiaAI.Presentation.Desktop;
 using AtaraxiaAI.Presentation.Desktop.Base.Services;
@@ -19,14 +17,17 @@ namespace AtaraxiaAI.DesktopApp;
 
 internal static class DependencyInjection
 {
+    // Logs, desktop preferences, and downloaded speech models are kept here.
+    private static readonly string APP_DATA_DIRECTORY =
+        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "AtaraxiaAI");
+
     internal static IServiceCollection BuildServiceCollection()
     {
-        string logDirectory = JsonAppDataStore.DefaultDataDirectory;
-        Directory.CreateDirectory(logDirectory);
+        Directory.CreateDirectory(APP_DATA_DIRECTORY);
         Serilog.Log.Logger = new LoggerConfiguration()
             .MinimumLevel.Verbose()
             .WriteTo.Sink(App.InMemorySink)
-            .WriteTo.File(Path.Combine(logDirectory, "log-.txt"), rollingInterval: RollingInterval.Day,
+            .WriteTo.File(Path.Combine(APP_DATA_DIRECTORY, "log-.txt"), rollingInterval: RollingInterval.Day,
                 retainedFileCountLimit: 1)
             .CreateLogger();
 
@@ -37,22 +38,21 @@ internal static class DependencyInjection
             .AddSingleton((sp) => sp.GetRequiredService<ILoggerFactory>().CreateLogger(nameof(App)))
             .AddSingleton<IEventSystem, EventSystem>();
 
-        // Data Access
-        services.RegisterInternalDataServices()
-            .ComposeDataAccessIntegrations();
+        // File and web access
+        services.ComposeAccessIntegrations();
 
         // Business
         services.RegisterInternalBusinessServices()
             .ComposeBusinessIntegrations();
 
         // Presentation
-        services.RegisterInternalPresentationServices()
+        services.RegisterInternalPresentationServices(APP_DATA_DIRECTORY)
             .ComposePresentationIntegrations();
 
         return services;
     }
 
-    private static IServiceCollection ComposeDataAccessIntegrations(this IServiceCollection services)
+    private static IServiceCollection ComposeAccessIntegrations(this IServiceCollection services)
     {
         // File System Access
         services.AddScoped<IFileSystemAccess, FileSystemAccess>();
@@ -66,22 +66,17 @@ internal static class DependencyInjection
             });
         services.AddSingleton<IHttpRequester, HttpRequester>();
 
-        // Database Access
-        services.AddSingleton<IAppDataStore, JsonAppDataStore>();
-
         return services;
     }
 
     private static IServiceCollection ComposeBusinessIntegrations(this IServiceCollection services)
     {
-        services.AddSingleton(sp => new IntegrationDependencies(
-            sp.GetRequiredService<IHttpRequester>(), Log.Logger));
-        services.AddSingleton<IIntegrationFactory, IntegrationFactory>();
+        services.RegisterInternalIntegrationsServices(APP_DATA_DIRECTORY);
+        services.AddSingleton(sp => new IntegrationDependencies(sp.GetRequiredService<IHttpRequester>(), Log.Logger));
         services.AddSingleton<IAudioPlayer, WavAudioPlayer>();
         services.AddSingleton(sp => new AI(
             Log.Logger,
             sp.GetRequiredService<IIntegrationFactory>(),
-            sp.GetRequiredService<IAppDataStore>(),
             sp.GetRequiredService<IAudioPlayer>(),
             sp.GetRequiredService<IntegrationDependencies>()));
 
