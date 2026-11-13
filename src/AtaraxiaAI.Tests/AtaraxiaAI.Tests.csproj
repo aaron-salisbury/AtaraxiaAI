@@ -4,7 +4,8 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\AtaraxiaAI.Business\AtaraxiaAI.Business.csproj" />
-    <ProjectReference Include="..\AtaraxiaAI.Data\AtaraxiaAI.Data.csproj" />
+    <ProjectReference Include="..\AtaraxiaAI.Integrations\AtaraxiaAI.Integrations.csproj" />
+    <ProjectReference Include="..\AtaraxiaAI.Presentation.Desktop\AtaraxiaAI.Presentation.Desktop.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Update="Microsoft.Testing.Extensions.CodeCoverage" Version="18.11.2" />

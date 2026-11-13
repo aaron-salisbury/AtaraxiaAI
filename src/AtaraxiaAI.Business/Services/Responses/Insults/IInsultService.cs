@@ -1,9 +1,8 @@
 using System.Threading.Tasks;
 
-namespace AtaraxiaAI.Business.Services
+namespace AtaraxiaAI.Business.Services;
+
+public interface IInsultService
 {
-    public interface IInsultService
-    {
-        Task<string> GetInsultAsync();
-    }
+    Task<string> GetInsultAsync();
 }

@@ -1,4 +1,3 @@
-using AtaraxiaAI.Business;
 using AtaraxiaAI.Business.Componants;
 using AtaraxiaAI.Business.Services;
 using System;
@@ -7,90 +6,94 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Speech.Recognition;
 
-namespace AtaraxiaAI.Integrations.Services
+namespace AtaraxiaAI.Integrations.Services;
+
+internal class SystemDotSpeechRecognizer : IRecognizer
 {
-    internal class SystemDotSpeechRecognizer : IRecognizer
+    private readonly CultureInfo _culture;
+    private SpeechRecognitionEngine _recognizer;
+
+    internal SystemDotSpeechRecognizer(CultureInfo culture = null)
     {
-        private CultureInfo _culture;
-        private SpeechRecognitionEngine _recognizer;
+        _culture = culture ?? new CultureInfo("en-US");
 
-        internal SystemDotSpeechRecognizer(CultureInfo culture = null)
+        BuildRecognizer();
+    }
+
+    // System.Speech always uses its configured input device.
+    public void UpdateCaptureSource(AtaraxiaAI.Business.Base.Enums.SoundCaptureSources source)
+    {
+    }
+
+    bool IRecognizer.IsAvailable()
+    {
+        return RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
+    }
+
+    void IRecognizer.Listen(Action<string> speechRecognizedAction)
+    {
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
-            _culture = culture ?? new CultureInfo("en-US");
-
+            Dispose();
             BuildRecognizer();
+
+            _recognizer.SpeechRecognized += (s, e) => speechRecognizedAction(RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? e.Result.Text : string.Empty);
+
+            _recognizer.RecognizeAsync(RecognizeMode.Multiple);
         }
+    }
 
-        // System.Speech always uses its configured input device.
-        public void UpdateCaptureSource(AtaraxiaAI.Business.Base.Enums.SoundCaptureSources source) { }
-
-        bool IRecognizer.IsAvailable() => RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
-
-        void IRecognizer.Listen(Action<string> speechRecognizedAction)
+    void IRecognizer.Pause()
+    {
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            {
-                Dispose();
-                BuildRecognizer();
-
-                _recognizer.SpeechRecognized += (s, e) => { speechRecognizedAction(RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? e.Result.Text : string.Empty); };
-
-                _recognizer.RecognizeAsync(RecognizeMode.Multiple);
-            }
+            _recognizer.RecognizeAsyncStop();
         }
+    }
 
-        void IRecognizer.Pause()
+    void IRecognizer.Unpause()
+    {
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            {
-                _recognizer.RecognizeAsyncStop();
-            }
+            _recognizer.RecognizeAsync(RecognizeMode.Multiple);
         }
+    }
 
-        void IRecognizer.Unpause()
+    public void Dispose()
+    {
+        if (_recognizer != null && RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            {
-                _recognizer.RecognizeAsync(RecognizeMode.Multiple);
-            }
+            _recognizer.RecognizeAsyncStop();
+            _recognizer.Dispose();
+            _recognizer = null;
         }
+    }
 
-        public void Dispose()
+    private void BuildRecognizer()
+    {
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
-            if (_recognizer != null && RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            {
-                _recognizer.RecognizeAsyncStop();
-                _recognizer.Dispose();
-                _recognizer = null;
-            }
+            _recognizer = new SpeechRecognitionEngine(_culture);
+            _recognizer.SetInputToDefaultAudioDevice();
+            _recognizer.LoadGrammarAsync(GetWakeSkillsGrammar());
         }
+    }
 
-        private void BuildRecognizer()
+    private static Grammar GetWakeSkillsGrammar()
+    {
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            {
-                _recognizer = new SpeechRecognitionEngine(_culture);
-                _recognizer.SetInputToDefaultAudioDevice();
-                _recognizer.LoadGrammarAsync(GetWakeSkillsGrammar());
-            }
+            GrammarBuilder wakeSkills = new(OrchestrationEngine.WAKE_COMMAND);
+
+            wakeSkills.Append(new Choices(
+                Enum.GetValues(typeof(OrchestrationEngine.SkillMessages))
+                    .Cast<OrchestrationEngine.SkillMessages>()
+                    .Select(e => string.Concat(e.ToString().Select(x => char.IsUpper(x) ? " " + x : x.ToString())).TrimStart(' '))
+                    .ToArray()));
+
+            return new Grammar(wakeSkills);
         }
 
-        private static Grammar GetWakeSkillsGrammar()
-        {
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            {
-                GrammarBuilder wakeSkills = new GrammarBuilder(OrchestrationEngine.WAKE_COMMAND);
-
-                wakeSkills.Append(new Choices(
-                    Enum.GetValues(typeof(OrchestrationEngine.SkillMessages))
-                        .Cast<OrchestrationEngine.SkillMessages>()
-                        .Select(e => string.Concat(e.ToString().Select(x => char.IsUpper(x) ? " " + x : x.ToString())).TrimStart(' '))
-                        .ToArray()));
-
-                return new Grammar(wakeSkills);
-            }
-
-            return null;
-        }
+        return null;
     }
 }

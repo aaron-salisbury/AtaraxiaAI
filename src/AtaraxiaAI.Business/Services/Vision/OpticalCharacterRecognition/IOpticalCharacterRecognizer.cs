@@ -1,9 +1,6 @@
-using System;
+namespace AtaraxiaAI.Business.Services;
 
-namespace AtaraxiaAI.Business.Services
+public interface IOpticalCharacterRecognizer
 {
-    public interface IOpticalCharacterRecognizer
-    {
-        string ReadTextFromImage(byte[] imageBuffer);
-    }
+    string ReadTextFromImage(byte[] imageBuffer);
 }

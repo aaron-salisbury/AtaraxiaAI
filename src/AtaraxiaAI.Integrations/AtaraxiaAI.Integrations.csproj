@@ -1,11 +1,26 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <Description>Integrations tier of application.</Description>
   </PropertyGroup>
 
+  <!-- Let unit tests verify internal provider behavior. -->
+  <ItemGroup>
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+      <_Parameter1>AtaraxiaAI.Tests</_Parameter1>
+    </AssemblyAttribute>
+  </ItemGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\AtaraxiaAI.Business\AtaraxiaAI.Business.csproj" />
+  </ItemGroup>
+
+  <!-- Kokoro runs in this process. Its package's own build target would copy every voice, including non-English ones (and
+       only for builds), so it is excluded and the American and British English voices are copied explicitly, which also
+       reaches publish output. -->
+  <ItemGroup>
+    <Content Include="$(PkgKokoroSharp)/content/voices/a*.npy;$(PkgKokoroSharp)/content/voices/b*.npy" Link="SpeechVoices/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="$(PkgKokoroSharp)/content/voices/LICENSE" Link="SpeechVoices/LICENSE" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>
@@ -22,8 +37,9 @@
     <PackageReference Include="CsvHelper" Version="33.1.0" />
     <PackageReference Include="Emgu.CV" Version="4.13.0.5924" />
     <PackageReference Include="Emgu.CV.runtime.windows" Version="4.13.0.5924" />
-    <PackageReference Include="Google.Cloud.TextToSpeech.V1" Version="3.18.0" />
-    <PackageReference Include="Microsoft.CognitiveServices.Speech" Version="1.51.2" />
+    <PackageReference Include="KokoroSharp" Version="0.8.4" GeneratePathProperty="true" ExcludeAssets="build;buildTransitive" />
+    <PackageReference Include="Microsoft.Extensions.Http" Version="10.0.12" />
+    <PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.31.0" />
     <PackageReference Include="NAudio" Version="2.3.0" />
     <PackageReference Include="ScreenCapture.NET" Version="3.0.0" />
     <PackageReference Include="ScreenCapture.NET.DX11" Version="3.0.0" />
@@ -32,5 +48,5 @@
     <PackageReference Include="Tesseract" Version="5.2.0" />
     <PackageReference Include="Vosk" Version="0.3.38" />
   </ItemGroup>
-	
+
 </Project>

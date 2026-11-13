@@ -1,35 +1,37 @@
-using AtaraxiaAI.Business;
 using AtaraxiaAI.Business.Services;
 using System;
 using Tesseract;
 
-namespace AtaraxiaAI.Integrations.Services
+namespace AtaraxiaAI.Integrations.Services;
+
+internal class TesseractOCR : IOpticalCharacterRecognizer
 {
-    internal class TesseractOCR : IOpticalCharacterRecognizer
+    private readonly IntegrationDependencies _dependencies;
+
+    internal TesseractOCR(IntegrationDependencies dependencies)
     {
-        private readonly IntegrationDependencies _dependencies;
+        _dependencies = dependencies;
+    }
 
-        internal TesseractOCR(IntegrationDependencies dependencies) => _dependencies = dependencies;
-        public string ReadTextFromImage(byte[] imageBuffer)
+    public string ReadTextFromImage(byte[] imageBuffer)
+    {
+        string text = null;
+
+        try
         {
-            string text = null;
-
-            try
+            using (TesseractEngine engine = new(ModelAssets.TessdataPath, "eng", EngineMode.Default))
+            using (Pix image = Pix.LoadFromMemory(imageBuffer))
+            //using (Pix image = Pix.LoadFromFile("./Detection/Vision/OCR/tessdata/test.jpg"))
+            using (Page page = engine.Process(image))
             {
-                using (TesseractEngine engine = new TesseractEngine(ModelAssets.TessdataPath, "eng", EngineMode.Default))
-                using (Pix image = Pix.LoadFromMemory(imageBuffer))
-                //using (Pix image = Pix.LoadFromFile("./Detection/Vision/OCR/tessdata/test.jpg"))
-                using (Page page = engine.Process(image))
-                {
-                    text = page.GetText().TrimEnd();
-                }
+                text = page.GetText().TrimEnd();
             }
-            catch (Exception e)
-            {
-                _dependencies.Logger.Error($"Failed to parse text from image: {e.Message}");
-            }
-
-            return text;
         }
+        catch (Exception e)
+        {
+            _dependencies.Logger.Error($"Failed to parse text from image: {e.Message}");
+        }
+
+        return text;
     }
 }

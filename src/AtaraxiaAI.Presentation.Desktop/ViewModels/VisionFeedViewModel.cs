@@ -47,13 +47,19 @@ public partial class VisionFeedViewModel : BaseViewModel
     public void SetVisionFrame(byte[] jpeg)
     {
         Interlocked.Exchange(ref _pendingFrame, jpeg);
-        if (Interlocked.Exchange(ref _frameUpdateScheduled, 1) != 0) return;
+        if (Interlocked.Exchange(ref _frameUpdateScheduled, 1) != 0)
+        {
+            return;
+        }
 
         Dispatcher.UIThread.Post(() =>
         {
             byte[]? latest = Interlocked.Exchange(ref _pendingFrame, null);
             Interlocked.Exchange(ref _frameUpdateScheduled, 0);
-            if (ShowCameraFeed) FrameBuffer = latest;
+            if (ShowCameraFeed)
+            {
+                FrameBuffer = latest;
+            }
         });
     }
 }

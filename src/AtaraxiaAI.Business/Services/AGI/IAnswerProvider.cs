@@ -1,11 +1,10 @@
 using System.Threading.Tasks;
 
-namespace AtaraxiaAI.Business.Services
-{
-    public interface IAnswerProvider
-    {
-        bool IsAvailable();
+namespace AtaraxiaAI.Business.Services;
 
-        Task<string> AnswerAsync(string message);
-    }
+public interface IAnswerProvider
+{
+    bool IsAvailable();
+
+    Task<string> AnswerAsync(string message);
 }

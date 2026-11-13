@@ -73,21 +73,25 @@ releases when upgrading the solution.
 ## 3. Solution Architecture
 
 The solution uses Business as the application center. Business owns assistant
-behavior, concepts, and application-facing contracts. Data and Integrations
-implement those contracts. Presentation.Desktop owns Avalonia views and view
-models. DesktopApp is the executable composition root: it registers concrete
-implementations, starts the app, and owns its lifetime. KokoroWorker is a
-separate executable for local speech synthesis.
+behavior, concepts, and application-facing contracts. Integrations implements
+those contracts. Presentation.Desktop owns Avalonia views, view models, and
+desktop preferences such as the chosen speech source and voice. DesktopApp is the executable composition root: it registers concrete
+implementations, starts the app, and owns its lifetime. Local models such as
+Kokoro run in the application process through Integrations.
 
 ```text
-Business <--- Data
-    ^       Integrations
+Business <--- Integrations
+    ^
     |
 Presentation.Desktop
 
-DesktopApp ---> assembles Business, Data, Integrations, Presentation.Desktop,
-                and the KokoroWorker process
+DesktopApp ---> assembles Business, Integrations, Presentation.Desktop
 ```
+
+There is currently no Data project: the app keeps no business-owned
+information. User preferences belong to Presentation, and provider bookkeeping,
+such as a quota counter or a downloaded model, belongs to the integration that
+owns it. Add a Data project when Business gains information it must persist.
 
 The arrows describe intended dependency direction, not every current project
 reference. A project reference grants technical access, not architectural
@@ -259,11 +263,12 @@ implementations; it does not configure a general answer provider.
 Keep provider-specific types and transport details within Integrations.
 App-facing contracts should use application-defined types. Add a new contract
 only for a concrete use case, and avoid one interface per hypothetical
-provider. The local JSON store owns app counters, not arbitrary provider data.
+provider.
 
 Do not commit secrets or write them to application JSON or logs. Resolve
-credentials through an appropriate infrastructure boundary when a provider
-requires them. If future agents or automation gain write operations, make
+credentials through an appropriate infrastructure boundary, such as the
+operating system's protected credential storage, when a provider requires
+them. If future agents or automation gain write operations, make
 their authority explicit at the capability boundary.
 
 ------------------------------------------------------------------------
@@ -445,7 +450,8 @@ does not intrinsically own.
 When deciding where new code belongs:
 
 **Is this about storing app-owned information?**\
-It probably belongs in `Data`.
+It probably belongs in a `Data` project, created when the first such need
+arises. A user preference for the desktop app belongs in `Presentation.Desktop`.
 
 **Is this a rule, concept, process, validation, or capability
 contract?**\

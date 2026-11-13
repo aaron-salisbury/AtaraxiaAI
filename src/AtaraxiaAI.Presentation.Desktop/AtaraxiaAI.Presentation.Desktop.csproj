@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <Description>Avalonia desktop presentation for AtaraxiaAI.</Description>
   </PropertyGroup>
@@ -35,6 +35,13 @@
 
   <ItemGroup>
     <ProjectReference Include="..\AtaraxiaAI.Business\AtaraxiaAI.Business.csproj" />
+  </ItemGroup>
+
+  <!-- Let unit tests verify internal settings storage. -->
+  <ItemGroup>
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+      <_Parameter1>AtaraxiaAI.Tests</_Parameter1>
+    </AssemblyAttribute>
   </ItemGroup>
 
   <ItemGroup>

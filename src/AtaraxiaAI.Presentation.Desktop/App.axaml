@@ -12,7 +12,7 @@
         <DataTemplate DataType="vm:SettingsViewModel"><v:SettingsView /></DataTemplate>
         <DataTemplate DataType="vm:VisionFeedViewModel"><v:VisionFeedView /></DataTemplate>
 	</Application.DataTemplates>
-	
+
     <Application.Styles>
         <FluentTheme />
         <i:MaterialIconStyles />
